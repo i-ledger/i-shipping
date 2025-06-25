@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kelola Data Karyawan</title>
+  <style>
+    :root {
+      --primary: #007BFF;
+      --primary-light: #E7FFFB;
+      --text-dark: #333;
+      --bg-light: #F9F9F9;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg-light);
+      color: var(--text-dark);
+    }
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-bottom: 16px;
+      color: var(--primary);
+    }
+    .form-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .form-group input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    .form-group button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 0 16px;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .form-group button:hover {
+      background: #0056b3;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead th {
+      background: var(--primary);
+      color: #fff;
+      padding: 10px;
+      text-align: left;
+    }
+    tbody td {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    .action-btn {
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-right: 6px;
+    }
+    .edit { background: #FFC107; color: #333; }
+    .delete { background: #DC3545; color: #fff; }
+    .header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.btn-dashboard {
+  background: var(--primary);
+  color: #fff;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  transition: background 0.3s;
+}
+.btn-dashboard:hover {
+  background: #0056b3;
+}
+
+  </style>
+  
+</head>
+<body>
+  <div class="container">
+<div class="header">
+  <h2>Data Karyawan</h2>
+  <a href="dashboard.html" class="btn-dashboard">Dashboard</a>
+</div>
+    <div class="form-group">
+      <input type="text" id="namaInput" placeholder="Nama Karyawan" oninput="this.value = this.value.toUpperCase()" />
+      <button onclick="tambahKaryawan()">Tambah</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Nama</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tabelKaryawan"></tbody>
+    </table>
+  </div>
+
+  <script src="config.js"></script>
+  <script>
+    if (localStorage.getItem('loggedIn') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    const scriptURL = API_ENDPOINT;
+    let dataKaryawan = [];
+
+    function loadKaryawan() {
+      fetch(`${scriptURL}?sheet=namakaryawan&action=get`)
+        .then(res => res.json())
+        .then(data => {
+          dataKaryawan = data;
+          const tbody = document.getElementById('tabelKaryawan');
+          tbody.innerHTML = '';
+          dataKaryawan.forEach((item, i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${i + 1}</td>
+              <td>${item.nama}</td>
+              <td>
+                <button class="action-btn edit" onclick="editKaryawan(${i})">✏️ Edit</button>
+                <button class="action-btn delete" onclick="hapusKaryawan(${i + 2})">🗑️ Hapus</button>
+              </td>`;
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(err => alert("❌ Gagal load data: " + err.message));
+    }
+
+    function tambahKaryawan() {
+      const nama = document.getElementById("namaInput").value.trim().toUpperCase();
+      if (!nama) return alert("Nama tidak boleh kosong.");
+      fetch(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify({
+          sheet: "namakaryawan",
+          action: "add",
+          payload: { values: [nama] }
+        })
+      })
+      .then(res => res.json())
+      .then(() => {
+        document.getElementById("namaInput").value = '';
+        loadKaryawan();
+      })
+      .catch(err => alert("❌ Gagal tambah karyawan: " + err.message));
+    }
+
+    function editKaryawan(index) {
+      const current = dataKaryawan[index];
+      const newNama = prompt("Edit Nama:", current.nama);
+      if (newNama === null) return;
+      const namaBaru = newNama.trim().toUpperCase();
+      if (namaBaru) {
+        fetch(scriptURL, {
+          method: 'POST',
+          body: JSON.stringify({
+            sheet: "namakaryawan",
+            action: "edit",
+            payload: {
+              row: index + 2,
+              values: [namaBaru]
+            }
+          })
+        })
+        .then(res => res.json())
+        .then(loadKaryawan)
+        .catch(err => alert("❌ Gagal edit karyawan: " + err.message));
+      }
+    }
+
+    function hapusKaryawan(row) {
+      if (!confirm("Yakin ingin menghapus baris " + row + "?")) return;
+      fetch(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify({
+          sheet: "namakaryawan",
+          action: "delete",
+          payload: { row: row }
+        })
+      })
+      .then(res => res.json())
+      .then(loadKaryawan)
+      .catch(err => alert("❌ Gagal hapus karyawan: " + err.message));
+    }
+
+    loadKaryawan();
+    setTimeout(() => localStorage.removeItem('loggedIn'), 300000);
+  </script>
+</body>
+</html>

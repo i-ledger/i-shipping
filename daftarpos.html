@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kelola POS (Uraian ⇄ Kategori)</title>
+  <style>
+    :root {
+      --primary: #007BFF;
+      --primary-light: #E7FFFB;
+      --text-dark: #333;
+      --bg-light: #F9F9F9;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg-light);
+      color: var(--text-dark);
+    }
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .header h2 {
+      margin: 0;
+      font-size: 1.6rem;
+      color: var(--primary);
+    }
+    .btn-dashboard {
+      background: var(--primary);
+      color: #fff;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      transition: background 0.3s;
+    }
+    .btn-dashboard:hover {
+      background: #0056b3;
+    }
+    .form-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .form-group input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    .form-group button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 0 20px;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .form-group button:hover {
+      background: #0056b3;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+    }
+    thead th {
+      background: var(--primary);
+      color: #fff;
+      padding: 12px;
+      text-align: left;
+    }
+    tbody td {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+    }
+    tbody tr:hover {
+      background: var(--primary-light);
+    }
+    .action-btn {
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-right: 6px;
+    }
+    .edit { background: #FFC107; color: #333; }
+    .delete { background: #DC3545; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>Kelola POS</h2>
+      <a href="dashboard.html" class="btn-dashboard">Dashboard</a>
+    </div>
+
+    <!-- Form Tambah POS -->
+    <div class="form-group">
+<input type="text" id="uraianInput" class="uppercase" placeholder="Uraian (misal: KERTAS)" />
+<input type="text" id="posInput" class="uppercase" placeholder="Pos (misal: ATK)" />
+
+      <button onclick="tambahPos()">Tambah</button>
+    </div>
+
+    <!-- Upload File Excel -->
+    <div class="form-group">
+      <input type="file" id="fileUpload" accept=".xlsx, .xls" />
+      <button onclick="uploadExcel()">Upload Excel</button>
+    </div>
+
+    <!-- Tabel -->
+    <table id="posTable">
+      <thead>
+        <tr>
+          <th>No.</th>
+          <th>Uraian</th>
+          <th>Pos</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+  <script src="config.js"></script>
+  <script>
+  if (localStorage.getItem('loggedIn') !== 'true') {
+    window.location.href = 'login.html';
+  }
+
+  const scriptURL = API_ENDPOINT;
+  let dataPOS = [];
+
+  function loadPOS() {
+    fetch(`${scriptURL}?sheet=POS&action=get`)
+      .then(res => res.json())
+      .then(data => {
+        dataPOS = data;
+        const tbody = document.querySelector("#posTable tbody");
+        tbody.innerHTML = '';
+        dataPOS.forEach((item, i) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td>${item.uraian}</td>
+            <td>${item.pos}</td>
+            <td>
+              <button class="action-btn edit" onclick="editPos(${i})">✏️ Edit</button>
+              <button class="action-btn delete" onclick="hapusPos(${i + 2})">🗑️ Hapus</button>
+            </td>`;
+          tbody.appendChild(tr);
+        });
+      })
+      .catch(err => alert("❌ Gagal load POS: " + err.message));
+  }
+
+  function tambahPos() {
+const uraian = document.getElementById("uraianInput").value.trim().toUpperCase();
+const pos = document.getElementById("posInput").value.trim().toUpperCase();
+    if (!uraian || !pos) return alert("Kedua field harus diisi.");
+
+    fetch(scriptURL, {
+      method: 'POST',
+      body: JSON.stringify({
+        sheet: "POS",
+        action: "add",
+        payload: {
+          values: [uraian, pos]
+        }
+      })
+    })
+    .then(res => res.json())
+    .then(() => {
+      document.getElementById("uraianInput").value = '';
+      document.getElementById("posInput").value = '';
+      loadPOS();
+    })
+    .catch(err => alert("❌ Gagal tambah POS: " + err.message));
+  }
+
+  function editPos(index) {
+    const current = dataPOS[index];
+    const newUraian = prompt("Edit Uraian:", current.uraian);
+    if (newUraian === null) return;
+    const newPos = prompt("Edit Pos:", current.pos);
+    if (newPos === null) return;
+
+    fetch(scriptURL, {
+      method: 'POST',
+      body: JSON.stringify({
+        sheet: "POS",
+        action: "edit",
+        payload: {
+          row: index + 2,
+          values: [newUraian.trim(), newPos.trim()]
+        }
+      })
+    })
+    .then(res => res.json())
+    .then(loadPOS)
+    .catch(err => alert("❌ Gagal edit POS: " + err.message));
+  }
+
+  function hapusPos(row) {
+    if (!confirm("Yakin ingin menghapus baris " + row + "?")) return;
+    fetch(scriptURL, {
+      method: 'POST',
+      body: JSON.stringify({
+        sheet: "POS",
+        action: "delete",
+        payload: { row }
+      })
+    })
+    .then(res => res.json())
+    .then(loadPOS)
+    .catch(err => alert("❌ Gagal hapus POS: " + err.message));
+  }
+
+  function uploadExcel() {
+    const file = document.getElementById('fileUpload').files[0];
+    if (!file) return alert("Pilih file Excel terlebih dahulu.");
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+      rows.forEach(row => {
+        if (row[0] && row[1]) {
+          fetch(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+              sheet: "POS",
+              action: "add",
+              payload: {
+                values: [row[0], row[1]]
+              }
+            })
+          })
+          .then(res => res.json())
+          .then(loadPOS)
+          .catch(err => console.error("❌ Gagal upload baris:", err));
+        }
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // Load saat halaman dibuka
+  loadPOS();
+  setTimeout(() => localStorage.removeItem('loggedIn'), 300000);
+</script></body>
+</html>
