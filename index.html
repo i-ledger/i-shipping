@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PT. SINARAPI JATAYU PERMAI (i-Ledger)</title>
+  <title>i-Shipping SES_GS</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gradient-to-br from-indigo-100 to-white min-h-screen flex items-center justify-center p-4 relative">
@@ -22,27 +22,27 @@
     <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
   </div>
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
-    <h2 class="text-3xl font-bold text-indigo-700 mb-6 text-center">PT. SINARAPI JATAYU PERMAI (i-Ledger)</h2>
+    <h2 class="text-3xl font-bold text-indigo-700 mb-6 text-center">i-Shipping SES_GS</h2>
     <form id="ledgerForm" class="space-y-6">
       <div>
-        <label for="nama" class="block text-sm font-medium text-gray-600">Nama</label>
+        <label for="nama" class="block text-sm font-medium text-gray-600">Driver/Kernet</label>
         <select id="nama" required class="mt-2 block w-full border border-gray-300 rounded-lg shadow-sm p-3"></select>
       </div>
       <div>
-        <label for="uraian" class="block text-sm font-medium text-gray-600">Uraian</label>
+        <label for="uraian" class="block text-sm font-medium text-gray-600">Nama Pangkalan</label>
         <input list="uraianList" id="uraian" required class="mt-2 block w-full border border-gray-300 rounded-lg shadow-sm p-3" />
         <datalist id="uraianList"></datalist>
       </div>
       <div>
-        <label for="pos" class="block text-sm font-medium text-gray-600">Pos</label>
+        <label for="pos" class="block text-sm font-medium text-gray-600">Nama PT</label>
         <input type="text" id="pos" readonly class="mt-2 block w-full bg-gray-100 border border-gray-300 rounded-lg p-3" />
       </div>
       <div>
-        <label for="nominal" class="block text-sm font-medium text-gray-600">Nominal</label>
+        <label for="nominal" class="block text-sm font-medium text-gray-600">Jumlah Pengiriman</label>
         <input type="text" id="nominal" required class="mt-2 block w-full border border-gray-300 rounded-lg p-3" />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-600">Foto Nota</label>
+        <label class="block text-sm font-medium text-gray-600">Foto Pangkalan</label>
         <input type="file" accept="image/*" id="fotoNotaUpload" class="hidden" />
         <input type="file" accept="image/*" capture="environment" id="fotoNotaCamera" class="hidden" />
         <div class="mt-2 flex items-center space-x-2">
@@ -52,10 +52,10 @@
         <img id="previewNota" class="w-70 h-70 object-cover rounded-lg border hidden" />
       </div>
       <div>
-        <label for="pembayaran" class="block text-sm font-medium text-gray-600">Pembayaran</label>
+        <label for="pembayaran" class="block text-sm font-medium text-gray-600">Apakah Pemilik Pangkalan berada dilokasi Pangkalan?</label>
         <select id="pembayaran" class="mt-2 block w-full border border-gray-300 rounded-lg p-3">
-          <option value="Cash">Cash</option>
-          <option value="Transfer">Transfer</option>
+          <option value="Tidak">Cash</option>
+          <option value="Ya">Transfer</option>
         </select>
       </div>
       <div id="buktiTransferContainer" class="hidden">
