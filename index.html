@@ -29,30 +29,40 @@
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-xl p-8">
     <h2 class="text-3xl font-bold text-green-700 mb-6 text-center">i-Shipping SES_GS</h2>
     <form id="ledgerForm" class="space-y-6">
+      <!-- Form field lainnya tetap -->
+
       <div>
-        <label for="nama" class="block text-sm font-medium text-gray-600">Driver/Kernet</label>
-        <select id="nama" required class="mt-2 block w-full border border-gray-300 rounded-lg shadow-sm p-3"></select>
+        <label for="nama" class="block text-sm font-medium text-gray-600">Nama</label>
+        <input type="text" id="nama" class="mt-2 block w-full border border-gray-300 rounded-lg p-3" required />
       </div>
       <div>
-        <label for="uraian" class="block text-sm font-medium text-gray-600">Nama Pangkalan</label>
-        <input list="uraianList" id="uraian" required class="mt-2 block w-full border border-gray-300 rounded-lg shadow-sm p-3" />
-        <datalist id="uraianList"></datalist>
+        <label for="uraian" class="block text-sm font-medium text-gray-600">Uraian</label>
+        <input type="text" id="uraian" class="mt-2 block w-full border border-gray-300 rounded-lg p-3" required />
       </div>
       <div>
-        <label for="pos" class="block text-sm font-medium text-gray-600">Nama PT</label>
-        <input type="text" id="pos" readonly class="mt-2 block w-full bg-gray-100 border border-gray-300 rounded-lg p-3" />
+        <label for="pos" class="block text-sm font-medium text-gray-600">POS</label>
+        <input type="text" id="pos" class="mt-2 block w-full border border-gray-300 rounded-lg p-3" required />
       </div>
       <div>
-        <label for="nominal" class="block text-sm font-medium text-gray-600">Jumlah Pengiriman</label>
-        <input type="text" id="nominal" required class="mt-2 block w-full border border-gray-300 rounded-lg p-3" />
+        <label for="nominal" class="block text-sm font-medium text-gray-600">Nominal</label>
+        <input type="text" id="nominal" class="mt-2 block w-full border border-gray-300 rounded-lg p-3" required />
       </div>
       <div>
-        <label for="brightgas" class="block text-sm font-medium text-gray-600">Tbg Bright Gas</label>
-        <input type="number" id="brightgas" required min="0" class="mt-2 block w-full border border-gray-300 rounded-lg shadow-sm p-3" value="0" />
+        <label for="brightgas" class="block text-sm font-medium text-gray-600">Bright Gas</label>
+        <input type="number" id="brightgas" class="mt-2 block w-full border border-gray-300 rounded-lg p-3" value="0" required />
       </div>
       <div>
         <label for="retur" class="block text-sm font-medium text-gray-600">Retur</label>
-        <input type="number" id="retur" required min="0" class="mt-2 block w-full border border-gray-300 rounded-lg shadow-sm p-3" value="0" />
+        <input type="number" id="retur" class="mt-2 block w-full border border-gray-300 rounded-lg p-3" value="0" required />
+      </div>
+      <div>
+        <label for="pembayaran" class="block text-sm font-medium text-gray-600">Pemilik Pangkalan Hadir?</label>
+        <select id="pembayaran" class="mt-2 block w-full border border-gray-300 rounded-lg p-3">
+          <option value="Tidak">Tidak</option>
+          <option value="Ya">Ya</option>
+        </select>
+      </div>
+
       <!-- 🔹 Kamera Pangkalan -->
       <div>
         <label class="block text-sm font-medium text-gray-600 mb-2">Kamera Pangkalan</label>
@@ -62,7 +72,7 @@
       </div>
 
       <!-- 🔹 Kamera Pemilik -->
-      <div>
+      <div id="buktiTransferContainer" class="hidden">
         <label class="block text-sm font-medium text-gray-600 mb-2">Kamera Pemilik Pangkalan</label>
         <video id="videoBukti" autoplay muted playsinline class="rounded-xl"></video>
         <canvas id="canvasBukti" class="hidden mt-2"></canvas>
@@ -97,6 +107,19 @@
     const videoRetur = document.getElementById('videoRetur');
     const canvasRetur = document.getElementById('canvasRetur');
     const captureRetur = document.getElementById('captureRetur');
+
+    const pembayaran = document.getElementById('pembayaran');
+    const returInput = document.getElementById('retur');
+    const buktiContainer = document.getElementById('buktiTransferContainer');
+    const returFotoContainer = document.getElementById('returFotoContainer');
+
+    pembayaran.addEventListener('change', () => {
+      buktiContainer.classList.toggle('hidden', pembayaran.value !== 'Ya');
+    });
+
+    returInput.addEventListener('input', () => {
+      returFotoContainer.classList.toggle('hidden', parseInt(returInput.value) === 0);
+    });
 
     function startCamera(videoEl) {
       navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
@@ -143,6 +166,14 @@
           const lng = posGeo.coords.longitude;
           const lokasi = `https://www.google.com/maps?q=${lat},${lng}`;
 
+          const nama = document.getElementById('nama').value;
+          const uraian = document.getElementById('uraian').value;
+          const pos = document.getElementById('pos').value;
+          const nominal = document.getElementById('nominal').value;
+          const brightgas = parseInt(document.getElementById('brightgas').value) || 0;
+          const retur = parseInt(document.getElementById('retur').value) || 0;
+          const pembayaranVal = document.getElementById('pembayaran').value;
+
           const payload = {
             action: 'addTransaksi',
             sheet: 'Transaksi',
@@ -184,181 +215,6 @@
       }
     });
 
-    setTimeout(() => localStorage.removeItem('loggedIn'), 300000);
-  </script>
-</body>
-</html>
-
-
-  <style>
-    .loader { border-top-color: #6366f1; animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
-  <script src="config.js"></script>
-  <script>
-    if (localStorage.getItem('loggedIn') !== 'true') window.location.href = 'login.html';
-
-    const API_NAMA = API_ENDPOINT + '?action=nama';
-    const API_POS = API_ENDPOINT + '?action=pos';
-    const SUBMIT_URL = API_ENDPOINT;
-
-    const namaEl = document.getElementById('nama');
-    const uraianEl = document.getElementById('uraian');
-    const posEl = document.getElementById('pos');
-    const nominalEl = document.getElementById('nominal');
-    const brightgasEl = document.getElementById('brightgas');
-    const returEl = document.getElementById('retur');
-    const returFotoEl = document.getElementById('returFoto');
-    const returFotoContainer = document.getElementById('returFotoContainer');
-    const previewRetur = document.getElementById('previewRetur');
-    const fotoUpload = document.getElementById('fotoNotaUpload');
-    const fotoCamera = document.getElementById('fotoNotaCamera');
-    const buktiInput = document.getElementById('buktiTransfer');
-    const pembayaran = document.getElementById('pembayaran');
-    const buktiContainer = document.getElementById('buktiTransferContainer');
-    const previewNota = document.getElementById('previewNota');
-    const previewBukti = document.getElementById('previewBukti');
-    const loadingOverlay = document.getElementById('loadingOverlay');
-
-    fetch(API_NAMA).then(r => r.json()).then(data => {
-      data.forEach(n => {
-        const o = document.createElement('option');
-        o.value = o.textContent = n;
-        namaEl.appendChild(o);
-      });
-    });
-
-    let uraianMap = {};
-    fetch(API_POS).then(r => r.json()).then(data => {
-      data.forEach(row => {
-        uraianMap[row.uraian] = row.pos;
-        const o = document.createElement('option');
-        o.value = row.uraian;
-        document.getElementById('uraianList').appendChild(o);
-      });
-    });
-
-    uraianEl.addEventListener('input', () => {
-      posEl.value = uraianMap[uraianEl.value] || '';
-    });
-    pembayaran.addEventListener('change', () => {
-      buktiContainer.classList.toggle('hidden', pembayaran.value !== 'Ya');
-    });
-    returEl.addEventListener('input', () => {
-      returFotoContainer.classList.toggle('hidden', parseInt(returEl.value) === 0);
-    });
-    returFotoEl.addEventListener('change', () => {
-      previewRetur.src = URL.createObjectURL(returFotoEl.files[0]);
-      previewRetur.classList.remove('hidden');
-    });
-    fotoUpload.addEventListener('change', () => {
-      previewNota.src = URL.createObjectURL(fotoUpload.files[0]);
-      previewNota.classList.remove('hidden');
-    });
-    fotoCamera.addEventListener('change', () => {
-      previewNota.src = URL.createObjectURL(fotoCamera.files[0]);
-      previewNota.classList.remove('hidden');
-    });
-    buktiInput.addEventListener('change', () => {
-      previewBukti.src = URL.createObjectURL(buktiInput.files[0]);
-      previewBukti.classList.remove('hidden');
-    });
-
-    nominalEl.addEventListener('input', e => {
-      const v = e.target.value.replace(/\D/g, '');
-      e.target.value = new Intl.NumberFormat('id-ID').format(v);
-    });
-
-    document.getElementById('ledgerForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-      loadingOverlay.classList.remove('hidden');
-
-      const nama = namaEl.value;
-      const uraian = uraianEl.value;
-      const pos = posEl.value;
-      const nominal = nominalEl.value.replace(/\D/g, '');
-      const brightgas = parseInt(brightgasEl.value) || 0;
-      const retur = parseInt(returEl.value) || 0;
-      const pembayaranVal = pembayaran.value;
-
-      const fotoFile = fotoUpload.files[0] || fotoCamera.files[0];
-      if (!fotoFile) {
-        alert("❌ Foto Pangkalan wajib diunggah.");
-        loadingOverlay.classList.add('hidden');
-        return;
-      }
-
-      const buktiFile = pembayaranVal === "Ya" ? buktiInput.files[0] : null;
-      if (pembayaranVal === "Ya" && !buktiFile) {
-        alert("❌ Foto Pemilik Pangkalan wajib diunggah.");
-        loadingOverlay.classList.add('hidden');
-        return;
-      }
-
-      if (retur > 0 && !returFotoEl.files[0]) {
-        alert("❌ Bukti retur wajib diunggah jika ada retur.");
-        loadingOverlay.classList.add('hidden');
-        return;
-      }
-
-      const toBase64 = file => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
-      try {
-        const fotoNotaBase64 = await toBase64(fotoFile);
-        const fotoBuktiBase64 = buktiFile ? await toBase64(buktiFile) : "";
-        const returFotoBase64 = returFotoEl.files[0] ? await toBase64(returFotoEl.files[0]) : "";
-
-        navigator.geolocation.getCurrentPosition(async posGeo => {
-          const lat = posGeo.coords.latitude;
-          const lng = posGeo.coords.longitude;
-          const lokasi = `https://www.google.com/maps?q=${lat},${lng}`;
-
-
-          const payload = {
-            action: 'addTransaksi',
-            sheet: 'Transaksi',
-            payload: {
-              nama, uraian, pos, nominal,
-              pembayaran: pembayaranVal,
-              fotoNota: fotoNotaBase64,
-              fotoBukti: fotoBuktiBase64,
-              brightgas, retur, returFoto: returFotoBase64,
-              lokasi
-            }
-          };
-
-          const res = await fetch(SUBMIT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(payload)
-          });
-
-          const result = await res.json();
-          if (result.status === 'success') {
-            alert('✅ Transaksi berhasil disimpan!');
-            document.getElementById('ledgerForm').reset();
-            previewNota.classList.add('hidden');
-            previewBukti.classList.add('hidden');
-            previewRetur.classList.add('hidden');
-            posEl.value = '';
-            buktiContainer.classList.add('hidden');
-            returFotoContainer.classList.add('hidden');
-          } else {
-            alert('❌ Gagal: ' + result.message);
-          }
-          loadingOverlay.classList.add('hidden');
-        });
-
-      } catch (err) {
-        alert('❌ Error koneksi: ' + err.message);
-        loadingOverlay.classList.add('hidden');
-      }
-    });
     setTimeout(() => localStorage.removeItem('loggedIn'), 300000);
   </script>
 </body>
