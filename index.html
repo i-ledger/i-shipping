@@ -204,7 +204,10 @@
         const returFotoBase64 = returFotoEl.files[0] ? await toBase64(returFotoEl.files[0]) : "";
 
         navigator.geolocation.getCurrentPosition(async posGeo => {
-          const lokasi = `${posGeo.coords.latitude},${posGeo.coords.longitude}`;
+          const lat = posGeo.coords.latitude;
+          const lng = posGeo.coords.longitude;
+          const lokasi = `https://www.google.com/maps?q=${lat},${lng}`;
+
 
           const payload = {
             action: 'addTransaksi',
