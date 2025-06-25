@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>i-Shipping SES_GS</title>
+  <title>PT. SINARAPI JATAYU PERMAI (i-Ledger)</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gradient-to-br from-indigo-100 to-white min-h-screen flex items-center justify-center p-4 relative">
@@ -22,7 +22,7 @@
     <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
   </div>
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
-    <h2 class="text-3xl font-bold text-indigo-700 mb-6 text-center">i-Shipping SES_GS</h2>
+    <h2 class="text-3xl font-bold text-indigo-700 mb-6 text-center">PT. SINARAPI JATAYU PERMAI (i-Ledger)</h2>
     <form id="ledgerForm" class="space-y-6">
       <div>
         <label for="nama" class="block text-sm font-medium text-gray-600">Nama</label>
@@ -178,7 +178,7 @@ document.getElementById('ledgerForm').addEventListener('submit', async function 
 
     const payload = {
       action: 'addTransaksi',
-      sheet: 'Pengiriman',
+      sheet: 'Transaksi',
       payload: {
         nama,
         uraian,
