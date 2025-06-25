@@ -59,14 +59,14 @@
         </select>
       </div>
       <div id="buktiTransferContainer" class="hidden">
-        <label for="buktiTransfer" class="block text-sm font-medium text-gray-600">Bukti Transfer</label>
+        <label for="buktiTransfer" class="block text-sm font-medium text-gray-600">Foto Pangkalan Beserta Pemilik Pangkalan</label>
         <div class="mt-2 flex items-center space-x-2">
           <input type="file" accept="image/*" id="buktiTransfer" class="hidden" />
           <label for="buktiTransfer" class="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg">Upload Bukti</label>
         </div>
        <img id="previewBukti" class="w-70 h-70 object-cover rounded-lg border hidden" />
       </div>
-      <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg">Kirim Transaksi</button>
+      <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg">Submit</button>
     </form>
   </div>
 
@@ -153,14 +153,14 @@ document.getElementById('ledgerForm').addEventListener('submit', async function 
 
   const fotoFile = fotoUpload.files[0] || fotoCamera.files[0];
   if (!fotoFile) {
-    alert("❌ Foto nota wajib diunggah.");
+    alert("❌ Foto Pangkalan wajib diunggah.");
     loadingOverlay.classList.add('hidden');
     return;
   }
 
   const buktiFile = pembayaranVal === "Transfer" ? buktiInput.files[0] : null;
   if (pembayaranVal === "Transfer" && !buktiFile) {
-    alert("❌ Bukti transfer wajib diunggah.");
+    alert("❌ Foto Pangkalan Beserta Pemilik wajib diunggah.");
     loadingOverlay.classList.add('hidden');
     return;
   }
