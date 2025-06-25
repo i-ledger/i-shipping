@@ -92,13 +92,111 @@
     const API_POS = API_ENDPOINT + '?action=pos';
     const SUBMIT_URL = API_ENDPOINT;
 
-    // Semua deklarasi element tetap
+    const namaEl = document.getElementById('nama');
+    const uraianEl = document.getElementById('uraian');
+    const posEl = document.getElementById('pos');
+    const nominalEl = document.getElementById('nominal');
+    const brightgasEl = document.getElementById('brightgas');
+    const returEl = document.getElementById('retur');
+    const returFotoEl = document.getElementById('returFoto');
+    const returFotoContainer = document.getElementById('returFotoContainer');
+    const previewRetur = document.getElementById('previewRetur');
+    const fotoUpload = document.getElementById('fotoNotaUpload');
+    const fotoCamera = document.getElementById('fotoNotaCamera');
+    const buktiInput = document.getElementById('buktiTransfer');
+    const pembayaran = document.getElementById('pembayaran');
+    const buktiContainer = document.getElementById('buktiTransferContainer');
+    const previewNota = document.getElementById('previewNota');
+    const previewBukti = document.getElementById('previewBukti');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    fetch(API_NAMA).then(r => r.json()).then(data => {
+      data.forEach(n => {
+        const o = document.createElement('option');
+        o.value = o.textContent = n;
+        namaEl.appendChild(o);
+      });
+    });
+
+    let uraianMap = {};
+    fetch(API_POS).then(r => r.json()).then(data => {
+      data.forEach(row => {
+        uraianMap[row.uraian] = row.pos;
+        const o = document.createElement('option');
+        o.value = row.uraian;
+        document.getElementById('uraianList').appendChild(o);
+      });
+    });
+
+    uraianEl.addEventListener('input', () => {
+      posEl.value = uraianMap[uraianEl.value] || '';
+    });
+    pembayaran.addEventListener('change', () => {
+      buktiContainer.classList.toggle('hidden', pembayaran.value !== 'Ya');
+    });
+    returEl.addEventListener('input', () => {
+      returFotoContainer.classList.toggle('hidden', parseInt(returEl.value) === 0);
+    });
+    returFotoEl.addEventListener('change', () => {
+      previewRetur.src = URL.createObjectURL(returFotoEl.files[0]);
+      previewRetur.classList.remove('hidden');
+    });
+    fotoUpload.addEventListener('change', () => {
+      previewNota.src = URL.createObjectURL(fotoUpload.files[0]);
+      previewNota.classList.remove('hidden');
+    });
+    fotoCamera.addEventListener('change', () => {
+      previewNota.src = URL.createObjectURL(fotoCamera.files[0]);
+      previewNota.classList.remove('hidden');
+    });
+    buktiInput.addEventListener('change', () => {
+      previewBukti.src = URL.createObjectURL(buktiInput.files[0]);
+      previewBukti.classList.remove('hidden');
+    });
+
+    nominalEl.addEventListener('input', e => {
+      const v = e.target.value.replace(/\D/g, '');
+      e.target.value = new Intl.NumberFormat('id-ID').format(v);
+    });
 
     document.getElementById('ledgerForm').addEventListener('submit', async function (e) {
       e.preventDefault();
       loadingOverlay.classList.remove('hidden');
 
-      // Validasi dan ambil semua inputan tetap
+      const nama = namaEl.value;
+      const uraian = uraianEl.value;
+      const pos = posEl.value;
+      const nominal = nominalEl.value.replace(/\D/g, '');
+      const brightgas = parseInt(brightgasEl.value) || 0;
+      const retur = parseInt(returEl.value) || 0;
+      const pembayaranVal = pembayaran.value;
+
+      const fotoFile = fotoUpload.files[0] || fotoCamera.files[0];
+      if (!fotoFile) {
+        alert("❌ Foto Pangkalan wajib diunggah.");
+        loadingOverlay.classList.add('hidden');
+        return;
+      }
+
+      const buktiFile = pembayaranVal === "Ya" ? buktiInput.files[0] : null;
+      if (pembayaranVal === "Ya" && !buktiFile) {
+        alert("❌ Foto Pemilik Pangkalan wajib diunggah.");
+        loadingOverlay.classList.add('hidden');
+        return;
+      }
+
+      if (retur > 0 && !returFotoEl.files[0]) {
+        alert("❌ Bukti retur wajib diunggah jika ada retur.");
+        loadingOverlay.classList.add('hidden');
+        return;
+      }
+
+      const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
 
       try {
         const fotoNotaBase64 = await toBase64(fotoFile);
@@ -106,9 +204,7 @@
         const returFotoBase64 = returFotoEl.files[0] ? await toBase64(returFotoEl.files[0]) : "";
 
         navigator.geolocation.getCurrentPosition(async posGeo => {
-          const lat = posGeo.coords.latitude;
-          const lng = posGeo.coords.longitude;
-          const lokasi = `https://www.google.com/maps?q=${lat},${lng}`;
+          const lokasi = `${posGeo.coords.latitude},${posGeo.coords.longitude}`;
 
           const payload = {
             action: 'addTransaksi',
@@ -143,10 +239,8 @@
             alert('❌ Gagal: ' + result.message);
           }
           loadingOverlay.classList.add('hidden');
-        }, err => {
-          alert("❌ Gagal mengambil lokasi: " + err.message);
-          loadingOverlay.classList.add('hidden');
         });
+
       } catch (err) {
         alert('❌ Error koneksi: ' + err.message);
         loadingOverlay.classList.add('hidden');
