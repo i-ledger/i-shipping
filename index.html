@@ -8,20 +8,11 @@
   <style>
     .loader { border-top-color: #6366f1; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    video, canvas, img {
-      width: 100%;
-      max-height: 240px;
-      object-fit: cover;
-      border-radius: 0.5rem;
-      border: 1px solid #ddd;
-      margin-top: 0.5rem;
-      display: block;
-    }
-    .hidden { display: none; }
+    video { transform: none; }
+    canvas { display: none; }
   </style>
 </head>
 <body class="bg-gradient-to-br from-indigo-100 to-white min-h-screen flex items-center justify-center p-4 relative">
-
   <div id="loadingOverlay" class="hidden absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
   </div>
@@ -73,7 +64,10 @@
         <label class="block text-sm font-medium text-gray-600">Foto Pangkalan</label>
         <video id="videoNota" autoplay playsinline class="w-full h-60 object-cover rounded-lg"></video>
         <canvas id="canvasNota" class="hidden"></canvas>
-        <button type="button" id="snapNota" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
+        <button type="button" onclick="takeSnapshot('Nota')" id="snapNota" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
+<button type="button" onclick="retakePhoto('Nota')" id="retakeNota" class="mt-2 ml-2 bg-red-600 text-white px-4 py-2 rounded-lg hidden">Ambil Ulang</button>
+
+        
         <img id="previewNota" class="w-full mt-2 hidden rounded-lg border" />
       </div>
 
@@ -86,8 +80,9 @@
         <label class="block text-sm font-medium text-gray-600">Foto Retur</label>
         <video id="videoRetur" autoplay playsinline class="w-full h-60 object-cover rounded-lg"></video>
         <canvas id="canvasRetur" class="hidden"></canvas>
-        <button type="button" id="snapRetur" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
-        <button type="button" id="retakeRetur" class="mt-2 ml-2 bg-red-600 text-white px-4 py-2 rounded-lg hidden">Ambil Ulang</button>
+        <button type="button" onclick="takeSnapshot('Retur')" id="snapRetur" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
+<button type="button" onclick="retakePhoto('Retur')" id="retakeRetur" class="mt-2 ml-2 bg-red-600 text-white px-4 py-2 rounded-lg hidden">Ambil Ulang</button>
+
         <img id="previewRetur" class="w-full mt-2 hidden rounded-lg border" />
       </div>
 
@@ -103,8 +98,9 @@
         <label class="block text-sm font-medium text-gray-600">Foto Pemilik + Pangkalan</label>
         <video id="videoBukti" autoplay playsinline class="w-full h-60 object-cover rounded-lg"></video>
         <canvas id="canvasBukti" class="hidden"></canvas>
-        <button type="button" id="snapBukti" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
-        <button type="button" id="retakeBukti" class="mt-2 ml-2 bg-red-600 text-white px-4 py-2 rounded-lg hidden">Ambil Ulang</button>
+       <button type="button" onclick="takeSnapshot('Bukti')" id="snapBukti" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
+<button type="button" onclick="retakePhoto('Bukti')" id="retakeBukti" class="mt-2 ml-2 bg-red-600 text-white px-4 py-2 rounded-lg hidden">Ambil Ulang</button>
+
         <img id="previewBukti" class="w-full mt-2 hidden rounded-lg border" />
       </div>
 
@@ -114,6 +110,7 @@
   </div>
 
   <script src="config.js"></script>
+  <script src="kamera-kanvas.js"></script>
   <script>
     if (localStorage.getItem('loggedIn') !== 'true') window.location.href = 'login.html';
 
@@ -126,57 +123,27 @@
     const posEl = document.getElementById('pos');
     const nominalEl = document.getElementById('nominal');
     const returEl = document.getElementById('retur');
-
+    const returFotoEl = document.getElementById('returFoto');
     const returFotoContainer = document.getElementById('returFotoContainer');
-    const videoRetur = document.getElementById('videoRetur');
-    const canvasRetur = document.getElementById('canvasRetur');
-    const snapRetur = document.getElementById('snapRetur');
-    const retakeRetur = document.getElementById('retakeRetur');
     const previewRetur = document.getElementById('previewRetur');
-
+    const fotoUpload = document.getElementById('fotoNotaUpload');
+    const fotoCamera = document.getElementById('fotoNotaCamera');
+    const buktiInput = document.getElementById('buktiTransfer');
     const pembayaran = document.getElementById('pembayaran');
-    const buktiTransferContainer = document.getElementById('buktiTransferContainer');
-    const videoBukti = document.getElementById('videoBukti');
-    const canvasBukti = document.getElementById('canvasBukti');
-    const snapBukti = document.getElementById('snapBukti');
-    const retakeBukti = document.getElementById('retakeBukti');
+    const buktiContainer = document.getElementById('buktiTransferContainer');
+    const previewNota = document.getElementById('previewNota');
     const previewBukti = document.getElementById('previewBukti');
+    const loadingOverlay = document.getElementById('loadingOverlay');
 
     const brightgasYN = document.getElementById('brightgasYN');
     const brightgasContainer = document.getElementById('brightgasContainer');
     const brightgas12 = document.getElementById('brightgas12');
     const brightgas55 = document.getElementById('brightgas55');
 
-    const videoNota = document.getElementById('videoNota');
-    const canvasNota = document.getElementById('canvasNota');
-    const snapNota = document.getElementById('snapNota');
-    const previewNota = document.getElementById('previewNota');
+    brightgasYN.addEventListener('change', () => {
+      brightgasContainer.classList.toggle('hidden', brightgasYN.value !== 'Ya');
+    });
 
-    const loadingOverlay = document.getElementById('loadingOverlay');
-
-    let streamNota = null;
-    let streamRetur = null;
-    let streamBukti = null;
-
-    // Start Camera function
-    async function startCamera(videoEl) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
-        videoEl.srcObject = stream;
-        return stream;
-      } catch (err) {
-        alert('Gagal akses kamera: ' + err.message);
-        return null;
-      }
-    }
-    // Stop Camera function
-    function stopCamera(stream) {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-    }
-
-    // Load Nama Driver/Kernet
     fetch(API_NAMA).then(r => r.json()).then(data => {
       data.forEach(n => {
         const o = document.createElement('option');
@@ -185,7 +152,6 @@
       });
     });
 
-    // Load uraian dan pos
     let uraianMap = {};
     fetch(API_POS).then(r => r.json()).then(data => {
       data.forEach(row => {
@@ -200,147 +166,40 @@
       posEl.value = uraianMap[uraianEl.value] || '';
     });
 
-    brightgasYN.addEventListener('change', () => {
-      brightgasContainer.classList.toggle('hidden', brightgasYN.value !== 'Ya');
+    pembayaran.addEventListener('change', () => {
+      buktiContainer.classList.toggle('hidden', pembayaran.value !== 'Ya');
     });
 
-    // Toggle Bukti Transfer Container
-    pembayaran.addEventListener('change', async () => {
-      if (pembayaran.value === 'Ya') {
-        buktiTransferContainer.classList.remove('hidden');
-        if (!streamBukti) {
-          streamBukti = await startCamera(videoBukti);
-        }
-      } else {
-        buktiTransferContainer.classList.add('hidden');
-        previewBukti.classList.add('hidden');
-        retakeBukti.classList.add('hidden');
-        canvasBukti.classList.add('hidden');
-        videoBukti.classList.removeAttribute('srcObject');
-        stopCamera(streamBukti);
-        streamBukti = null;
-      }
+    returEl.addEventListener('input', () => {
+      returFotoContainer.classList.toggle('hidden', parseInt(returEl.value) === 0);
     });
 
-    // Toggle Retur Foto Container
-    returEl.addEventListener('input', async () => {
-      if (parseInt(returEl.value) > 0) {
-        returFotoContainer.classList.remove('hidden');
-        previewRetur.classList.add('hidden');
-        retakeRetur.classList.add('hidden');
-        canvasRetur.classList.add('hidden');
-        videoRetur.classList.removeAttribute('srcObject');
-        if (!streamRetur) {
-          streamRetur = await startCamera(videoRetur);
-        }
-      } else {
-        returFotoContainer.classList.add('hidden');
-        previewRetur.classList.add('hidden');
-        retakeRetur.classList.add('hidden');
-        canvasRetur.classList.add('hidden');
-        videoRetur.classList.removeAttribute('srcObject');
-        stopCamera(streamRetur);
-        streamRetur = null;
-      }
-    });
-
-    // Snap Nota
-    snapNota.addEventListener('click', () => {
-      if (!streamNota) return alert('Kamera Nota belum aktif!');
-      const ctx = canvasNota.getContext('2d');
-      canvasNota.width = videoNota.videoWidth;
-      canvasNota.height = videoNota.videoHeight;
-      ctx.drawImage(videoNota, 0, 0, canvasNota.width, canvasNota.height);
-
-      const dataURL = canvasNota.toDataURL('image/jpeg');
-      previewNota.src = dataURL;
-      previewNota.classList.remove('hidden');
-
-      canvasNota.classList.remove('hidden');
-      videoNota.classList.add('hidden');
-
-      stopCamera(streamNota);
-      streamNota = null;
-      window.fotoNotaBase64 = dataURL.split(',')[1];
-    });
-
-    // Start Nota Kamera on page load
-    window.addEventListener('load', async () => {
-      streamNota = await startCamera(videoNota);
-    });
-
-    // Snap Retur
-    snapRetur.addEventListener('click', () => {
-      if (!streamRetur) return alert('Kamera Retur belum aktif!');
-      const ctx = canvasRetur.getContext('2d');
-      canvasRetur.width = videoRetur.videoWidth;
-      canvasRetur.height = videoRetur.videoHeight;
-      ctx.drawImage(videoRetur, 0, 0, canvasRetur.width, canvasRetur.height);
-
-      const dataURL = canvasRetur.toDataURL('image/jpeg');
-      previewRetur.src = dataURL;
+    returFotoEl.addEventListener('change', () => {
+      previewRetur.src = URL.createObjectURL(returFotoEl.files[0]);
       previewRetur.classList.remove('hidden');
-
-      canvasRetur.classList.remove('hidden');
-      videoRetur.classList.add('hidden');
-
-      snapRetur.classList.add('hidden');
-      retakeRetur.classList.remove('hidden');
-
-      stopCamera(streamRetur);
-      streamRetur = null;
-      window.fotoReturBase64 = dataURL.split(',')[1];
     });
 
-    retakeRetur.addEventListener('click', async () => {
-      previewRetur.classList.add('hidden');
-      canvasRetur.classList.add('hidden');
-      retakeRetur.classList.add('hidden');
-      snapRetur.classList.remove('hidden');
-      videoRetur.classList.remove('hidden');
-      if (!streamRetur) streamRetur = await startCamera(videoRetur);
+    fotoUpload.addEventListener('change', () => {
+      previewNota.src = URL.createObjectURL(fotoUpload.files[0]);
+      previewNota.classList.remove('hidden');
     });
 
-    // Snap Bukti
-    snapBukti.addEventListener('click', () => {
-      if (!streamBukti) return alert('Kamera Bukti belum aktif!');
-      const ctx = canvasBukti.getContext('2d');
-      canvasBukti.width = videoBukti.videoWidth;
-      canvasBukti.height = videoBukti.videoHeight;
-      ctx.drawImage(videoBukti, 0, 0, canvasBukti.width, canvasBukti.height);
+    fotoCamera.addEventListener('change', () => {
+      previewNota.src = URL.createObjectURL(fotoCamera.files[0]);
+      previewNota.classList.remove('hidden');
+    });
 
-      const dataURL = canvasBukti.toDataURL('image/jpeg');
-      previewBukti.src = dataURL;
+    buktiInput.addEventListener('change', () => {
+      previewBukti.src = URL.createObjectURL(buktiInput.files[0]);
       previewBukti.classList.remove('hidden');
-
-      canvasBukti.classList.remove('hidden');
-      videoBukti.classList.add('hidden');
-
-      snapBukti.classList.add('hidden');
-      retakeBukti.classList.remove('hidden');
-
-      stopCamera(streamBukti);
-      streamBukti = null;
-      window.fotoBuktiBase64 = dataURL.split(',')[1];
     });
 
-    retakeBukti.addEventListener('click', async () => {
-      previewBukti.classList.add('hidden');
-      canvasBukti.classList.add('hidden');
-      retakeBukti.classList.add('hidden');
-      snapBukti.classList.remove('hidden');
-      videoBukti.classList.remove('hidden');
-      if (!streamBukti) streamBukti = await startCamera(videoBukti);
-    });
-
-    // Format nominal input as Rupiah style
     nominalEl.addEventListener('input', e => {
       const v = e.target.value.replace(/\D/g, '');
       e.target.value = new Intl.NumberFormat('id-ID').format(v);
     });
 
-    // Submit form
-    document.getElementById('ledgerForm').addEventListener('submit', async (e) => {
+    document.getElementById('ledgerForm').addEventListener('submit', async function (e) {
       e.preventDefault();
       loadingOverlay.classList.remove('hidden');
 
@@ -358,83 +217,81 @@
         brightgas = `${val12} Tbg (12kg) || ${val55} Tbg (5,5 KG)`;
       }
 
-      // Validasi foto Nota (ambil dari window.fotoNotaBase64)
-      if (!window.fotoNotaBase64) {
-        alert("❌ Foto Pangkalan wajib diambil menggunakan kamera.");
+      const fotoFile = fotoUpload.files[0] || fotoCamera.files[0];
+      if (!fotoFile) {
+        alert("❌ Foto Pangkalan wajib diunggah.");
         loadingOverlay.classList.add('hidden');
         return;
       }
 
-      // Validasi bukti jika Pemilik "Ya"
-      if (pembayaranVal === "Ya" && !window.fotoBuktiBase64) {
-        alert("❌ Foto Pemilik Pangkalan wajib diambil menggunakan kamera.");
+      const buktiFile = pembayaranVal === "Ya" ? buktiInput.files[0] : null;
+      if (pembayaranVal === "Ya" && !buktiFile) {
+        alert("❌ Foto Pemilik Pangkalan wajib diunggah.");
         loadingOverlay.classList.add('hidden');
         return;
       }
 
-      // Validasi retur foto jika retur > 0
-      if (retur > 0 && !window.fotoReturBase64) {
-        alert("❌ Bukti retur wajib diambil menggunakan kamera.");
+      if (retur > 0 && !returFotoEl.files[0]) {
+        alert("❌ Bukti retur wajib diunggah jika ada retur.");
         loadingOverlay.classList.add('hidden');
         return;
       }
 
-      // Ambil posisi GPS
-      navigator.geolocation.getCurrentPosition(async (posGeo) => {
-        const lokasi = `https://www.google.com/maps?q=${posGeo.coords.latitude},${posGeo.coords.longitude}`;
+      const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
 
-        const payload = {
-          action: 'addTransaksi',
-          sheet: 'Transaksi',
-          payload: {
-            nama, uraian, pos, nominal,
-            pembayaran: pembayaranVal,
-            fotoNota: window.fotoNotaBase64,
-            fotoBukti: window.fotoBuktiBase64 || "",
-            brightgas, retur, returFoto: window.fotoReturBase64 || "",
-            lokasi
-          }
-        };
+      try {
+        const fotoNotaBase64 = await toBase64(fotoFile);
+        const fotoBuktiBase64 = buktiFile ? await toBase64(buktiFile) : "";
+        const returFotoBase64 = returFotoEl.files[0] ? await toBase64(returFotoEl.files[0]) : "";
 
-        try {
+        navigator.geolocation.getCurrentPosition(async posGeo => {
+          const lokasi = `https://www.google.com/maps?q=${posGeo.coords.latitude},${posGeo.coords.longitude}`;
+
+          const payload = {
+            action: 'addTransaksi',
+            sheet: 'Transaksi',
+            payload: {
+              nama, uraian, pos, nominal,
+              pembayaran: pembayaranVal,
+              fotoNota: fotoNotaBase64,
+              fotoBukti: fotoBuktiBase64,
+              brightgas, retur, returFoto: returFotoBase64,
+              lokasi
+            }
+          };
+
           const res = await fetch(SUBMIT_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify(payload)
           });
+
           const result = await res.json();
           if (result.status === 'success') {
             alert('✅ Transaksi berhasil disimpan!');
             document.getElementById('ledgerForm').reset();
-
             previewNota.classList.add('hidden');
             previewBukti.classList.add('hidden');
             previewRetur.classList.add('hidden');
             posEl.value = '';
-            buktiTransferContainer.classList.add('hidden');
+            buktiContainer.classList.add('hidden');
             returFotoContainer.classList.add('hidden');
             brightgasContainer.classList.add('hidden');
-
-            // Reset foto base64
-            window.fotoNotaBase64 = null;
-            window.fotoBuktiBase64 = null;
-            window.fotoReturBase64 = null;
-
-            // Restart kamera Nota
-            if (!streamNota) streamNota = await startCamera(videoNota);
           } else {
             alert('❌ Gagal: ' + result.message);
           }
-        } catch (err) {
-          alert('❌ Error koneksi: ' + err.message);
-        } finally {
           loadingOverlay.classList.add('hidden');
-        }
-      }, (error) => {
-        alert('❌ Gagal mendapatkan lokasi: ' + error.message);
-        loadingOverlay.classList.add('hidden');
-      });
+        });
 
+      } catch (err) {
+        alert('❌ Error koneksi: ' + err.message);
+        loadingOverlay.classList.add('hidden');
+      }
     });
 
     setTimeout(() => localStorage.removeItem('loggedIn'), 300000);
