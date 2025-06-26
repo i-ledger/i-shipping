@@ -41,7 +41,6 @@
         <label for="nominal" class="block text-sm font-medium text-gray-600">Jumlah Pengiriman</label>
         <input type="text" id="nominal" required class="mt-2 block w-full border border-gray-300 rounded-lg p-3" />
       </div>
-
       <div>
         <label for="brightgasYN" class="block text-sm font-medium text-gray-600">Apakah Driver Mengirim Bright Gas?</label>
         <select id="brightgasYN" class="mt-2 block w-full border border-gray-300 rounded-lg p-3">
@@ -60,13 +59,12 @@
         </div>
       </div>
 
-      <!-- Kamera Pangkalan -->
+      <!-- Foto Pangkalan via Kamera Belakang (Landscape) -->
       <div>
         <label class="block text-sm font-medium text-gray-600">Foto Pangkalan</label>
         <video id="videoNota" autoplay playsinline class="w-full h-60 object-cover rounded-lg"></video>
         <canvas id="canvasNota" class="hidden"></canvas>
         <button type="button" onclick="takeSnapshot('Nota')" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
-        <button type="button" id="retryNota" onclick="retrySnapshot('Nota')" class="mt-2 bg-yellow-500 text-white px-4 py-2 rounded-lg hidden">Ambil Ulang</button>
         <img id="previewNota" class="w-full mt-2 hidden rounded-lg border" />
       </div>
 
@@ -80,13 +78,12 @@
         <video id="videoRetur" autoplay playsinline class="w-full h-60 object-cover rounded-lg"></video>
         <canvas id="canvasRetur" class="hidden"></canvas>
         <button type="button" onclick="takeSnapshot('Retur')" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
-        <button type="button" id="retryRetur" onclick="retrySnapshot('Retur')" class="mt-2 bg-yellow-500 text-white px-4 py-2 rounded-lg hidden">Ambil Ulang</button>
         <img id="previewRetur" class="w-full mt-2 hidden rounded-lg border" />
       </div>
 
-      <!-- Bukti Pemilik -->
+      <!-- Bukti Transfer jika Pemilik Ada -->
       <div>
-        <label for="pembayaran" class="block text-sm font-medium text-gray-600">Apakah Pemilik Pangkalan berada di lokasi?</label>
+        <label for="pembayaran" class="block text-sm font-medium text-gray-600">Apakah Pemilik Pangkalan berada dilokasi Pangkalan?</label>
         <select id="pembayaran" class="mt-2 block w-full border border-gray-300 rounded-lg p-3">
           <option value="Tidak">Tidak</option>
           <option value="Ya">Ya</option>
@@ -97,10 +94,10 @@
         <video id="videoBukti" autoplay playsinline class="w-full h-60 object-cover rounded-lg"></video>
         <canvas id="canvasBukti" class="hidden"></canvas>
         <button type="button" onclick="takeSnapshot('Bukti')" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
-        <button type="button" id="retryBukti" onclick="retrySnapshot('Bukti')" class="mt-2 bg-yellow-500 text-white px-4 py-2 rounded-lg hidden">Ambil Ulang</button>
         <img id="previewBukti" class="w-full mt-2 hidden rounded-lg border" />
       </div>
 
+      <!-- Tombol Submit -->
       <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg">Submit</button>
     </form>
   </div>
@@ -119,8 +116,18 @@
     const posEl = document.getElementById('pos');
     const nominalEl = document.getElementById('nominal');
     const returEl = document.getElementById('retur');
+    const returFotoEl = document.getElementById('returFoto');
+    const returFotoContainer = document.getElementById('returFotoContainer');
+    const previewRetur = document.getElementById('previewRetur');
+    const fotoUpload = document.getElementById('fotoNotaUpload');
+    const fotoCamera = document.getElementById('fotoNotaCamera');
+    const buktiInput = document.getElementById('buktiTransfer');
     const pembayaran = document.getElementById('pembayaran');
+    const buktiContainer = document.getElementById('buktiTransferContainer');
+    const previewNota = document.getElementById('previewNota');
+    const previewBukti = document.getElementById('previewBukti');
     const loadingOverlay = document.getElementById('loadingOverlay');
+
     const brightgasYN = document.getElementById('brightgasYN');
     const brightgasContainer = document.getElementById('brightgasContainer');
     const brightgas12 = document.getElementById('brightgas12');
@@ -152,6 +159,34 @@
       posEl.value = uraianMap[uraianEl.value] || '';
     });
 
+    pembayaran.addEventListener('change', () => {
+      buktiContainer.classList.toggle('hidden', pembayaran.value !== 'Ya');
+    });
+
+    returEl.addEventListener('input', () => {
+      returFotoContainer.classList.toggle('hidden', parseInt(returEl.value) === 0);
+    });
+
+    returFotoEl.addEventListener('change', () => {
+      previewRetur.src = URL.createObjectURL(returFotoEl.files[0]);
+      previewRetur.classList.remove('hidden');
+    });
+
+    fotoUpload.addEventListener('change', () => {
+      previewNota.src = URL.createObjectURL(fotoUpload.files[0]);
+      previewNota.classList.remove('hidden');
+    });
+
+    fotoCamera.addEventListener('change', () => {
+      previewNota.src = URL.createObjectURL(fotoCamera.files[0]);
+      previewNota.classList.remove('hidden');
+    });
+
+    buktiInput.addEventListener('change', () => {
+      previewBukti.src = URL.createObjectURL(buktiInput.files[0]);
+      previewBukti.classList.remove('hidden');
+    });
+
     nominalEl.addEventListener('input', e => {
       const v = e.target.value.replace(/\D/g, '');
       e.target.value = new Intl.NumberFormat('id-ID').format(v);
@@ -175,62 +210,81 @@
         brightgas = `${val12} Tbg (12kg) || ${val55} Tbg (5,5 KG)`;
       }
 
-      const fotoNotaBase64 = window.fotoNotaBase64;
-      const fotoBuktiBase64 = pembayaranVal === "Ya" ? window.fotoBuktiBase64 : "";
-      const returFotoBase64 = retur > 0 ? window.fotoReturBase64 : "";
-
-      if (!fotoNotaBase64) {
-        alert("❌ Foto Pangkalan wajib diambil.");
-        loadingOverlay.classList.add('hidden');
-        return;
-      }
-      if (pembayaranVal === "Ya" && !fotoBuktiBase64) {
-        alert("❌ Foto Pemilik wajib diambil.");
-        loadingOverlay.classList.add('hidden');
-        return;
-      }
-      if (retur > 0 && !returFotoBase64) {
-        alert("❌ Foto Retur wajib diambil.");
+      const fotoFile = fotoUpload.files[0] || fotoCamera.files[0];
+      if (!fotoFile) {
+        alert("❌ Foto Pangkalan wajib diunggah.");
         loadingOverlay.classList.add('hidden');
         return;
       }
 
-      navigator.geolocation.getCurrentPosition(async posGeo => {
-        const lokasi = `https://www.google.com/maps?q=${posGeo.coords.latitude},${posGeo.coords.longitude}`;
-        const payload = {
-          action: 'addTransaksi',
-          sheet: 'Transaksi',
-          payload: {
-            nama, uraian, pos, nominal,
-            pembayaran: pembayaranVal,
-            fotoNota: fotoNotaBase64,
-            fotoBukti: fotoBuktiBase64,
-            brightgas, retur, returFoto: returFotoBase64,
-            lokasi
+      const buktiFile = pembayaranVal === "Ya" ? buktiInput.files[0] : null;
+      if (pembayaranVal === "Ya" && !buktiFile) {
+        alert("❌ Foto Pemilik Pangkalan wajib diunggah.");
+        loadingOverlay.classList.add('hidden');
+        return;
+      }
+
+      if (retur > 0 && !returFotoEl.files[0]) {
+        alert("❌ Bukti retur wajib diunggah jika ada retur.");
+        loadingOverlay.classList.add('hidden');
+        return;
+      }
+
+      const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      try {
+        const fotoNotaBase64 = await toBase64(fotoFile);
+        const fotoBuktiBase64 = buktiFile ? await toBase64(buktiFile) : "";
+        const returFotoBase64 = returFotoEl.files[0] ? await toBase64(returFotoEl.files[0]) : "";
+
+        navigator.geolocation.getCurrentPosition(async posGeo => {
+          const lokasi = `https://www.google.com/maps?q=${posGeo.coords.latitude},${posGeo.coords.longitude}`;
+
+          const payload = {
+            action: 'addTransaksi',
+            sheet: 'Transaksi',
+            payload: {
+              nama, uraian, pos, nominal,
+              pembayaran: pembayaranVal,
+              fotoNota: fotoNotaBase64,
+              fotoBukti: fotoBuktiBase64,
+              brightgas, retur, returFoto: returFotoBase64,
+              lokasi
+            }
+          };
+
+          const res = await fetch(SUBMIT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(payload)
+          });
+
+          const result = await res.json();
+          if (result.status === 'success') {
+            alert('✅ Transaksi berhasil disimpan!');
+            document.getElementById('ledgerForm').reset();
+            previewNota.classList.add('hidden');
+            previewBukti.classList.add('hidden');
+            previewRetur.classList.add('hidden');
+            posEl.value = '';
+            buktiContainer.classList.add('hidden');
+            returFotoContainer.classList.add('hidden');
+            brightgasContainer.classList.add('hidden');
+          } else {
+            alert('❌ Gagal: ' + result.message);
           }
-        };
-
-        const res = await fetch(SUBMIT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify(payload)
+          loadingOverlay.classList.add('hidden');
         });
 
-        const result = await res.json();
-        if (result.status === 'success') {
-          alert('✅ Transaksi berhasil disimpan!');
-          document.getElementById('ledgerForm').reset();
-          posEl.value = '';
-          document.querySelectorAll('img').forEach(i => i.classList.add('hidden'));
-          document.querySelectorAll('canvas').forEach(c => c.classList.add('hidden'));
-        } else {
-          alert('❌ Gagal: ' + result.message);
-        }
+      } catch (err) {
+        alert('❌ Error koneksi: ' + err.message);
         loadingOverlay.classList.add('hidden');
-      }, err => {
-        alert("❌ Gagal ambil lokasi: " + err.message);
-        loadingOverlay.classList.add('hidden');
-      });
+      }
     });
 
     setTimeout(() => localStorage.removeItem('loggedIn'), 300000);
