@@ -40,9 +40,20 @@ function takeSnapshot(key) {
   const retakeBtn = document.getElementById(cameras[key].retakeBtnEl);
 
   const context = canvas.getContext('2d');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  // Tentukan ukuran crop yang diinginkan (misal 640x480)
+  const cropWidth = 640;
+  const cropHeight = 480;
+
+  // Tentukan posisi crop di tengah video asli
+  const sx = (video.videoWidth - cropWidth) / 2;
+  const sy = (video.videoHeight - cropHeight) / 2;
+
+  canvas.width = cropWidth;
+  canvas.height = cropHeight;
+
+  // crop dan draw image dari video ke canvas
+  context.drawImage(video, sx, sy, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
 
   const dataURL = canvas.toDataURL('image/jpeg');
   preview.src = dataURL;
@@ -54,6 +65,7 @@ function takeSnapshot(key) {
 
   window[`foto${key}Base64`] = dataURL.split(',')[1];
 }
+
 
 function retakePhoto(key) {
   const video = document.getElementById(cameras[key].videoEl);
