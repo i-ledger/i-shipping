@@ -81,22 +81,24 @@ function addRemoveButton(previewEl, key) {
   btn.onclick = (e) => {
     e.preventDefault();
 
-    // Hilangkan gambar preview
+    // Sembunyikan preview
     previewEl.src = '';
     previewEl.classList.add('hidden');
 
-    // Tampilkan kembali video kamera
+    // Tampilkan kembali video
     const video = document.getElementById(cameras[key].videoEl);
     video.classList.remove('hidden');
-
-    // Aktifkan ulang kamera
     startCamera(key);
 
-    // Tampilkan kembali tombol ambil foto
+    // Cek tombol ambil foto
     const takeBtn = document.getElementById(`ambil${key}`);
-    if (takeBtn) takeBtn.classList.remove('hidden');
+    if (takeBtn) {
+      console.log(`Menampilkan kembali tombol ambil foto: ambil${key}`);
+      takeBtn.classList.remove('hidden');
+    } else {
+      console.warn(`⚠️ Tombol ambil${key} tidak ditemukan`);
+    }
 
-    // Hapus foto dari memory
     delete window[`foto${key}Base64`];
 
     // Hapus tombol ❌
@@ -106,6 +108,7 @@ function addRemoveButton(previewEl, key) {
   previewEl.parentElement.style.position = 'relative';
   previewEl.parentElement.appendChild(btn);
 }
+
 
 
 function removeExistingRemoveButton(previewEl) {
@@ -157,4 +160,10 @@ window.addEventListener('DOMContentLoaded', () => {
   preview.classList.add('hidden');
   video.classList.remove('hidden');
   startCamera('Nota');
+  ['Nota', 'Retur', 'Bukti'].forEach(k => {
+  const btn = document.getElementById(`ambil${k}`);
+  if (!btn) console.warn(`Tombol ambil${k} tidak ditemukan di HTML`);
+});
+
+  
 });
