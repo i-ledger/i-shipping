@@ -1,5 +1,3 @@
-// kamera-kanvas.js
-
 const cameras = {
   Nota: { videoEl: 'videoNota', canvasEl: 'canvasNota', previewEl: 'previewNota' },
   Retur: { videoEl: 'videoRetur', canvasEl: 'canvasRetur', previewEl: 'previewRetur' },
@@ -9,7 +7,7 @@ const cameras = {
 const constraints = {
   audio: false,
   video: {
-    facingMode: { ideal: 'environment' }, // kamera belakang
+    facingMode: { ideal: 'environment' },
     width: { ideal: 1280 },
     height: { ideal: 720 }
   }
@@ -40,22 +38,20 @@ function takeSnapshot(key) {
   const canvas = document.getElementById(cameras[key].canvasEl);
   const preview = document.getElementById(cameras[key].previewEl);
 
-  // Set ukuran tetap 640x480 (crop tengah dari video)
   const width = 640;
   const height = 480;
   canvas.width = width;
   canvas.height = height;
 
   const context = canvas.getContext('2d');
-  // Hitung offset untuk crop tengah dari video asli
   const videoRatio = video.videoWidth / video.videoHeight;
   const cropWidth = video.videoHeight * (width / height);
   const cropX = (video.videoWidth - cropWidth) / 2;
 
   context.drawImage(
     video,
-    cropX, 0, cropWidth, video.videoHeight, // sumber (crop tengah)
-    0, 0, width, height // target canvas
+    cropX, 0, cropWidth, video.videoHeight,
+    0, 0, width, height
   );
 
   const dataURL = canvas.toDataURL('image/jpeg');
@@ -65,6 +61,34 @@ function takeSnapshot(key) {
 
   stopCamera(key);
   window[`foto${key}Base64`] = dataURL.split(',')[1];
+
+  addRemoveButton(preview, key);
+}
+
+function addRemoveButton(previewEl, key) {
+  removeExistingRemoveButton(previewEl);
+
+  const btn = document.createElement('button');
+  btn.innerHTML = '❌';
+  btn.className = 'absolute top-0 right-0 mt-1 mr-1 bg-red-600 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center';
+  btn.style.zIndex = '10';
+  btn.onclick = (e) => {
+    e.preventDefault();
+    previewEl.src = '';
+    previewEl.classList.add('hidden');
+    document.getElementById(cameras[key].videoEl).classList.remove('hidden');
+    startCamera(key);
+    delete window[`foto${key}Base64`];
+    btn.remove();
+  };
+
+  previewEl.parentElement.style.position = 'relative';
+  previewEl.parentElement.appendChild(btn);
+}
+
+function removeExistingRemoveButton(previewEl) {
+  const existing = previewEl.parentElement.querySelector('button');
+  if (existing) existing.remove();
 }
 
 // Event untuk Retur
