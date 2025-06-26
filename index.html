@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>i-Shipping SES_GS</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .loader { border-top-color: #6366f1; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    video { transform: scaleX(-1); }
+    canvas { display: none; }
+  </style>
 </head>
 <body class="bg-gradient-to-br from-indigo-100 to-white min-h-screen flex items-center justify-center p-4 relative">
   <div id="loadingOverlay" class="hidden absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -52,28 +58,30 @@
           <input type="number" id="brightgas55" min="0" class="mt-2 block w-full border border-gray-300 rounded-lg shadow-sm p-3" value="0" />
         </div>
       </div>
+
+      <!-- Foto Pangkalan via Kamera Belakang (Landscape) -->
+      <div>
+        <label class="block text-sm font-medium text-gray-600">Foto Pangkalan</label>
+        <video id="videoNota" autoplay playsinline class="w-full h-60 object-cover rounded-lg"></video>
+        <canvas id="canvasNota" class="hidden"></canvas>
+        <button type="button" onclick="takeSnapshot('Nota')" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
+        <img id="previewNota" class="w-full mt-2 hidden rounded-lg border" />
+      </div>
+
+      <!-- Retur -->
       <div>
         <label for="retur" class="block text-sm font-medium text-gray-600">Retur</label>
         <input type="number" id="retur" required min="0" class="mt-2 block w-full border border-gray-300 rounded-lg shadow-sm p-3" value="0" />
       </div>
       <div id="returFotoContainer" class="hidden">
-        <label class="block text-sm font-medium text-gray-600">Upload Bukti Pengiriman Retur</label>
-        <input type="file" accept="image/*" id="returFoto" class="hidden" />
-        <div class="mt-2 flex items-center space-x-2">
-          <label for="returFoto" class="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg">Upload Retur</label>
-        </div>
-        <img id="previewRetur" class="w-70 h-70 object-cover rounded-lg border hidden" />
+        <label class="block text-sm font-medium text-gray-600">Foto Retur</label>
+        <video id="videoRetur" autoplay playsinline class="w-full h-60 object-cover rounded-lg"></video>
+        <canvas id="canvasRetur" class="hidden"></canvas>
+        <button type="button" onclick="takeSnapshot('Retur')" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
+        <img id="previewRetur" class="w-full mt-2 hidden rounded-lg border" />
       </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-600">Foto Pangkalan</label>
-        <input type="file" accept="image/*" id="fotoNotaUpload" class="hidden" />
-        <input type="file" accept="image/*" capture="environment" id="fotoNotaCamera" class="hidden" />
-        <div class="mt-2 flex items-center space-x-2">
-          <label for="fotoNotaUpload" class="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg">Galeri</label>
-          <label for="fotoNotaCamera" class="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg">Kamera</label>
-        </div>
-        <img id="previewNota" class="w-70 h-70 object-cover rounded-lg border hidden" />
-      </div>
+
+      <!-- Bukti Transfer jika Pemilik Ada -->
       <div>
         <label for="pembayaran" class="block text-sm font-medium text-gray-600">Apakah Pemilik Pangkalan berada dilokasi Pangkalan?</label>
         <select id="pembayaran" class="mt-2 block w-full border border-gray-300 rounded-lg p-3">
@@ -82,23 +90,20 @@
         </select>
       </div>
       <div id="buktiTransferContainer" class="hidden">
-        <label for="buktiTransfer" class="block text-sm font-medium text-gray-600">Foto Pangkalan Beserta Pemilik Pangkalan</label>
-        <div class="mt-2 flex items-center space-x-2">
-          <input type="file" accept="image/*" id="buktiTransfer" class="hidden" />
-          <label for="buktiTransfer" class="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg">Upload Bukti</label>
-        </div>
-        <img id="previewBukti" class="w-70 h-70 object-cover rounded-lg border hidden" />
+        <label class="block text-sm font-medium text-gray-600">Foto Pemilik + Pangkalan</label>
+        <video id="videoBukti" autoplay playsinline class="w-full h-60 object-cover rounded-lg"></video>
+        <canvas id="canvasBukti" class="hidden"></canvas>
+        <button type="button" onclick="takeSnapshot('Bukti')" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
+        <img id="previewBukti" class="w-full mt-2 hidden rounded-lg border" />
       </div>
+
+      <!-- Tombol Submit -->
       <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg">Submit</button>
     </form>
   </div>
 
-  <style>
-    .loader { border-top-color: #6366f1; animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
-
   <script src="config.js"></script>
+  <script src="kamera-kanvas.js"></script>
   <script>
     if (localStorage.getItem('loggedIn') !== 'true') window.location.href = 'login.html';
 
