@@ -1,5 +1,3 @@
-// kamera-kanvas.js
-
 const cameras = {
   Nota: { videoEl: 'videoNota', canvasEl: 'canvasNota', previewEl: 'previewNota', retryBtn: 'retryNota', container: 'notaKameraContainer' },
   Retur: { videoEl: 'videoRetur', canvasEl: 'canvasRetur', previewEl: 'previewRetur', retryBtn: 'retryRetur', container: 'returFotoContainer' },
@@ -41,25 +39,10 @@ function takeSnapshot(key) {
   const preview = document.getElementById(cameras[key].previewEl);
   const retryBtn = document.getElementById(cameras[key].retryBtn);
 
-  const videoWidth = video.videoWidth;
-  const videoHeight = video.videoHeight;
-
   const context = canvas.getContext('2d');
-
-  // Orientasi landscape: pastikan width lebih besar
-  canvas.width = Math.max(videoWidth, videoHeight);
-  canvas.height = Math.min(videoWidth, videoHeight);
-
-  context.save();
-  if (videoHeight > videoWidth) {
-    // rotasi dari portrait ke landscape
-    context.translate(canvas.width / 2, canvas.height / 2);
-    context.rotate(-90 * Math.PI / 180);
-    context.drawImage(video, -video.videoHeight / 2, -video.videoWidth / 2, video.videoHeight, video.videoWidth);
-  } else {
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-  }
-  context.restore();
+  canvas.width = 1280;
+  canvas.height = 720;
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
   const dataURL = canvas.toDataURL('image/jpeg');
   preview.src = dataURL;
@@ -98,16 +81,18 @@ function toggleCameraSection(key, show) {
   }
 }
 
+const returInput = document.getElementById('retur');
+returInput.addEventListener('input', (e) => {
+  const val = parseInt(e.target.value);
+  toggleCameraSection('Retur', val > 0);
+});
+
+const pembayaranInput = document.getElementById('pembayaran');
+pembayaranInput.addEventListener('change', (e) => {
+  const show = e.target.value === 'Ya';
+  toggleCameraSection('Bukti', show);
+});
+
 window.addEventListener('DOMContentLoaded', () => {
   toggleCameraSection('Nota', true);
-
-  document.getElementById('retur').addEventListener('input', (e) => {
-    const val = parseInt(e.target.value);
-    toggleCameraSection('Retur', val > 0);
-  });
-
-  document.getElementById('pembayaran').addEventListener('change', (e) => {
-    const show = e.target.value === 'Ya';
-    toggleCameraSection('Bukti', show);
-  });
 });
