@@ -72,36 +72,29 @@ if (takeBtn) takeBtn.classList.add('hidden');
 function addRemoveButton(previewEl, key) {
   removeExistingRemoveButton(previewEl);
 
-  const btn = document.createElement('div');
+  const btn = document.createElement('button'); // Ganti dari div ke button
+  btn.type = 'button';  // Supaya gak submit form
   btn.innerHTML = '❌';
-  btn.setAttribute('role', 'button');
   btn.className = 'absolute top-0 right-0 mt-1 mr-1 bg-red-600 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center cursor-pointer';
   btn.style.zIndex = '10';
 
   btn.onclick = (e) => {
     e.preventDefault();
 
-    // Sembunyikan preview
     previewEl.src = '';
     previewEl.classList.add('hidden');
 
-    // Tampilkan kembali video
     const video = document.getElementById(cameras[key].videoEl);
     video.classList.remove('hidden');
     startCamera(key);
 
-    // Cek tombol ambil foto
     const takeBtn = document.getElementById(`ambil${key}`);
     if (takeBtn) {
-      console.log(`Menampilkan kembali tombol ambil foto: ambil${key}`);
       takeBtn.classList.remove('hidden');
-    } else {
-      console.warn(`⚠️ Tombol ambil${key} tidak ditemukan`);
     }
 
     delete window[`foto${key}Base64`];
 
-    // Hapus tombol ❌
     btn.remove();
   };
 
@@ -111,10 +104,12 @@ function addRemoveButton(previewEl, key) {
 
 
 
+
 function removeExistingRemoveButton(previewEl) {
   const existing = previewEl.parentElement.querySelector('button');
   if (existing) existing.remove();
 }
+
 
 // Event untuk Retur
 const returInput = document.getElementById('retur');
