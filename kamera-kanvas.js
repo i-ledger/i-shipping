@@ -64,6 +64,9 @@ function takeSnapshot(key) {
   window[`foto${key}Base64`] = dataURL.split(',')[1];
 
   addRemoveButton(preview, key);
+  const takeBtn = document.getElementById(`ambil${key}`);
+if (takeBtn) takeBtn.classList.add('hidden');
+
 }
 
 function addRemoveButton(previewEl, key) {
@@ -77,8 +80,15 @@ function addRemoveButton(previewEl, key) {
     e.preventDefault();
     previewEl.src = '';
     previewEl.classList.add('hidden');
-    document.getElementById(cameras[key].videoEl).classList.remove('hidden');
+
+    const video = document.getElementById(cameras[key].videoEl);
+    video.classList.remove('hidden');
     startCamera(key);
+
+    // Tampilkan kembali tombol ambil foto
+    const takeBtn = document.getElementById(`ambil${key}`);
+    if (takeBtn) takeBtn.classList.remove('hidden');
+
     delete window[`foto${key}Base64`];
     btn.remove();
   };
@@ -86,6 +96,7 @@ function addRemoveButton(previewEl, key) {
   previewEl.parentElement.style.position = 'relative';
   previewEl.parentElement.appendChild(btn);
 }
+
 
 function removeExistingRemoveButton(previewEl) {
   const existing = previewEl.parentElement.querySelector('button');
