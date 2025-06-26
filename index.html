@@ -23,7 +23,7 @@
 
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
     <h2 class="text-3xl font-bold text-indigo-700 mb-6 text-center">i-Shipping SES_GS</h2>
-    <form id="ledgerForm" class="space-y-6">
+    <form id="ledgerForm" class="space-y-6" autocomplete="off">
       <div>
         <label for="nama" class="block text-sm font-medium text-gray-600">Driver/Kernet</label>
         <select id="nama" required class="mt-2 block w-full border border-gray-300 rounded-lg shadow-sm p-3"></select>
@@ -65,9 +65,7 @@
         <video id="videoNota" autoplay playsinline class="w-full h-60 object-cover rounded-lg"></video>
         <canvas id="canvasNota" class="hidden"></canvas>
         <button type="button" onclick="takeSnapshot('Nota')" id="snapNota" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
-<button type="button" onclick="retakePhoto('Nota')" id="retakeNota" class="mt-2 ml-2 bg-red-600 text-white px-4 py-2 rounded-lg hidden">Ambil Ulang</button>
-
-        
+        <button type="button" onclick="retakePhoto('Nota')" id="retakeNota" class="mt-2 ml-2 bg-red-600 text-white px-4 py-2 rounded-lg hidden">Ambil Ulang</button>
         <img id="previewNota" class="w-full mt-2 hidden rounded-lg border" />
       </div>
 
@@ -81,8 +79,7 @@
         <video id="videoRetur" autoplay playsinline class="w-full h-60 object-cover rounded-lg"></video>
         <canvas id="canvasRetur" class="hidden"></canvas>
         <button type="button" onclick="takeSnapshot('Retur')" id="snapRetur" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
-<button type="button" onclick="retakePhoto('Retur')" id="retakeRetur" class="mt-2 ml-2 bg-red-600 text-white px-4 py-2 rounded-lg hidden">Ambil Ulang</button>
-
+        <button type="button" onclick="retakePhoto('Retur')" id="retakeRetur" class="mt-2 ml-2 bg-red-600 text-white px-4 py-2 rounded-lg hidden">Ambil Ulang</button>
         <img id="previewRetur" class="w-full mt-2 hidden rounded-lg border" />
       </div>
 
@@ -98,9 +95,8 @@
         <label class="block text-sm font-medium text-gray-600">Foto Pemilik + Pangkalan</label>
         <video id="videoBukti" autoplay playsinline class="w-full h-60 object-cover rounded-lg"></video>
         <canvas id="canvasBukti" class="hidden"></canvas>
-       <button type="button" onclick="takeSnapshot('Bukti')" id="snapBukti" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
-<button type="button" onclick="retakePhoto('Bukti')" id="retakeBukti" class="mt-2 ml-2 bg-red-600 text-white px-4 py-2 rounded-lg hidden">Ambil Ulang</button>
-
+        <button type="button" onclick="takeSnapshot('Bukti')" id="snapBukti" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
+        <button type="button" onclick="retakePhoto('Bukti')" id="retakeBukti" class="mt-2 ml-2 bg-red-600 text-white px-4 py-2 rounded-lg hidden">Ambil Ulang</button>
         <img id="previewBukti" class="w-full mt-2 hidden rounded-lg border" />
       </div>
 
@@ -118,32 +114,27 @@
     const API_POS = API_ENDPOINT + '?action=pos';
     const SUBMIT_URL = API_ENDPOINT;
 
+    const cameras = {
+      Nota: { videoEl: 'videoNota', canvasEl: 'canvasNota', previewEl: 'previewNota', retakeBtnEl: 'retakeNota' },
+      Retur: { videoEl: 'videoRetur', canvasEl: 'canvasRetur', previewEl: 'previewRetur', retakeBtnEl: 'retakeRetur' },
+      Bukti: { videoEl: 'videoBukti', canvasEl: 'canvasBukti', previewEl: 'previewBukti', retakeBtnEl: 'retakeBukti' },
+    };
+
     const namaEl = document.getElementById('nama');
     const uraianEl = document.getElementById('uraian');
     const posEl = document.getElementById('pos');
     const nominalEl = document.getElementById('nominal');
     const returEl = document.getElementById('retur');
-    const returFotoEl = document.getElementById('returFoto');
     const returFotoContainer = document.getElementById('returFotoContainer');
-    const previewRetur = document.getElementById('previewRetur');
-    const fotoUpload = document.getElementById('fotoNotaUpload');
-    const fotoCamera = document.getElementById('fotoNotaCamera');
-    const buktiInput = document.getElementById('buktiTransfer');
     const pembayaran = document.getElementById('pembayaran');
     const buktiContainer = document.getElementById('buktiTransferContainer');
-    const previewNota = document.getElementById('previewNota');
-    const previewBukti = document.getElementById('previewBukti');
-    const loadingOverlay = document.getElementById('loadingOverlay');
-
     const brightgasYN = document.getElementById('brightgasYN');
     const brightgasContainer = document.getElementById('brightgasContainer');
     const brightgas12 = document.getElementById('brightgas12');
     const brightgas55 = document.getElementById('brightgas55');
+    const loadingOverlay = document.getElementById('loadingOverlay');
 
-    brightgasYN.addEventListener('change', () => {
-      brightgasContainer.classList.toggle('hidden', brightgasYN.value !== 'Ya');
-    });
-
+    // Load nama driver/kernet
     fetch(API_NAMA).then(r => r.json()).then(data => {
       data.forEach(n => {
         const o = document.createElement('option');
@@ -152,6 +143,7 @@
       });
     });
 
+    // Load uraian & pos
     let uraianMap = {};
     fetch(API_POS).then(r => r.json()).then(data => {
       data.forEach(row => {
@@ -166,39 +158,141 @@
       posEl.value = uraianMap[uraianEl.value] || '';
     });
 
-    pembayaran.addEventListener('change', () => {
-      buktiContainer.classList.toggle('hidden', pembayaran.value !== 'Ya');
+    brightgasYN.addEventListener('change', () => {
+      brightgasContainer.classList.toggle('hidden', brightgasYN.value !== 'Ya');
     });
 
+    // Fungsi kamera (start/stop)
+    async function startCamera(key) {
+      const video = document.getElementById(cameras[key].videoEl);
+      try {
+        const constraints = {
+          audio: false,
+          video: {
+            facingMode: { exact: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        };
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = stream;
+      } catch (err) {
+        alert('Tidak bisa mengakses kamera: ' + err.message);
+      }
+    }
+
+    function stopCamera(key) {
+      const video = document.getElementById(cameras[key].videoEl);
+      const stream = video.srcObject;
+      if (stream) {
+        const tracks = stream.getTracks();
+        tracks.forEach(track => track.stop());
+        video.srcObject = null;
+      }
+    }
+
+    // Fungsi ambil foto
+    function takeSnapshot(key) {
+      const video = document.getElementById(cameras[key].videoEl);
+      const canvas = document.getElementById(cameras[key].canvasEl);
+      const preview = document.getElementById(cameras[key].previewEl);
+      const retakeBtn = document.getElementById(cameras[key].retakeBtnEl);
+
+      const context = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const dataURL = canvas.toDataURL('image/jpeg');
+      preview.src = dataURL;
+      preview.classList.remove('hidden');
+      video.classList.add('hidden');
+      retakeBtn.classList.remove('hidden');
+
+      stopCamera(key);
+
+      window[`foto${key}Base64`] = dataURL.split(',')[1];
+    }
+
+    // Fungsi ambil ulang foto
+    function retakePhoto(key) {
+      const video = document.getElementById(cameras[key].videoEl);
+      const preview = document.getElementById(cameras[key].previewEl);
+      const retakeBtn = document.getElementById(cameras[key].retakeBtnEl);
+
+      preview.classList.add('hidden');
+      video.classList.remove('hidden');
+      retakeBtn.classList.add('hidden');
+
+      startCamera(key);
+    }
+
+    // Setup tombol retake dan mulai kamera Nota saat load
+    window.addEventListener('DOMContentLoaded', () => {
+      Object.keys(cameras).forEach(key => {
+        const btn = document.getElementById(cameras[key].retakeBtnEl);
+        if (btn) {
+          btn.addEventListener('click', () => retakePhoto(key));
+          btn.classList.add('hidden'); // sembunyikan awalnya
+        }
+      });
+
+      const videoNota = document.getElementById(cameras['Nota'].videoEl);
+      const previewNota = document.getElementById(cameras['Nota'].previewEl);
+      const retakeNota = document.getElementById(cameras['Nota'].retakeBtnEl);
+
+      previewNota.classList.add('hidden');
+      videoNota.classList.remove('hidden');
+      if (retakeNota) retakeNota.classList.add('hidden');
+
+      startCamera('Nota');
+    });
+
+    // Toggle kamera Retur saat input > 0
     returEl.addEventListener('input', () => {
-      returFotoContainer.classList.toggle('hidden', parseInt(returEl.value) === 0);
+      const val = parseInt(returEl.value) || 0;
+      const container = returFotoContainer;
+      const video = document.getElementById(cameras['Retur'].videoEl);
+      const preview = document.getElementById(cameras['Retur'].previewEl);
+      const retakeBtn = document.getElementById(cameras['Retur'].retakeBtnEl);
+
+      container.classList.toggle('hidden', val === 0);
+
+      if (val > 0) {
+        preview.classList.add('hidden');
+        video.classList.remove('hidden');
+        if (retakeBtn) retakeBtn.classList.add('hidden');
+        startCamera('Retur');
+      } else {
+        stopCamera('Retur');
+      }
     });
 
-    returFotoEl.addEventListener('change', () => {
-      previewRetur.src = URL.createObjectURL(returFotoEl.files[0]);
-      previewRetur.classList.remove('hidden');
+    // Toggle kamera Bukti Transfer jika pilih "Ya"
+    pembayaran.addEventListener('change', () => {
+      const show = pembayaran.value === 'Ya';
+      buktiContainer.classList.toggle('hidden', !show);
+      const video = document.getElementById(cameras['Bukti'].videoEl);
+      const preview = document.getElementById(cameras['Bukti'].previewEl);
+      const retakeBtn = document.getElementById(cameras['Bukti'].retakeBtnEl);
+
+      if (show) {
+        preview.classList.add('hidden');
+        video.classList.remove('hidden');
+        if (retakeBtn) retakeBtn.classList.add('hidden');
+        startCamera('Bukti');
+      } else {
+        stopCamera('Bukti');
+      }
     });
 
-    fotoUpload.addEventListener('change', () => {
-      previewNota.src = URL.createObjectURL(fotoUpload.files[0]);
-      previewNota.classList.remove('hidden');
-    });
-
-    fotoCamera.addEventListener('change', () => {
-      previewNota.src = URL.createObjectURL(fotoCamera.files[0]);
-      previewNota.classList.remove('hidden');
-    });
-
-    buktiInput.addEventListener('change', () => {
-      previewBukti.src = URL.createObjectURL(buktiInput.files[0]);
-      previewBukti.classList.remove('hidden');
-    });
-
+    // Format nominal input ke rupiah
     nominalEl.addEventListener('input', e => {
       const v = e.target.value.replace(/\D/g, '');
       e.target.value = new Intl.NumberFormat('id-ID').format(v);
     });
 
+    // Submit form
     document.getElementById('ledgerForm').addEventListener('submit', async function (e) {
       e.preventDefault();
       loadingOverlay.classList.remove('hidden');
@@ -217,38 +311,30 @@
         brightgas = `${val12} Tbg (12kg) || ${val55} Tbg (5,5 KG)`;
       }
 
-      const fotoFile = fotoUpload.files[0] || fotoCamera.files[0];
-      if (!fotoFile) {
-        alert("❌ Foto Pangkalan wajib diunggah.");
+      // Ambil base64 dari foto yang sudah diambil via kamera
+      const fotoNotaBase64 = window.fotoNotaBase64 || '';
+      const fotoBuktiBase64 = window.fotoBuktiBase64 || '';
+      const fotoReturBase64 = window.fotoReturBase64 || '';
+
+      if (!fotoNotaBase64) {
+        alert("❌ Foto Pangkalan wajib diambil.");
         loadingOverlay.classList.add('hidden');
         return;
       }
 
-      const buktiFile = pembayaranVal === "Ya" ? buktiInput.files[0] : null;
-      if (pembayaranVal === "Ya" && !buktiFile) {
-        alert("❌ Foto Pemilik Pangkalan wajib diunggah.");
+      if (pembayaranVal === "Ya" && !fotoBuktiBase64) {
+        alert("❌ Foto Pemilik Pangkalan wajib diambil.");
         loadingOverlay.classList.add('hidden');
         return;
       }
 
-      if (retur > 0 && !returFotoEl.files[0]) {
-        alert("❌ Bukti retur wajib diunggah jika ada retur.");
+      if (retur > 0 && !fotoReturBase64) {
+        alert("❌ Foto Bukti Retur wajib diambil jika ada retur.");
         loadingOverlay.classList.add('hidden');
         return;
       }
-
-      const toBase64 = file => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
 
       try {
-        const fotoNotaBase64 = await toBase64(fotoFile);
-        const fotoBuktiBase64 = buktiFile ? await toBase64(buktiFile) : "";
-        const returFotoBase64 = returFotoEl.files[0] ? await toBase64(returFotoEl.files[0]) : "";
-
         navigator.geolocation.getCurrentPosition(async posGeo => {
           const lokasi = `https://www.google.com/maps?q=${posGeo.coords.latitude},${posGeo.coords.longitude}`;
 
@@ -260,7 +346,7 @@
               pembayaran: pembayaranVal,
               fotoNota: fotoNotaBase64,
               fotoBukti: fotoBuktiBase64,
-              brightgas, retur, returFoto: returFotoBase64,
+              brightgas, retur, returFoto: fotoReturBase64,
               lokasi
             }
           };
@@ -275,18 +361,31 @@
           if (result.status === 'success') {
             alert('✅ Transaksi berhasil disimpan!');
             document.getElementById('ledgerForm').reset();
-            previewNota.classList.add('hidden');
-            previewBukti.classList.add('hidden');
-            previewRetur.classList.add('hidden');
-            posEl.value = '';
+
+            // Reset preview dan variabel base64
+            Object.keys(cameras).forEach(key => {
+              const preview = document.getElementById(cameras[key].previewEl);
+              preview.classList.add('hidden');
+              window[`foto${key}Base64`] = '';
+              stopCamera(key);
+            });
+
+            // Reset container visibility
             buktiContainer.classList.add('hidden');
             returFotoContainer.classList.add('hidden');
             brightgasContainer.classList.add('hidden');
+            posEl.value = '';
+            
+            // Restart kamera Nota
+            startCamera('Nota');
           } else {
             alert('❌ Gagal: ' + result.message);
           }
           loadingOverlay.classList.add('hidden');
-        });
+        }, (geoError) => {
+          alert("❌ Gagal mendapatkan lokasi. Pastikan izin lokasi diaktifkan.");
+          loadingOverlay.classList.add('hidden');
+        }, { timeout: 10000 });
 
       } catch (err) {
         alert('❌ Error koneksi: ' + err.message);
