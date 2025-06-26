@@ -41,32 +41,24 @@ function takeSnapshot(key) {
   const preview = document.getElementById(cameras[key].previewEl);
   const retryBtn = document.getElementById(cameras[key].retryBtn);
 
-  // Ambil dimensi asli dari stream video
   const videoWidth = video.videoWidth;
   const videoHeight = video.videoHeight;
 
-  // Rotasi jika perlu: Landscape (lebar > tinggi)
-  if (videoWidth > videoHeight) {
-    canvas.width = videoWidth;
-    canvas.height = videoHeight;
-  } else {
-    // Paksa rotasi ke landscape jika video portrait
-    canvas.width = videoHeight;
-    canvas.height = videoWidth;
-  }
-
   const context = canvas.getContext('2d');
-  context.save();
 
-  if (videoWidth < videoHeight) {
-    // Rotasi 90 derajat jika video portrait
+  // Orientasi landscape: pastikan width lebih besar
+  canvas.width = Math.max(videoWidth, videoHeight);
+  canvas.height = Math.min(videoWidth, videoHeight);
+
+  context.save();
+  if (videoHeight > videoWidth) {
+    // rotasi dari portrait ke landscape
     context.translate(canvas.width / 2, canvas.height / 2);
     context.rotate(-90 * Math.PI / 180);
     context.drawImage(video, -video.videoHeight / 2, -video.videoWidth / 2, video.videoHeight, video.videoWidth);
   } else {
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
   }
-
   context.restore();
 
   const dataURL = canvas.toDataURL('image/jpeg');
@@ -79,6 +71,16 @@ function takeSnapshot(key) {
   window[`foto${key}Base64`] = dataURL.split(',')[1];
 }
 
+function retrySnapshot(key) {
+  const video = document.getElementById(cameras[key].videoEl);
+  const preview = document.getElementById(cameras[key].previewEl);
+  const retryBtn = document.getElementById(cameras[key].retryBtn);
+
+  preview.classList.add('hidden');
+  retryBtn.classList.add('hidden');
+  video.classList.remove('hidden');
+  startCamera(key);
+}
 
 function toggleCameraSection(key, show) {
   const container = document.getElementById(cameras[key].container);
@@ -96,18 +98,16 @@ function toggleCameraSection(key, show) {
   }
 }
 
-const returInput = document.getElementById('retur');
-returInput.addEventListener('input', (e) => {
-  const val = parseInt(e.target.value);
-  toggleCameraSection('Retur', val > 0);
-});
-
-const pembayaranInput = document.getElementById('pembayaran');
-pembayaranInput.addEventListener('change', (e) => {
-  const show = e.target.value === 'Ya';
-  toggleCameraSection('Bukti', show);
-});
-
 window.addEventListener('DOMContentLoaded', () => {
   toggleCameraSection('Nota', true);
+
+  document.getElementById('retur').addEventListener('input', (e) => {
+    const val = parseInt(e.target.value);
+    toggleCameraSection('Retur', val > 0);
+  });
+
+  document.getElementById('pembayaran').addEventListener('change', (e) => {
+    const show = e.target.value === 'Ya';
+    toggleCameraSection('Bukti', show);
+  });
 });
