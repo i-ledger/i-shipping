@@ -1,5 +1,5 @@
 const cameras = {
-  Nota: { videoEl: 'videoNota', canvasEl: 'canvasNota', previewEl: 'previewNota' },
+  Nota:  { videoEl: 'videoNota',  canvasEl: 'canvasNota',  previewEl: 'previewNota' },
   Retur: { videoEl: 'videoRetur', canvasEl: 'canvasRetur', previewEl: 'previewRetur' },
   Bukti: { videoEl: 'videoBukti', canvasEl: 'canvasBukti', previewEl: 'previewBukti' },
 };
@@ -44,15 +44,10 @@ function takeSnapshot(key) {
   canvas.height = height;
 
   const context = canvas.getContext('2d');
-  const videoRatio = video.videoWidth / video.videoHeight;
   const cropWidth = video.videoHeight * (width / height);
   const cropX = (video.videoWidth - cropWidth) / 2;
 
-  context.drawImage(
-    video,
-    cropX, 0, cropWidth, video.videoHeight,
-    0, 0, width, height
-  );
+  context.drawImage(video, cropX, 0, cropWidth, video.videoHeight, 0, 0, width, height);
 
   const dataURL = canvas.toDataURL('image/jpeg');
   preview.src = dataURL;
@@ -72,6 +67,7 @@ function addRemoveButton(previewEl, key) {
   btn.innerHTML = '❌';
   btn.className = 'absolute top-0 right-0 mt-1 mr-1 bg-red-600 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center';
   btn.style.zIndex = '10';
+
   btn.onclick = (e) => {
     e.preventDefault();
     previewEl.src = '';
