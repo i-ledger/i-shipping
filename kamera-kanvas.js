@@ -39,22 +39,44 @@ function takeSnapshot(key) {
   const canvas = document.getElementById(cameras[key].canvasEl);
   const preview = document.getElementById(cameras[key].previewEl);
 
-  const width = 640;
-  const height = 480;
-  canvas.width = width;
-  canvas.height = height;
+  const outputWidth = 640;
+  const outputHeight = 480;
+  canvas.width = outputWidth;
+  canvas.height = outputHeight;
 
-  const context = canvas.getContext('2d');
-  const videoRatio = video.videoWidth / video.videoHeight;
-  const cropWidth = video.videoHeight * (width / height);
-  const cropX = (video.videoWidth - cropWidth) / 2;
+  const ctx = canvas.getContext('2d');
 
-  context.drawImage(
+  // Rasio video asli
+  const videoWidth = video.videoWidth;
+  const videoHeight = video.videoHeight;
+  const videoRatio = videoWidth / videoHeight;
+
+  // Rasio kanvas output
+  const outputRatio = outputWidth / outputHeight;
+
+  let sx, sy, sWidth, sHeight;
+
+  if (videoRatio > outputRatio) {
+    // Video lebih lebar dari kanvas, crop sisi kiri dan kanan
+    sHeight = videoHeight;
+    sWidth = sHeight * outputRatio;
+    sx = (videoWidth - sWidth) / 2;
+    sy = 0;
+  } else {
+    // Video lebih tinggi dari kanvas, crop atas dan bawah
+    sWidth = videoWidth;
+    sHeight = sWidth / outputRatio;
+    sx = 0;
+    sy = (videoHeight - sHeight) / 2;
+  }
+
+  ctx.drawImage(
     video,
-    cropX, 0, cropWidth, video.videoHeight,
-    0, 0, width, height
+    sx, sy, sWidth, sHeight,
+    0, 0, outputWidth, outputHeight
   );
 
+  // Preview hasil foto
   const dataURL = canvas.toDataURL('image/jpeg');
   preview.src = dataURL;
   preview.classList.remove('hidden');
@@ -65,8 +87,7 @@ function takeSnapshot(key) {
 
   addRemoveButton(preview, key);
   const takeBtn = document.getElementById(`ambil${key}`);
-if (takeBtn) takeBtn.classList.add('hidden');
-
+  if (takeBtn) takeBtn.classList.add('hidden');
 }
 
 function addRemoveButton(previewEl, key) {
