@@ -1,7 +1,7 @@
 const cameras = {
-  Nota: { videoEl: 'videoNota', canvasEl: 'canvasNota', previewEl: 'previewNota' },
-  Retur: { videoEl: 'videoRetur', canvasEl: 'canvasRetur', previewEl: 'previewRetur' },
-  Bukti: { videoEl: 'videoBukti', canvasEl: 'canvasBukti', previewEl: 'previewBukti' },
+  Nota: { videoEl: 'videoNota', canvasEl: 'canvasNota', previewEl: 'previewNota', retakeBtnEl: 'retakeNota' },
+  Retur: { videoEl: 'videoRetur', canvasEl: 'canvasRetur', previewEl: 'previewRetur', retakeBtnEl: 'retakeRetur' },
+  Bukti: { videoEl: 'videoBukti', canvasEl: 'canvasBukti', previewEl: 'previewBukti', retakeBtnEl: 'retakeBukti' },
 };
 
 const constraints = {
@@ -37,6 +37,7 @@ function takeSnapshot(key) {
   const video = document.getElementById(cameras[key].videoEl);
   const canvas = document.getElementById(cameras[key].canvasEl);
   const preview = document.getElementById(cameras[key].previewEl);
+  const retakeBtn = document.getElementById(cameras[key].retakeBtnEl);
 
   const context = canvas.getContext('2d');
   canvas.width = video.videoWidth;
@@ -47,53 +48,41 @@ function takeSnapshot(key) {
   preview.src = dataURL;
   preview.classList.remove('hidden');
   video.classList.add('hidden');
+  retakeBtn.classList.remove('hidden'); // munculin tombol ambil ulang
 
-  // stop kamera setelah ambil gambar
   stopCamera(key);
 
-  // simpan data ke global (untuk dikirim ke API nanti)
   window[`foto${key}Base64`] = dataURL.split(',')[1];
 }
 
-// Retur aktif jika input > 0
-const returInput = document.getElementById('retur');
-returInput.addEventListener('input', (e) => {
-  const val = parseInt(e.target.value);
-  const container = document.getElementById('returFotoContainer');
-  const video = document.getElementById(cameras['Retur'].videoEl);
-  const preview = document.getElementById(cameras['Retur'].previewEl);
-  container.classList.toggle('hidden', !val);
-  if (val) {
-    preview.classList.add('hidden');
-    video.classList.remove('hidden');
-    startCamera('Retur');
-  } else {
-    stopCamera('Retur');
-  }
-});
+function retakePhoto(key) {
+  const video = document.getElementById(cameras[key].videoEl);
+  const preview = document.getElementById(cameras[key].previewEl);
+  const retakeBtn = document.getElementById(cameras[key].retakeBtnEl);
 
-// Bukti Transfer aktif jika Ya
-const pembayaranInput = document.getElementById('pembayaran');
-pembayaranInput.addEventListener('change', (e) => {
-  const show = e.target.value === 'Ya';
-  const container = document.getElementById('buktiTransferContainer');
-  const video = document.getElementById(cameras['Bukti'].videoEl);
-  const preview = document.getElementById(cameras['Bukti'].previewEl);
-  container.classList.toggle('hidden', !show);
-  if (show) {
-    preview.classList.add('hidden');
-    video.classList.remove('hidden');
-    startCamera('Bukti');
-  } else {
-    stopCamera('Bukti');
-  }
-});
-
-// Kamera utama pangkalan langsung aktif saat load
-window.addEventListener('DOMContentLoaded', () => {
-  const video = document.getElementById(cameras['Nota'].videoEl);
-  const preview = document.getElementById(cameras['Nota'].previewEl);
   preview.classList.add('hidden');
   video.classList.remove('hidden');
+  retakeBtn.classList.add('hidden');
+
+  startCamera(key);
+}
+
+// Event listener tombol ambil ulang untuk tiap kamera
+window.addEventListener('DOMContentLoaded', () => {
+  Object.keys(cameras).forEach(key => {
+    const btn = document.getElementById(cameras[key].retakeBtnEl);
+    if (btn) {
+      btn.addEventListener('click', () => retakePhoto(key));
+      btn.classList.add('hidden'); // sembunyikan tombol retake awalnya
+    }
+  });
+
+  // Start kamera Nota saat halaman load
+  const video = document.getElementById(cameras['Nota'].videoEl);
+  const preview = document.getElementById(cameras['Nota'].previewEl);
+  const retakeBtn = document.getElementById(cameras['Nota'].retakeBtnEl);
+  preview.classList.add('hidden');
+  video.classList.remove('hidden');
+  if (retakeBtn) retakeBtn.classList.add('hidden');
   startCamera('Nota');
 });
