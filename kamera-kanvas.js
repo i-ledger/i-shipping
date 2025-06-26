@@ -1,3 +1,5 @@
+// kamera-kanvas.js
+
 const cameras = {
   Nota: { videoEl: 'videoNota', canvasEl: 'canvasNota', previewEl: 'previewNota', retryBtn: 'retryNota', container: 'notaKameraContainer' },
   Retur: { videoEl: 'videoRetur', canvasEl: 'canvasRetur', previewEl: 'previewRetur', retryBtn: 'retryRetur', container: 'returFotoContainer' },
@@ -8,8 +10,8 @@ const constraints = {
   audio: false,
   video: {
     facingMode: { exact: 'environment' },
-    width: { ideal: 1280 },
-    height: { ideal: 720 }
+    width: { ideal: 640 },
+    height: { ideal: 480 }
   }
 };
 
@@ -40,9 +42,17 @@ function takeSnapshot(key) {
   const retryBtn = document.getElementById(cameras[key].retryBtn);
 
   const context = canvas.getContext('2d');
-  canvas.width = 1280;
-  canvas.height = 720;
+
+  // Set fixed landscape resolution
+  canvas.width = 640;
+  canvas.height = 480;
+
+  // Clear canvas and flip horizontally
+  context.save();
+  context.translate(canvas.width, 0);
+  context.scale(-1, 1); // mirror effect fix
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  context.restore();
 
   const dataURL = canvas.toDataURL('image/jpeg');
   preview.src = dataURL;
@@ -81,18 +91,16 @@ function toggleCameraSection(key, show) {
   }
 }
 
-const returInput = document.getElementById('retur');
-returInput.addEventListener('input', (e) => {
-  const val = parseInt(e.target.value);
-  toggleCameraSection('Retur', val > 0);
-});
-
-const pembayaranInput = document.getElementById('pembayaran');
-pembayaranInput.addEventListener('change', (e) => {
-  const show = e.target.value === 'Ya';
-  toggleCameraSection('Bukti', show);
-});
-
 window.addEventListener('DOMContentLoaded', () => {
   toggleCameraSection('Nota', true);
+
+  document.getElementById('retur').addEventListener('input', (e) => {
+    const val = parseInt(e.target.value);
+    toggleCameraSection('Retur', val > 0);
+  });
+
+  document.getElementById('pembayaran').addEventListener('change', (e) => {
+    const show = e.target.value === 'Ya';
+    toggleCameraSection('Bukti', show);
+  });
 });
