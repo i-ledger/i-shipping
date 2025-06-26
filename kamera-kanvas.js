@@ -9,9 +9,7 @@ const cameras = {
 const constraints = {
   audio: false,
   video: {
-    facingMode: { exact: 'environment' },
-    width: { ideal: 640 },
-    height: { ideal: 480 }
+    facingMode: { exact: 'environment' }
   }
 };
 
@@ -20,6 +18,7 @@ async function startCamera(key) {
   try {
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
     video.srcObject = stream;
+    await video.play();
   } catch (err) {
     alert('Tidak bisa mengakses kamera: ' + err.message);
   }
@@ -43,16 +42,25 @@ function takeSnapshot(key) {
 
   const context = canvas.getContext('2d');
 
-  // Set fixed landscape resolution
+  // Set canvas size to 640x480
   canvas.width = 640;
   canvas.height = 480;
 
-  // Clear canvas and flip horizontally
-  context.save();
-  context.translate(canvas.width, 0);
-  context.scale(-1, 1); // mirror effect fix
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
-  context.restore();
+  // Crop center of the actual video to fit 640x480
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+  const aspectRatio = 640 / 480;
+  let sx = 0, sy = 0, sWidth = vw, sHeight = vh;
+
+  if (vw / vh > aspectRatio) {
+    sWidth = vh * aspectRatio;
+    sx = (vw - sWidth) / 2;
+  } else {
+    sHeight = vw / aspectRatio;
+    sy = (vh - sHeight) / 2;
+  }
+
+  context.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, 640, 480);
 
   const dataURL = canvas.toDataURL('image/jpeg');
   preview.src = dataURL;
