@@ -19,6 +19,9 @@ async function startCamera(key) {
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
     video.srcObject = stream;
     await video.play();
+    video.onloadedmetadata = () => {
+      video.play();
+    };
   } catch (err) {
     alert('Tidak bisa mengakses kamera: ' + err.message);
   }
@@ -60,7 +63,10 @@ function takeSnapshot(key) {
     sy = (vh - sHeight) / 2;
   }
 
-  context.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, 640, 480);
+  context.save();
+  context.scale(-1, 1); // mirror horizontal
+  context.drawImage(video, -640, 0, 640, 480); // flipped
+  context.restore();
 
   const dataURL = canvas.toDataURL('image/jpeg');
   preview.src = dataURL;
