@@ -2,398 +2,198 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>i-Shipping SES_GS</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Demo Kamera Retur dan Bukti</title>
   <style>
-    .loader { border-top-color: #6366f1; animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    video { transform: none; }
-    canvas { display: none; }
+    video, canvas, img {
+      width: 320px;
+      height: 240px;
+      border: 1px solid black;
+      object-fit: cover;
+      display: block;
+      margin-bottom: 10px;
+    }
+    .hidden { display: none; }
   </style>
 </head>
-<body class="bg-gradient-to-br from-indigo-100 to-white min-h-screen flex items-center justify-center p-4 relative">
-  <div id="loadingOverlay" class="hidden absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
+<body>
+
+  <label for="retur">Retur:</label>
+  <input type="number" id="retur" min="0" value="0" />
+
+  <div id="returFotoContainer" class="hidden">
+    <video id="videoRetur" autoplay playsinline></video>
+    <canvas id="canvasRetur" class="hidden"></canvas>
+    <button type="button" id="snapRetur">Ambil Foto Retur</button>
+    <button type="button" id="retakeRetur" class="hidden">Ambil Ulang Retur</button>
+    <img id="previewRetur" class="hidden" />
   </div>
 
-  <a href="dashboard.html" class="absolute top-4 right-4 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow">
-    Ke Dashboard
-  </a>
+  <label for="pembayaran">Pemilik Pangkalan ada di lokasi?</label>
+  <select id="pembayaran">
+    <option value="Tidak">Tidak</option>
+    <option value="Ya">Ya</option>
+  </select>
 
-  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
-    <h2 class="text-3xl font-bold text-indigo-700 mb-6 text-center">i-Shipping SES_GS</h2>
-    <form id="ledgerForm" class="space-y-6" autocomplete="off">
-      <div>
-        <label for="nama" class="block text-sm font-medium text-gray-600">Driver/Kernet</label>
-        <select id="nama" required class="mt-2 block w-full border border-gray-300 rounded-lg shadow-sm p-3"></select>
-      </div>
-      <div>
-        <label for="uraian" class="block text-sm font-medium text-gray-600">Nama Pangkalan</label>
-        <input list="uraianList" id="uraian" required class="mt-2 block w-full border border-gray-300 rounded-lg shadow-sm p-3" />
-        <datalist id="uraianList"></datalist>
-      </div>
-      <div>
-        <label for="pos" class="block text-sm font-medium text-gray-600">Nama PT</label>
-        <input type="text" id="pos" readonly class="mt-2 block w-full bg-gray-100 border border-gray-300 rounded-lg p-3" />
-      </div>
-      <div>
-        <label for="nominal" class="block text-sm font-medium text-gray-600">Jumlah Pengiriman</label>
-        <input type="text" id="nominal" required class="mt-2 block w-full border border-gray-300 rounded-lg p-3" />
-      </div>
-      <div>
-        <label for="brightgasYN" class="block text-sm font-medium text-gray-600">Apakah Driver Mengirim Bright Gas?</label>
-        <select id="brightgasYN" class="mt-2 block w-full border border-gray-300 rounded-lg p-3">
-          <option value="Tidak">Tidak</option>
-          <option value="Ya">Ya</option>
-        </select>
-      </div>
-      <div id="brightgasContainer" class="hidden space-y-4">
-        <div>
-          <label for="brightgas12" class="block text-sm font-medium text-gray-600">12 KG</label>
-          <input type="number" id="brightgas12" min="0" class="mt-2 block w-full border border-gray-300 rounded-lg shadow-sm p-3" value="0" />
-        </div>
-        <div>
-          <label for="brightgas55" class="block text-sm font-medium text-gray-600">5.5 KG</label>
-          <input type="number" id="brightgas55" min="0" class="mt-2 block w-full border border-gray-300 rounded-lg shadow-sm p-3" value="0" />
-        </div>
-      </div>
-
-      <!-- Foto Pangkalan via Kamera Belakang (Landscape) -->
-      <div>
-        <label class="block text-sm font-medium text-gray-600">Foto Pangkalan</label>
-        <video id="videoNota" autoplay playsinline class="w-full h-60 object-cover rounded-lg"></video>
-        <canvas id="canvasNota" class="hidden"></canvas>
-        <button type="button" onclick="takeSnapshot('Nota')" id="snapNota" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
-        <button type="button" onclick="retakePhoto('Nota')" id="retakeNota" class="mt-2 ml-2 bg-red-600 text-white px-4 py-2 rounded-lg hidden">Ambil Ulang</button>
-        <img id="previewNota" class="w-full mt-2 hidden rounded-lg border" />
-      </div>
-
-      <!-- Retur -->
-      <div>
-        <label for="retur" class="block text-sm font-medium text-gray-600">Retur</label>
-        <input type="number" id="retur" required min="0" class="mt-2 block w-full border border-gray-300 rounded-lg shadow-sm p-3" value="0" />
-      </div>
-      <div id="returFotoContainer" class="hidden">
-        <label class="block text-sm font-medium text-gray-600">Foto Retur</label>
-        <video id="videoRetur" autoplay playsinline class="w-full h-60 object-cover rounded-lg"></video>
-        <canvas id="canvasRetur" class="hidden"></canvas>
-        <button type="button" onclick="takeSnapshot('Retur')" id="snapRetur" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
-        <button type="button" onclick="retakePhoto('Retur')" id="retakeRetur" class="mt-2 ml-2 bg-red-600 text-white px-4 py-2 rounded-lg hidden">Ambil Ulang</button>
-        <img id="previewRetur" class="w-full mt-2 hidden rounded-lg border" />
-      </div>
-
-      <!-- Bukti Transfer jika Pemilik Ada -->
-      <div>
-        <label for="pembayaran" class="block text-sm font-medium text-gray-600">Apakah Pemilik Pangkalan berada dilokasi Pangkalan?</label>
-        <select id="pembayaran" class="mt-2 block w-full border border-gray-300 rounded-lg p-3">
-          <option value="Tidak">Tidak</option>
-          <option value="Ya">Ya</option>
-        </select>
-      </div>
-      <div id="buktiTransferContainer" class="hidden">
-        <label class="block text-sm font-medium text-gray-600">Foto Pemilik + Pangkalan</label>
-        <video id="videoBukti" autoplay playsinline class="w-full h-60 object-cover rounded-lg"></video>
-        <canvas id="canvasBukti" class="hidden"></canvas>
-        <button type="button" onclick="takeSnapshot('Bukti')" id="snapBukti" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
-        <button type="button" onclick="retakePhoto('Bukti')" id="retakeBukti" class="mt-2 ml-2 bg-red-600 text-white px-4 py-2 rounded-lg hidden">Ambil Ulang</button>
-        <img id="previewBukti" class="w-full mt-2 hidden rounded-lg border" />
-      </div>
-
-      <!-- Tombol Submit -->
-      <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg">Submit</button>
-    </form>
+  <div id="buktiTransferContainer" class="hidden">
+    <video id="videoBukti" autoplay playsinline></video>
+    <canvas id="canvasBukti" class="hidden"></canvas>
+    <button type="button" id="snapBukti">Ambil Foto Bukti</button>
+    <button type="button" id="retakeBukti" class="hidden">Ambil Ulang Bukti</button>
+    <img id="previewBukti" class="hidden" />
   </div>
 
-  <script src="config.js"></script>
-  <script src="kamera-kanvas.js"></script>
-  <script>
-    if (localStorage.getItem('loggedIn') !== 'true') window.location.href = 'login.html';
+<script>
+  const returInput = document.getElementById('retur');
+  const returContainer = document.getElementById('returFotoContainer');
+  const videoRetur = document.getElementById('videoRetur');
+  const canvasRetur = document.getElementById('canvasRetur');
+  const snapReturBtn = document.getElementById('snapRetur');
+  const retakeReturBtn = document.getElementById('retakeRetur');
+  const previewRetur = document.getElementById('previewRetur');
 
-    const API_NAMA = API_ENDPOINT + '?action=nama';
-    const API_POS = API_ENDPOINT + '?action=pos';
-    const SUBMIT_URL = API_ENDPOINT;
+  const pembayaranSelect = document.getElementById('pembayaran');
+  const buktiContainer = document.getElementById('buktiTransferContainer');
+  const videoBukti = document.getElementById('videoBukti');
+  const canvasBukti = document.getElementById('canvasBukti');
+  const snapBuktiBtn = document.getElementById('snapBukti');
+  const retakeBuktiBtn = document.getElementById('retakeBukti');
+  const previewBukti = document.getElementById('previewBukti');
 
-    const cameras = {
-      Nota: { videoEl: 'videoNota', canvasEl: 'canvasNota', previewEl: 'previewNota', retakeBtnEl: 'retakeNota' },
-      Retur: { videoEl: 'videoRetur', canvasEl: 'canvasRetur', previewEl: 'previewRetur', retakeBtnEl: 'retakeRetur' },
-      Bukti: { videoEl: 'videoBukti', canvasEl: 'canvasBukti', previewEl: 'previewBukti', retakeBtnEl: 'retakeBukti' },
-    };
+  let streamRetur = null;
+  let streamBukti = null;
 
-    const namaEl = document.getElementById('nama');
-    const uraianEl = document.getElementById('uraian');
-    const posEl = document.getElementById('pos');
-    const nominalEl = document.getElementById('nominal');
-    const returEl = document.getElementById('retur');
-    const returFotoContainer = document.getElementById('returFotoContainer');
-    const pembayaran = document.getElementById('pembayaran');
-    const buktiContainer = document.getElementById('buktiTransferContainer');
-    const brightgasYN = document.getElementById('brightgasYN');
-    const brightgasContainer = document.getElementById('brightgasContainer');
-    const brightgas12 = document.getElementById('brightgas12');
-    const brightgas55 = document.getElementById('brightgas55');
-    const loadingOverlay = document.getElementById('loadingOverlay');
-
-    // Load nama driver/kernet
-    fetch(API_NAMA).then(r => r.json()).then(data => {
-      data.forEach(n => {
-        const o = document.createElement('option');
-        o.value = o.textContent = n;
-        namaEl.appendChild(o);
-      });
-    });
-
-    // Load uraian & pos
-    let uraianMap = {};
-    fetch(API_POS).then(r => r.json()).then(data => {
-      data.forEach(row => {
-        uraianMap[row.uraian] = row.pos;
-        const o = document.createElement('option');
-        o.value = row.uraian;
-        document.getElementById('uraianList').appendChild(o);
-      });
-    });
-
-    uraianEl.addEventListener('input', () => {
-      posEl.value = uraianMap[uraianEl.value] || '';
-    });
-
-    brightgasYN.addEventListener('change', () => {
-      brightgasContainer.classList.toggle('hidden', brightgasYN.value !== 'Ya');
-    });
-
-    // Fungsi kamera (start/stop)
-    async function startCamera(key) {
-      const video = document.getElementById(cameras[key].videoEl);
-      try {
-        const constraints = {
-          audio: false,
-          video: {
-            facingMode: { exact: 'environment' },
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }
-        };
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        video.srcObject = stream;
-      } catch (err) {
-        alert('Tidak bisa mengakses kamera: ' + err.message);
-      }
+  // Fungsi start camera
+  async function startCamera(videoEl) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      videoEl.srcObject = stream;
+      return stream;
+    } catch (e) {
+      alert('Gagal akses kamera: ' + e.message);
+      return null;
     }
+  }
 
-    function stopCamera(key) {
-      const video = document.getElementById(cameras[key].videoEl);
-      const stream = video.srcObject;
-      if (stream) {
-        const tracks = stream.getTracks();
-        tracks.forEach(track => track.stop());
-        video.srcObject = null;
-      }
+  // Fungsi stop camera
+  function stopCamera(stream) {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
     }
+  }
 
-    // Fungsi ambil foto
-    function takeSnapshot(key) {
-      const video = document.getElementById(cameras[key].videoEl);
-      const canvas = document.getElementById(cameras[key].canvasEl);
-      const preview = document.getElementById(cameras[key].previewEl);
-      const retakeBtn = document.getElementById(cameras[key].retakeBtnEl);
+  // Retur input change
+  returInput.addEventListener('input', async () => {
+    const val = parseInt(returInput.value) || 0;
+    if (val > 0) {
+      returContainer.classList.remove('hidden');
+      previewRetur.classList.add('hidden');
+      canvasRetur.classList.add('hidden');
+      retakeReturBtn.classList.add('hidden');
+      videoRetur.classList.remove('hidden');
 
-      const context = canvas.getContext('2d');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // start camera for Retur
+      if (!streamRetur) streamRetur = await startCamera(videoRetur);
+    } else {
+      // hide container and stop camera
+      returContainer.classList.add('hidden');
+      previewRetur.classList.add('hidden');
+      retakeReturBtn.classList.add('hidden');
+      canvasRetur.classList.add('hidden');
+      videoRetur.classList.add('hidden');
 
-      const dataURL = canvas.toDataURL('image/jpeg');
-      preview.src = dataURL;
-      preview.classList.remove('hidden');
-      video.classList.add('hidden');
-      retakeBtn.classList.remove('hidden');
-
-      stopCamera(key);
-
-      window[`foto${key}Base64`] = dataURL.split(',')[1];
+      stopCamera(streamRetur);
+      streamRetur = null;
     }
+  });
 
-    // Fungsi ambil ulang foto
-    function retakePhoto(key) {
-      const video = document.getElementById(cameras[key].videoEl);
-      const preview = document.getElementById(cameras[key].previewEl);
-      const retakeBtn = document.getElementById(cameras[key].retakeBtnEl);
+  // pembayaran change
+  pembayaranSelect.addEventListener('change', async () => {
+    if (pembayaranSelect.value === 'Ya') {
+      buktiContainer.classList.remove('hidden');
+      previewBukti.classList.add('hidden');
+      canvasBukti.classList.add('hidden');
+      retakeBuktiBtn.classList.add('hidden');
+      videoBukti.classList.remove('hidden');
 
-      preview.classList.add('hidden');
-      video.classList.remove('hidden');
-      retakeBtn.classList.add('hidden');
+      // start camera for Bukti
+      if (!streamBukti) streamBukti = await startCamera(videoBukti);
+    } else {
+      buktiContainer.classList.add('hidden');
+      previewBukti.classList.add('hidden');
+      retakeBuktiBtn.classList.add('hidden');
+      canvasBukti.classList.add('hidden');
+      videoBukti.classList.add('hidden');
 
-      startCamera(key);
+      stopCamera(streamBukti);
+      streamBukti = null;
     }
+  });
 
-    // Setup tombol retake dan mulai kamera Nota saat load
-    window.addEventListener('DOMContentLoaded', () => {
-      Object.keys(cameras).forEach(key => {
-        const btn = document.getElementById(cameras[key].retakeBtnEl);
-        if (btn) {
-          btn.addEventListener('click', () => retakePhoto(key));
-          btn.classList.add('hidden'); // sembunyikan awalnya
-        }
-      });
+  // Take snapshot Retur
+  snapReturBtn.addEventListener('click', () => {
+    const ctx = canvasRetur.getContext('2d');
+    canvasRetur.width = videoRetur.videoWidth;
+    canvasRetur.height = videoRetur.videoHeight;
+    ctx.drawImage(videoRetur, 0, 0, canvasRetur.width, canvasRetur.height);
 
-      const videoNota = document.getElementById(cameras['Nota'].videoEl);
-      const previewNota = document.getElementById(cameras['Nota'].previewEl);
-      const retakeNota = document.getElementById(cameras['Nota'].retakeBtnEl);
+    const dataURL = canvasRetur.toDataURL('image/jpeg');
+    previewRetur.src = dataURL;
+    previewRetur.classList.remove('hidden');
 
-      previewNota.classList.add('hidden');
-      videoNota.classList.remove('hidden');
-      if (retakeNota) retakeNota.classList.add('hidden');
+    canvasRetur.classList.remove('hidden');
+    videoRetur.classList.add('hidden');
+    retakeReturBtn.classList.remove('hidden');
 
-      startCamera('Nota');
-    });
+    // stop camera stream for retur
+    stopCamera(streamRetur);
+    streamRetur = null;
 
-    // Toggle kamera Retur saat input > 0
-    returEl.addEventListener('input', () => {
-      const val = parseInt(returEl.value) || 0;
-      const container = returFotoContainer;
-      const video = document.getElementById(cameras['Retur'].videoEl);
-      const preview = document.getElementById(cameras['Retur'].previewEl);
-      const retakeBtn = document.getElementById(cameras['Retur'].retakeBtnEl);
+    // Simpan base64 di window
+    window.fotoReturBase64 = dataURL.split(',')[1];
+  });
 
-      container.classList.toggle('hidden', val === 0);
+  // Retake snapshot Retur
+  retakeReturBtn.addEventListener('click', async () => {
+    previewRetur.classList.add('hidden');
+    canvasRetur.classList.add('hidden');
+    retakeReturBtn.classList.add('hidden');
+    videoRetur.classList.remove('hidden');
 
-      if (val > 0) {
-        preview.classList.add('hidden');
-        video.classList.remove('hidden');
-        if (retakeBtn) retakeBtn.classList.add('hidden');
-        startCamera('Retur');
-      } else {
-        stopCamera('Retur');
-      }
-    });
+    streamRetur = await startCamera(videoRetur);
+  });
 
-    // Toggle kamera Bukti Transfer jika pilih "Ya"
-    pembayaran.addEventListener('change', () => {
-      const show = pembayaran.value === 'Ya';
-      buktiContainer.classList.toggle('hidden', !show);
-      const video = document.getElementById(cameras['Bukti'].videoEl);
-      const preview = document.getElementById(cameras['Bukti'].previewEl);
-      const retakeBtn = document.getElementById(cameras['Bukti'].retakeBtnEl);
+  // Take snapshot Bukti
+  snapBuktiBtn.addEventListener('click', () => {
+    const ctx = canvasBukti.getContext('2d');
+    canvasBukti.width = videoBukti.videoWidth;
+    canvasBukti.height = videoBukti.videoHeight;
+    ctx.drawImage(videoBukti, 0, 0, canvasBukti.width, canvasBukti.height);
 
-      if (show) {
-        preview.classList.add('hidden');
-        video.classList.remove('hidden');
-        if (retakeBtn) retakeBtn.classList.add('hidden');
-        startCamera('Bukti');
-      } else {
-        stopCamera('Bukti');
-      }
-    });
+    const dataURL = canvasBukti.toDataURL('image/jpeg');
+    previewBukti.src = dataURL;
+    previewBukti.classList.remove('hidden');
 
-    // Format nominal input ke rupiah
-    nominalEl.addEventListener('input', e => {
-      const v = e.target.value.replace(/\D/g, '');
-      e.target.value = new Intl.NumberFormat('id-ID').format(v);
-    });
+    canvasBukti.classList.remove('hidden');
+    videoBukti.classList.add('hidden');
+    retakeBuktiBtn.classList.remove('hidden');
 
-    // Submit form
-    document.getElementById('ledgerForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-      loadingOverlay.classList.remove('hidden');
+    stopCamera(streamBukti);
+    streamBukti = null;
 
-      const nama = namaEl.value;
-      const uraian = uraianEl.value;
-      const pos = posEl.value;
-      const nominal = nominalEl.value.replace(/\D/g, '');
-      const retur = parseInt(returEl.value) || 0;
-      const pembayaranVal = pembayaran.value;
+    window.fotoBuktiBase64 = dataURL.split(',')[1];
+  });
 
-      let brightgas = "0";
-      if (brightgasYN.value === "Ya") {
-        const val12 = parseInt(brightgas12.value) || 0;
-        const val55 = parseInt(brightgas55.value) || 0;
-        brightgas = `${val12} Tbg (12kg) || ${val55} Tbg (5,5 KG)`;
-      }
+  // Retake snapshot Bukti
+  retakeBuktiBtn.addEventListener('click', async () => {
+    previewBukti.classList.add('hidden');
+    canvasBukti.classList.add('hidden');
+    retakeBuktiBtn.classList.add('hidden');
+    videoBukti.classList.remove('hidden');
 
-      // Ambil base64 dari foto yang sudah diambil via kamera
-      const fotoNotaBase64 = window.fotoNotaBase64 || '';
-      const fotoBuktiBase64 = window.fotoBuktiBase64 || '';
-      const fotoReturBase64 = window.fotoReturBase64 || '';
+    streamBukti = await startCamera(videoBukti);
+  });
 
-      if (!fotoNotaBase64) {
-        alert("❌ Foto Pangkalan wajib diambil.");
-        loadingOverlay.classList.add('hidden');
-        return;
-      }
-
-      if (pembayaranVal === "Ya" && !fotoBuktiBase64) {
-        alert("❌ Foto Pemilik Pangkalan wajib diambil.");
-        loadingOverlay.classList.add('hidden');
-        return;
-      }
-
-      if (retur > 0 && !fotoReturBase64) {
-        alert("❌ Foto Bukti Retur wajib diambil jika ada retur.");
-        loadingOverlay.classList.add('hidden');
-        return;
-      }
-
-      try {
-        navigator.geolocation.getCurrentPosition(async posGeo => {
-          const lokasi = `https://www.google.com/maps?q=${posGeo.coords.latitude},${posGeo.coords.longitude}`;
-
-          const payload = {
-            action: 'addTransaksi',
-            sheet: 'Transaksi',
-            payload: {
-              nama, uraian, pos, nominal,
-              pembayaran: pembayaranVal,
-              fotoNota: fotoNotaBase64,
-              fotoBukti: fotoBuktiBase64,
-              brightgas, retur, returFoto: fotoReturBase64,
-              lokasi
-            }
-          };
-
-          const res = await fetch(SUBMIT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(payload)
-          });
-
-          const result = await res.json();
-          if (result.status === 'success') {
-            alert('✅ Transaksi berhasil disimpan!');
-            document.getElementById('ledgerForm').reset();
-
-            // Reset preview dan variabel base64
-            Object.keys(cameras).forEach(key => {
-              const preview = document.getElementById(cameras[key].previewEl);
-              preview.classList.add('hidden');
-              window[`foto${key}Base64`] = '';
-              stopCamera(key);
-            });
-
-            // Reset container visibility
-            buktiContainer.classList.add('hidden');
-            returFotoContainer.classList.add('hidden');
-            brightgasContainer.classList.add('hidden');
-            posEl.value = '';
-            
-            // Restart kamera Nota
-            startCamera('Nota');
-          } else {
-            alert('❌ Gagal: ' + result.message);
-          }
-          loadingOverlay.classList.add('hidden');
-        }, (geoError) => {
-          alert("❌ Gagal mendapatkan lokasi. Pastikan izin lokasi diaktifkan.");
-          loadingOverlay.classList.add('hidden');
-        }, { timeout: 10000 });
-
-      } catch (err) {
-        alert('❌ Error koneksi: ' + err.message);
-        loadingOverlay.classList.add('hidden');
-      }
-    });
-
-    setTimeout(() => localStorage.removeItem('loggedIn'), 300000);
-  </script>
+</script>
 </body>
 </html>
