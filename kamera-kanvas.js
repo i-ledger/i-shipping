@@ -1,9 +1,9 @@
 // kamera-kanvas.js
 
 const cameras = {
-  Nota: { videoEl: 'videoNota', canvasEl: 'canvasNota', previewEl: 'previewNota', retryBtn: 'retryNota' },
-  Retur: { videoEl: 'videoRetur', canvasEl: 'canvasRetur', previewEl: 'previewRetur', retryBtn: 'retryRetur' },
-  Bukti: { videoEl: 'videoBukti', canvasEl: 'canvasBukti', previewEl: 'previewBukti', retryBtn: 'retryBukti' },
+  Nota: { videoEl: 'videoNota', canvasEl: 'canvasNota', previewEl: 'previewNota', retryBtn: 'retryNota', container: 'notaKameraContainer' },
+  Retur: { videoEl: 'videoRetur', canvasEl: 'canvasRetur', previewEl: 'previewRetur', retryBtn: 'retryRetur', container: 'returFotoContainer' },
+  Bukti: { videoEl: 'videoBukti', canvasEl: 'canvasBukti', previewEl: 'previewBukti', retryBtn: 'retryBukti', container: 'buktiTransferContainer' },
 };
 
 const constraints = {
@@ -67,51 +67,34 @@ function retrySnapshot(key) {
   startCamera(key);
 }
 
-// Retur aktif jika input > 0
-const returInput = document.getElementById('retur');
-returInput.addEventListener('input', (e) => {
-  const val = parseInt(e.target.value);
-  const container = document.getElementById('returFotoContainer');
-  const video = document.getElementById(cameras['Retur'].videoEl);
-  const preview = document.getElementById(cameras['Retur'].previewEl);
-  const retryBtn = document.getElementById(cameras['Retur'].retryBtn);
-  container.classList.toggle('hidden', !val);
-  if (val) {
-    preview.classList.add('hidden');
-    retryBtn.classList.add('hidden');
-    video.classList.remove('hidden');
-    startCamera('Retur');
-  } else {
-    stopCamera('Retur');
-  }
-});
-
-// Bukti Transfer aktif jika Ya
-const pembayaranInput = document.getElementById('pembayaran');
-pembayaranInput.addEventListener('change', (e) => {
-  const show = e.target.value === 'Ya';
-  const container = document.getElementById('buktiTransferContainer');
-  const video = document.getElementById(cameras['Bukti'].videoEl);
-  const preview = document.getElementById(cameras['Bukti'].previewEl);
-  const retryBtn = document.getElementById(cameras['Bukti'].retryBtn);
+function toggleCameraSection(key, show) {
+  const container = document.getElementById(cameras[key].container);
+  const video = document.getElementById(cameras[key].videoEl);
+  const preview = document.getElementById(cameras[key].previewEl);
+  const retryBtn = document.getElementById(cameras[key].retryBtn);
   container.classList.toggle('hidden', !show);
   if (show) {
     preview.classList.add('hidden');
     retryBtn.classList.add('hidden');
     video.classList.remove('hidden');
-    startCamera('Bukti');
+    startCamera(key);
   } else {
-    stopCamera('Bukti');
+    stopCamera(key);
   }
+}
+
+const returInput = document.getElementById('retur');
+returInput.addEventListener('input', (e) => {
+  const val = parseInt(e.target.value);
+  toggleCameraSection('Retur', val > 0);
 });
 
-// Kamera utama pangkalan langsung aktif saat load
+const pembayaranInput = document.getElementById('pembayaran');
+pembayaranInput.addEventListener('change', (e) => {
+  const show = e.target.value === 'Ya';
+  toggleCameraSection('Bukti', show);
+});
+
 window.addEventListener('DOMContentLoaded', () => {
-  const video = document.getElementById(cameras['Nota'].videoEl);
-  const preview = document.getElementById(cameras['Nota'].previewEl);
-  const retryBtn = document.getElementById(cameras['Nota'].retryBtn);
-  preview.classList.add('hidden');
-  retryBtn.classList.add('hidden');
-  video.classList.remove('hidden');
-  startCamera('Nota');
+  toggleCameraSection('Nota', true);
 });
