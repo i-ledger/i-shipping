@@ -1,15 +1,15 @@
+// kamera-kanvas.js
+
 const cameras = {
-  Nota: { videoEl: 'videoNota', canvasEl: 'canvasNota', previewEl: 'previewNota', retakeBtnEl: 'retakeNota' },
-  Retur: { videoEl: 'videoRetur', canvasEl: 'canvasRetur', previewEl: 'previewRetur', retakeBtnEl: 'retakeRetur' },
-  Bukti: { videoEl: 'videoBukti', canvasEl: 'canvasBukti', previewEl: 'previewBukti', retakeBtnEl: 'retakeBukti' },
+  Nota: { videoEl: 'videoNota', canvasEl: 'canvasNota', previewEl: 'previewNota', retryBtn: 'retryNota', container: 'notaKameraContainer' },
+  Retur: { videoEl: 'videoRetur', canvasEl: 'canvasRetur', previewEl: 'previewRetur', retryBtn: 'retryRetur', container: 'returFotoContainer' },
+  Bukti: { videoEl: 'videoBukti', canvasEl: 'canvasBukti', previewEl: 'previewBukti', retryBtn: 'retryBukti', container: 'buktiTransferContainer' },
 };
 
 const constraints = {
   audio: false,
   video: {
-    facingMode: { exact: 'environment' },
-    width: { ideal: 1280 },
-    height: { ideal: 720 }
+    facingMode: { exact: 'environment' }
   }
 };
 
@@ -18,6 +18,10 @@ async function startCamera(key) {
   try {
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
     video.srcObject = stream;
+    await video.play();
+    video.onloadedmetadata = () => {
+      video.play();
+    };
   } catch (err) {
     alert('Tidak bisa mengakses kamera: ' + err.message);
   }
@@ -37,64 +41,80 @@ function takeSnapshot(key) {
   const video = document.getElementById(cameras[key].videoEl);
   const canvas = document.getElementById(cameras[key].canvasEl);
   const preview = document.getElementById(cameras[key].previewEl);
-  const retakeBtn = document.getElementById(cameras[key].retakeBtnEl);
+  const retryBtn = document.getElementById(cameras[key].retryBtn);
 
   const context = canvas.getContext('2d');
 
-  // Tentukan ukuran crop yang diinginkan (misal 640x480)
-  const cropWidth = 640;
-  const cropHeight = 480;
+  // Set canvas size to 640x480
+  canvas.width = 640;
+  canvas.height = 480;
 
-  // Tentukan posisi crop di tengah video asli
-  const sx = (video.videoWidth - cropWidth) / 2;
-  const sy = (video.videoHeight - cropHeight) / 2;
+  // Crop center of the actual video to fit 640x480
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+  const aspectRatio = 640 / 480;
+  let sx = 0, sy = 0, sWidth = vw, sHeight = vh;
 
-  canvas.width = cropWidth;
-  canvas.height = cropHeight;
+  if (vw / vh > aspectRatio) {
+    sWidth = vh * aspectRatio;
+    sx = (vw - sWidth) / 2;
+  } else {
+    sHeight = vw / aspectRatio;
+    sy = (vh - sHeight) / 2;
+  }
 
-  // crop dan draw image dari video ke canvas
-  context.drawImage(video, sx, sy, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+  context.save();
+  context.scale(-1, 1); // mirror horizontal
+  context.drawImage(video, -640, 0, 640, 480); // flipped
+  context.restore();
 
   const dataURL = canvas.toDataURL('image/jpeg');
   preview.src = dataURL;
   preview.classList.remove('hidden');
   video.classList.add('hidden');
-  retakeBtn.classList.remove('hidden'); // munculin tombol ambil ulang
+  retryBtn.classList.remove('hidden');
 
   stopCamera(key);
-
   window[`foto${key}Base64`] = dataURL.split(',')[1];
 }
 
-
-function retakePhoto(key) {
+function retrySnapshot(key) {
   const video = document.getElementById(cameras[key].videoEl);
   const preview = document.getElementById(cameras[key].previewEl);
-  const retakeBtn = document.getElementById(cameras[key].retakeBtnEl);
+  const retryBtn = document.getElementById(cameras[key].retryBtn);
 
   preview.classList.add('hidden');
+  retryBtn.classList.add('hidden');
   video.classList.remove('hidden');
-  retakeBtn.classList.add('hidden');
-
   startCamera(key);
 }
 
-// Event listener tombol ambil ulang untuk tiap kamera
+function toggleCameraSection(key, show) {
+  const container = document.getElementById(cameras[key].container);
+  const video = document.getElementById(cameras[key].videoEl);
+  const preview = document.getElementById(cameras[key].previewEl);
+  const retryBtn = document.getElementById(cameras[key].retryBtn);
+  container.classList.toggle('hidden', !show);
+  if (show) {
+    preview.classList.add('hidden');
+    retryBtn.classList.add('hidden');
+    video.classList.remove('hidden');
+    startCamera(key);
+  } else {
+    stopCamera(key);
+  }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
-  Object.keys(cameras).forEach(key => {
-    const btn = document.getElementById(cameras[key].retakeBtnEl);
-    if (btn) {
-      btn.addEventListener('click', () => retakePhoto(key));
-      btn.classList.add('hidden'); // sembunyikan tombol retake awalnya
-    }
+  toggleCameraSection('Nota', true);
+
+  document.getElementById('retur').addEventListener('input', (e) => {
+    const val = parseInt(e.target.value);
+    toggleCameraSection('Retur', val > 0);
   });
 
-  // Start kamera Nota saat halaman load
-  const video = document.getElementById(cameras['Nota'].videoEl);
-  const preview = document.getElementById(cameras['Nota'].previewEl);
-  const retakeBtn = document.getElementById(cameras['Nota'].retakeBtnEl);
-  preview.classList.add('hidden');
-  video.classList.remove('hidden');
-  if (retakeBtn) retakeBtn.classList.add('hidden');
-  startCamera('Nota');
+  document.getElementById('pembayaran').addEventListener('change', (e) => {
+    const show = e.target.value === 'Ya';
+    toggleCameraSection('Bukti', show);
+  });
 });
