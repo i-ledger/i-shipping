@@ -1,9 +1,9 @@
 // kamera-kanvas.js
 
 const cameras = {
-  Nota: { videoEl: 'videoNota', canvasEl: 'canvasNota', previewEl: 'previewNota' },
-  Retur: { videoEl: 'videoRetur', canvasEl: 'canvasRetur', previewEl: 'previewRetur' },
-  Bukti: { videoEl: 'videoBukti', canvasEl: 'canvasBukti', previewEl: 'previewBukti' },
+  Nota: { videoEl: 'videoNota', canvasEl: 'canvasNota', previewEl: 'previewNota', retryBtn: 'retryNota' },
+  Retur: { videoEl: 'videoRetur', canvasEl: 'canvasRetur', previewEl: 'previewRetur', retryBtn: 'retryRetur' },
+  Bukti: { videoEl: 'videoBukti', canvasEl: 'canvasBukti', previewEl: 'previewBukti', retryBtn: 'retryBukti' },
 };
 
 const constraints = {
@@ -39,22 +39,32 @@ function takeSnapshot(key) {
   const video = document.getElementById(cameras[key].videoEl);
   const canvas = document.getElementById(cameras[key].canvasEl);
   const preview = document.getElementById(cameras[key].previewEl);
+  const retryBtn = document.getElementById(cameras[key].retryBtn);
 
   const context = canvas.getContext('2d');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  canvas.width = 1280;
+  canvas.height = 720;
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
   const dataURL = canvas.toDataURL('image/jpeg');
   preview.src = dataURL;
   preview.classList.remove('hidden');
   video.classList.add('hidden');
+  retryBtn.classList.remove('hidden');
 
-  // stop kamera setelah ambil gambar
   stopCamera(key);
-
-  // simpan data ke global (untuk dikirim ke API nanti)
   window[`foto${key}Base64`] = dataURL.split(',')[1];
+}
+
+function retrySnapshot(key) {
+  const video = document.getElementById(cameras[key].videoEl);
+  const preview = document.getElementById(cameras[key].previewEl);
+  const retryBtn = document.getElementById(cameras[key].retryBtn);
+
+  preview.classList.add('hidden');
+  retryBtn.classList.add('hidden');
+  video.classList.remove('hidden');
+  startCamera(key);
 }
 
 // Retur aktif jika input > 0
@@ -64,9 +74,11 @@ returInput.addEventListener('input', (e) => {
   const container = document.getElementById('returFotoContainer');
   const video = document.getElementById(cameras['Retur'].videoEl);
   const preview = document.getElementById(cameras['Retur'].previewEl);
+  const retryBtn = document.getElementById(cameras['Retur'].retryBtn);
   container.classList.toggle('hidden', !val);
   if (val) {
     preview.classList.add('hidden');
+    retryBtn.classList.add('hidden');
     video.classList.remove('hidden');
     startCamera('Retur');
   } else {
@@ -81,9 +93,11 @@ pembayaranInput.addEventListener('change', (e) => {
   const container = document.getElementById('buktiTransferContainer');
   const video = document.getElementById(cameras['Bukti'].videoEl);
   const preview = document.getElementById(cameras['Bukti'].previewEl);
+  const retryBtn = document.getElementById(cameras['Bukti'].retryBtn);
   container.classList.toggle('hidden', !show);
   if (show) {
     preview.classList.add('hidden');
+    retryBtn.classList.add('hidden');
     video.classList.remove('hidden');
     startCamera('Bukti');
   } else {
@@ -95,7 +109,9 @@ pembayaranInput.addEventListener('change', (e) => {
 window.addEventListener('DOMContentLoaded', () => {
   const video = document.getElementById(cameras['Nota'].videoEl);
   const preview = document.getElementById(cameras['Nota'].previewEl);
+  const retryBtn = document.getElementById(cameras['Nota'].retryBtn);
   preview.classList.add('hidden');
+  retryBtn.classList.add('hidden');
   video.classList.remove('hidden');
   startCamera('Nota');
 });
