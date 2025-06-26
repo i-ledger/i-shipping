@@ -72,24 +72,34 @@ if (takeBtn) takeBtn.classList.add('hidden');
 function addRemoveButton(previewEl, key) {
   removeExistingRemoveButton(previewEl);
 
-  const btn = document.createElement('button');
+  const btn = document.createElement('div');
   btn.innerHTML = '❌';
-  btn.className = 'absolute top-0 right-0 mt-1 mr-1 bg-red-600 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center';
+  btn.setAttribute('role', 'button');
+  btn.className = 'absolute top-0 right-0 mt-1 mr-1 bg-red-600 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center cursor-pointer';
   btn.style.zIndex = '10';
+
   btn.onclick = (e) => {
     e.preventDefault();
+
+    // Hilangkan gambar preview
     previewEl.src = '';
     previewEl.classList.add('hidden');
 
+    // Tampilkan kembali video kamera
     const video = document.getElementById(cameras[key].videoEl);
     video.classList.remove('hidden');
+
+    // Aktifkan ulang kamera
     startCamera(key);
 
     // Tampilkan kembali tombol ambil foto
     const takeBtn = document.getElementById(`ambil${key}`);
     if (takeBtn) takeBtn.classList.remove('hidden');
 
+    // Hapus foto dari memory
     delete window[`foto${key}Base64`];
+
+    // Hapus tombol ❌
     btn.remove();
   };
 
