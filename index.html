@@ -65,7 +65,9 @@
         <video id="videoNota" autoplay playsinline class="w-full h-60 object-cover rounded-lg"></video>
         <canvas id="canvasNota" class="hidden"></canvas>
         <button type="button" onclick="takeSnapshot('Nota')" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
-        <img id="previewNota" class="w-full mt-2 hidden rounded-lg border" />
+        <div id="previewNotaWrapper" class="relative hidden mt-2">
+          <img id="previewNota" class="w-full rounded-lg border" />
+        </div>
       </div>
 
       <div>
@@ -77,7 +79,9 @@
         <video id="videoRetur" autoplay playsinline class="w-full h-60 object-cover rounded-lg"></video>
         <canvas id="canvasRetur" class="hidden"></canvas>
         <button type="button" onclick="takeSnapshot('Retur')" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
-        <img id="previewRetur" class="w-full mt-2 hidden rounded-lg border" />
+        <div id="previewReturWrapper" class="relative hidden mt-2">
+          <img id="previewRetur" class="w-full rounded-lg border" />
+        </div>
       </div>
 
       <div>
@@ -92,7 +96,9 @@
         <video id="videoBukti" autoplay playsinline class="w-full h-60 object-cover rounded-lg"></video>
         <canvas id="canvasBukti" class="hidden"></canvas>
         <button type="button" onclick="takeSnapshot('Bukti')" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg">Ambil Foto</button>
-        <img id="previewBukti" class="w-full mt-2 hidden rounded-lg border" />
+        <div id="previewBuktiWrapper" class="relative hidden mt-2">
+          <img id="previewBukti" class="w-full rounded-lg border" />
+        </div>
       </div>
 
       <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg">Submit</button>
@@ -155,85 +161,34 @@
       e.target.value = new Intl.NumberFormat('id-ID').format(v);
     });
 
-    document.getElementById('ledgerForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-      loadingOverlay.classList.remove('hidden');
+    // Tambahan tombol X untuk hapus foto
+    function addRemoveButton(previewEl, key) {
+      const wrapper = document.getElementById(previewEl.id + 'Wrapper');
+      removeExistingRemoveButton(wrapper);
 
-      const nama = namaEl.value;
-      const uraian = uraianEl.value;
-      const pos = posEl.value;
-      const nominal = nominalEl.value.replace(/\D/g, '');
-      const retur = parseInt(returEl.value) || 0;
-      const pembayaranVal = pembayaran.value;
+      const btn = document.createElement('button');
+      btn.innerHTML = '❌';
+      btn.className = 'absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center';
+      btn.style.zIndex = '10';
+      btn.onclick = (e) => {
+        e.preventDefault();
+        previewEl.src = '';
+        wrapper.classList.add('hidden');
+        const video = document.getElementById(cameras[key].videoEl);
+        video.classList.remove('hidden');
+        startCamera(key);
+        delete window[`foto${key}Base64`];
+        btn.remove();
+      };
 
-      let brightgas = "0";
-      if (brightgasYN.value === "Ya") {
-        const val12 = parseInt(brightgas12.value) || 0;
-        const val55 = parseInt(brightgas55.value) || 0;
-        brightgas = `${val12} Tbg (12kg) || ${val55} Tbg (5,5 KG)`;
-      }
+      wrapper.appendChild(btn);
+      wrapper.classList.remove('hidden');
+    }
 
-      if (!window.fotoNotaBase64) {
-        alert("❌ Foto Pangkalan wajib diambil.");
-        loadingOverlay.classList.add('hidden');
-        return;
-      }
-
-      if (pembayaranVal === "Ya" && !window.fotoBuktiBase64) {
-        alert("❌ Foto Pemilik Pangkalan wajib diambil.");
-        loadingOverlay.classList.add('hidden');
-        return;
-      }
-
-      if (retur > 0 && !window.fotoReturBase64) {
-        alert("❌ Foto retur wajib diambil.");
-        loadingOverlay.classList.add('hidden');
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(async posGeo => {
-        const lokasi = `https://www.google.com/maps?q=${posGeo.coords.latitude},${posGeo.coords.longitude}`;
-        const payload = {
-          action: 'addTransaksi',
-          sheet: 'Transaksi',
-          payload: {
-            nama, uraian, pos, nominal,
-            pembayaran: pembayaranVal,
-            fotoNota: window.fotoNotaBase64,
-            fotoBukti: window.fotoBuktiBase64 || "",
-            brightgas, retur, returFoto: window.fotoReturBase64 || "",
-            lokasi
-          }
-        };
-
-        try {
-          const res = await fetch(SUBMIT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(payload)
-          });
-          const result = await res.json();
-          if (result.status === 'success') {
-            alert('✅ Transaksi berhasil disimpan!');
-            document.getElementById('ledgerForm').reset();
-            previewNota.classList.add('hidden');
-            previewBukti.classList.add('hidden');
-            previewRetur.classList.add('hidden');
-            posEl.value = '';
-            brightgasContainer.classList.add('hidden');
-          } else {
-            alert('❌ Gagal: ' + result.message);
-          }
-        } catch (err) {
-          alert('❌ Error: ' + err.message);
-        } finally {
-          loadingOverlay.classList.add('hidden');
-        }
-      }, () => {
-        alert("❌ Gagal mendapatkan lokasi.");
-        loadingOverlay.classList.add('hidden');
-      });
-    });
+    function removeExistingRemoveButton(wrapper) {
+      const existing = wrapper.querySelector('button');
+      if (existing) existing.remove();
+    }
 
     setTimeout(() => localStorage.removeItem('loggedIn'), 300000);
   </script>
