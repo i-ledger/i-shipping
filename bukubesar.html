@@ -29,15 +29,17 @@
       <table class="min-w-full table-auto border border-gray-300 text-sm" id="rekapTable">
         <thead class="bg-indigo-600 text-white">
           <tr>
-            <th class="px-4 py-2">Waktu</th>
-            <th class="px-4 py-2">Driver</th>
-            <th class="px-4 py-2">Pangkalan</th>
-            <th class="px-4 py-2">Nama PT</th>
-            <th class="px-4 py-2">Jumlah</th>
+            <th class="px-4 py-2">Timestamp</th>
+            <th class="px-4 py-2">Nama</th>
+            <th class="px-4 py-2">Uraian</th>
+            <th class="px-4 py-2">Pos</th>
+            <th class="px-4 py-2">Nominal</th>
+            <th class="px-4 py-2">Foto</th>
+            <th class="px-4 py-2">Pembayaran</th>
+            <th class="px-4 py-2">Bukti Transfer</th>
             <th class="px-4 py-2">Bright Gas</th>
             <th class="px-4 py-2">Retur</th>
-            <th class="px-4 py-2">Status</th>
-            <th class="px-4 py-2">Link Bukti</th>
+            <th class="px-4 py-2">Bukti Retur</th>
             <th class="px-4 py-2">Lokasi</th>
           </tr>
         </thead>
@@ -92,13 +94,17 @@
           <td class="px-4 py-2">${r.uraian || '-'}</td>
           <td class="px-4 py-2">${r.pos || '-'}</td>
           <td class="px-4 py-2">${r.nominal || '-'}</td>
+          <td class="px-4 py-2">
+            ${r.foto ? `<a href="${r.foto}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}
+          </td>
+          <td class="px-4 py-2">${r.pembayaran || '-'}</td>
+          <td class="px-4 py-2">
+            ${r.buktitransfer ? `<a href="${r.buktitransfer}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}
+          </td>
           <td class="px-4 py-2">${r.brightgas || '0'}</td>
           <td class="px-4 py-2">${r.retur || '0'}</td>
-          <td class="px-4 py-2">${r.pembayaran || '-'}</td>
-          <td class="px-4 py-2 space-y-1 space-x-1">
-            ${r.foto ? `<a href="${r.foto}" target="_blank" class="text-blue-600 underline">Nota</a>` : ''}
-            ${r.buktitransfer ? `<a href="${r.buktitransfer}" target="_blank" class="text-blue-600 underline">Transfer</a>` : ''}
-            ${r.buktiretur ? `<a href="${r.buktiretur}" target="_blank" class="text-blue-600 underline">Retur</a>` : ''}
+          <td class="px-4 py-2">
+            ${r.buktiretur ? `<a href="${r.buktiretur}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}
           </td>
           <td class="px-4 py-2">
             ${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}
