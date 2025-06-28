@@ -51,12 +51,54 @@
   <script src="config.js"></script>
   <script>
     const API_URL = API_ENDPOINT + '?action=transaksi';
-
     const filterPT = document.getElementById('filterPT');
     const filterPangkalan = document.getElementById('filterPangkalan');
     const rekapBody = document.getElementById('rekapBody');
 
     let allData = [];
+
+    function convertDriveUrl(url) {
+      if (!url) return null;
+      let id = null;
+      const match1 = url.match(/\/d\/([^/]+)\//);
+      const match2 = url.match(/[?&]id=([^&]+)/);
+      if (match1) id = match1[1];
+      else if (match2) id = match2[1];
+      return id ? `https://drive.google.com/uc?id=${id}` : null;
+    }
+
+    function renderImage(url) {
+      const imgUrl = convertDriveUrl(url);
+      return imgUrl
+        ? `<img src="${imgUrl}" alt="foto" class="h-20 rounded shadow mx-auto" loading="lazy" />`
+        : '-';
+    }
+
+    function renderTable(rows) {
+      const filtered = rows.filter(item => {
+        return (!filterPT.value || item.pos === filterPT.value) &&
+               (!filterPangkalan.value || item.uraian === filterPangkalan.value);
+      });
+
+      rekapBody.innerHTML = filtered.map(r => `
+        <tr class="border-b hover:bg-gray-50">
+          <td class="px-4 py-2">${r.timestamp || '-'}</td>
+          <td class="px-4 py-2">${r.nama || '-'}</td>
+          <td class="px-4 py-2">${r.uraian || '-'}</td>
+          <td class="px-4 py-2">${r.pos || '-'}</td>
+          <td class="px-4 py-2 text-center">${r.nominal || '0'}</td>
+          <td class="px-4 py-2 text-center">${renderImage(r.foto)}</td>
+          <td class="px-4 py-2">${r.pembayaran || '-'}</td>
+          <td class="px-4 py-2 text-center">${renderImage(r.buktitransfer)}</td>
+          <td class="px-4 py-2 text-center">${r.brightgas || '0'}</td>
+          <td class="px-4 py-2 text-center">${r.retur || '0'}</td>
+          <td class="px-4 py-2 text-center">${renderImage(r.buktiretur)}</td>
+          <td class="px-4 py-2 text-center">
+            ${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}
+          </td>
+        </tr>
+      `).join('');
+    }
 
     async function fetchData() {
       const now = new Date();
@@ -79,37 +121,6 @@
       filterPangkalan.innerHTML = '<option value="">Semua</option>' + uniquePangkalan.map(p => `<option>${p}</option>`).join('');
 
       renderTable(data);
-    }
-
-    function renderImage(url) {
-      if (!url) return '-';
-      return `<a href="${url}" target="_blank"><img src="${url}" alt="foto" class="h-16 rounded shadow" loading="lazy" /></a>`;
-    }
-
-    function renderTable(rows) {
-      const filtered = rows.filter(item => {
-        return (!filterPT.value || item.pos === filterPT.value) &&
-               (!filterPangkalan.value || item.uraian === filterPangkalan.value);
-      });
-
-      rekapBody.innerHTML = filtered.map(r => `
-        <tr class="border-b">
-          <td class="px-4 py-2">${r.timestamp || '-'}</td>
-          <td class="px-4 py-2">${r.nama || '-'}</td>
-          <td class="px-4 py-2">${r.uraian || '-'}</td>
-          <td class="px-4 py-2">${r.pos || '-'}</td>
-          <td class="px-4 py-2">${r.nominal || '-'}</td>
-          <td class="px-4 py-2 text-center">${renderImage(r.foto)}</td>
-          <td class="px-4 py-2">${r.pembayaran || '-'}</td>
-          <td class="px-4 py-2 text-center">${renderImage(r.buktitransfer)}</td>
-          <td class="px-4 py-2">${r.brightgas || '0'}</td>
-          <td class="px-4 py-2">${r.retur || '0'}</td>
-          <td class="px-4 py-2 text-center">${renderImage(r.buktiretur)}</td>
-          <td class="px-4 py-2">
-            ${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}
-          </td>
-        </tr>
-      `).join('');
     }
 
     filterPT.addEventListener('change', () => renderTable(allData));
