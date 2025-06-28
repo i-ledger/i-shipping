@@ -50,7 +50,7 @@
             <th class="px-4 py-2">Nama PT</th>
             <th class="px-4 py-2">Driver/Kernet</th>
             <th class="px-4 py-2">Nama Pangkalan</th>
-            <th class="px-4 py-2">Jumlah Pengiriman(3Kg)</th>
+            <th class="px-4 py-2">Jumlah Pengiriman (3Kg)</th>
             <th class="px-4 py-2">Retur</th>
             <th class="px-4 py-2">Bright Gas (12Kg|5,5Kg)</th>
             <th class="px-4 py-2">Pemilik sedang dilokasi</th>
@@ -116,10 +116,10 @@
         </tr>`;
     }
     function renderTable(data) {
+      const from = fromInput.value ? new Date(fromInput.value + 'T00:00:00') : null;
+      const to   = toInput.value   ? new Date(toInput.value   + 'T23:59:59') : null;
       const filtered = data.filter(r => {
         const d = new Date(r.timestamp);
-        const from = fromInput.value ? new Date(fromInput.value) : null;
-        const to = toInput.value ? new Date(toInput.value) : null;
         return (!from || d >= from) && (!to || d <= to) &&
                (!filterPT.value || r.pos === filterPT.value) &&
                (!filterPangkalan.value || r.uraian === filterPangkalan.value);
@@ -127,32 +127,27 @@
       rekapBody.innerHTML = filtered.map(renderRow).join('');
     }
     async function fetchData() {
-      const res = await fetch(API_URL);
+      const res  = await fetch(API_URL);
       const data = await res.json();
       if (!Array.isArray(data)) return;
       allData = data;
-      // set default date inputs to today
       const today = new Date().toISOString().split('T')[0];
       fromInput.value = today;
-      toInput.value = today;
-      // populate filters
-      const pts = [...new Set(data.map(d=>d.pos))].sort();
-      const pgl = [...new Set(data.map(d=>d.uraian))].sort();
-      filterPT.innerHTML = '<option value="">Semua</option>' + pts.map(p=>`<option>${p}</option>`).join('');
-      filterPangkalan.innerHTML = '<option value="">Semua</option>' + pgl.map(p=>`<option>${p}</option>`).join('');
+      toInput.value   = today;
+      const pts  = [...new Set(data.map(d=>d.pos))].sort();
+      const pgls = [...new Set(data.map(d=>d.uraian))].sort();
+      filterPT.innerHTML        = '<option value="">Semua</option>' + pts.map(p=>`<option>${p}</option>`).join('');
+      filterPangkalan.innerHTML = '<option value="">Semua</option>' + pgls.map(p=>`<option>${p}</option>`).join('');
       renderTable(allData);
     }
     filterBtn.addEventListener('click', ()=>renderTable(allData));
     filterPT.addEventListener('change', ()=>renderTable(allData));
     filterPangkalan.addEventListener('change', ()=>renderTable(allData));
     downloadBtn.addEventListener('click', ()=>{
-      // generate CSV
       const header = ['Timestamp','Nama PT','Driver/Kernet','Nama Pangkalan','Jumlah Pengiriman','Retur','Bright Gas','Pemilik sedang dilokasi','Foto Pangkalan','Pemilik Pangkalan','Bukti Retur','Lokasi'];
       const rows = allData.filter(r => {
         const d = new Date(r.timestamp);
-        const from = fromInput.value ? new Date(fromInput.value) : null;
-        const to = toInput.value ? new Date(toInput.value) : null;
-        return (!from || d >= from) && (!to || d <= to);
+        return (!fromInput.value || d >= new Date(fromInput.value + 'T00:00:00')) && (!toInput.value || d <= new Date(toInput.value + 'T23:59:59'));
       }).map(r => [
         formatDate(r.timestamp), r.pos, r.nama, r.uraian, r.nominal, r.retur, r.brightgas, r.pembayaran,
         r.foto, r.buktitransfer, r.buktiretur, r.lokasi
@@ -160,8 +155,8 @@
       let csv = header.join(',') + '\n';
       rows.forEach(r => { csv += r.map(c=>`"${(c||'').toString().replace(/"/g,'""')}"`).join(',') + '\n'; });
       const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'rekap_pengiriman.csv'; a.click();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a'); a.href = url; a.download = 'rekap_pengiriman.csv'; a.click();
     });
 
     fetchData();
