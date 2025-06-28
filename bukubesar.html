@@ -52,6 +52,8 @@
     const filterPangkalan = document.getElementById('filterPangkalan');
     const rekapBody = document.getElementById('rekapBody');
 
+    let allData = [];
+
     async function fetchData() {
       const now = new Date();
       const yyyy = now.getFullYear();
@@ -64,41 +66,43 @@
 
       if (!data || !Array.isArray(data)) return;
 
-      const filtered = data.filter(item => {
-        return (!filterPT.value || item.pos === filterPT.value) &&
-               (!filterPangkalan.value || item.uraian === filterPangkalan.value);
-      });
+      allData = data;
 
-      const uniquePT = [...new Set(data.map(d => d.pos))];
-      const uniquePangkalan = [...new Set(data.map(d => d.uraian))];
+      const uniquePT = [...new Set(data.map(d => d.pos))].sort();
+      const uniquePangkalan = [...new Set(data.map(d => d.uraian))].sort();
 
       filterPT.innerHTML = '<option value="">Semua</option>' + uniquePT.map(p => `<option>${p}</option>`).join('');
       filterPangkalan.innerHTML = '<option value="">Semua</option>' + uniquePangkalan.map(p => `<option>${p}</option>`).join('');
 
-      renderTable(filtered);
+      renderTable(data);
     }
 
     function renderTable(rows) {
-      rekapBody.innerHTML = rows.map(r => `
+      const filtered = rows.filter(item => {
+        return (!filterPT.value || item.pos === filterPT.value) &&
+               (!filterPangkalan.value || item.uraian === filterPangkalan.value);
+      });
+
+      rekapBody.innerHTML = filtered.map(r => `
         <tr class="border-b">
-          <td class="px-4 py-2">${r.timestamp}</td>
-          <td class="px-4 py-2">${r.nama}</td>
-          <td class="px-4 py-2">${r.uraian}</td>
-          <td class="px-4 py-2">${r.pos}</td>
-          <td class="px-4 py-2">${r.jumlahtabung}</td>
-          <td class="px-4 py-2">${r.tbgbrightgas || '-'}</td>
+          <td class="px-4 py-2">${r.timestamp || '-'}</td>
+          <td class="px-4 py-2">${r.nama || '-'}</td>
+          <td class="px-4 py-2">${r.uraian || '-'}</td>
+          <td class="px-4 py-2">${r.pos || '-'}</td>
+          <td class="px-4 py-2">${r.nominal || '-'}</td>
+          <td class="px-4 py-2">${r.brightgas || '-'}</td>
           <td class="px-4 py-2">${r.retur || '-'}</td>
-          <td class="px-4 py-2">
-            <a href="${r.linkfotopangkalan}" target="_blank" class="text-blue-600 underline">Nota</a>
-            ${r.linkfotopemilik ? ` | <a href="${r.linkfotopemilik}" target="_blank" class="text-blue-600 underline">Pemilik</a>` : ''}
-            ${r.buktiretur ? ` | <a href="${r.buktiretur}" target="_blank" class="text-blue-600 underline">Retur</a>` : ''}
+          <td class="px-4 py-2 space-x-2">
+            ${r.foto ? `<a href="${r.foto}" target="_blank" class="text-blue-600 underline">Nota</a>` : ''}
+            ${r.buktitransfer ? `| <a href="${r.buktitransfer}" target="_blank" class="text-blue-600 underline">Pemilik</a>` : ''}
+            ${r.buktiretur ? `| <a href="${r.buktiretur}" target="_blank" class="text-blue-600 underline">Retur</a>` : ''}
           </td>
         </tr>
       `).join('');
     }
 
-    filterPT.addEventListener('change', fetchData);
-    filterPangkalan.addEventListener('change', fetchData);
+    filterPT.addEventListener('change', () => renderTable(allData));
+    filterPangkalan.addEventListener('change', () => renderTable(allData));
 
     fetchData();
   </script>
