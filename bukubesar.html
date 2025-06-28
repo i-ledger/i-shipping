@@ -16,104 +16,105 @@
 </head>
 <body class="bg-gradient-to-br from-indigo-100 to-white min-h-screen font-sans">
 
-  <div class="container">
-    <div class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl font-extrabold text-indigo-700">Data Transaksi i-Shipping SES_GS</h1>
-      <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg font-semibold">Logout</button>
-    </div>
-
-    <table id="transaksiTable">
-      <thead>
-        <tr>
-          <th>Tanggal</th>
-          <th>Nama</th>
-          <th>Nama Pangkalan</th>
-          <th>Nama PT</th>
-          <th>Jumlah LPG 3Kg</th>
-          <th>Bright Gas</th>
-          <th>Retur</th>
-          <th>Pembayaran</th>
-          <th>Lokasi</th>
-          <th>Foto Pangkalan</th>
-          <th>Foto Retur</th>
-          <th>Foto Bukti</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td colspan="12" class="text-center py-8 text-gray-500">Memuat data...</td></tr>
-      </tbody>
-    </table>
+<div class="container">
+  <div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-extrabold text-indigo-700">Data Transaksi i-Shipping SES_GS</h1>
+    <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg font-semibold">Logout</button>
   </div>
 
-  <script>
-    const API_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyvbLFoK_DIcji5GZiVyse5gBAe2tAnGXKMDZ3pmLsZmCILyHLOnz4XTmvwBGaHwLcv/exec';
+  <table id="transaksiTable">
+    <thead>
+      <tr>
+        <th>Tanggal</th>
+        <th>Nama</th>
+        <th>Nama Pangkalan</th>
+        <th>Nama PT</th>
+        <th>Jumlah LPG 3Kg</th>
+        <th>Bright Gas</th>
+        <th>Retur</th>
+        <th>Pembayaran</th>
+        <th>Lokasi</th>
+        <th>Foto Pangkalan</th>
+        <th>Foto Retur</th>
+        <th>Foto Bukti</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td colspan="12" class="text-center py-8 text-gray-500">Memuat data...</td></tr>
+    </tbody>
+  </table>
+</div>
 
-    if (localStorage.getItem('loggedIn') !== 'true') {
-      window.location.href = 'login.html';
-    }
+<script>
+  const API_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyvbLFoK_DIcji5GZiVyse5gBAe2tAnGXKMDZ3pmLsZmCILyHLOnz4XTmvwBGaHwLcv/exec';
 
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      localStorage.removeItem('loggedIn');
-      window.location.href = 'login.html';
-    });
+  if (localStorage.getItem('loggedIn') !== 'true') {
+    window.location.href = 'login.html';
+  }
 
-    const tbody = document.querySelector('#transaksiTable tbody');
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    localStorage.removeItem('loggedIn');
+    window.location.href = 'login.html';
+  });
 
-    function toDirectImageURL(url) {
-      if (!url) return '';
-      const match = url.match(/\/d\/([^/]+)\//);
-      return match ? `https://drive.google.com/uc?export=view&id=${match[1]}` : url;
-    }
+  const tbody = document.querySelector('#transaksiTable tbody');
 
-    async function fetchData() {
-      try {
-        const res = await fetch(API_ENDPOINT + '?action=transaksi');
-        const data = await res.json();
+  function toDirectImageURL(url) {
+    if (!url) return '';
+    const match = url.match(/\/d\/([^/]+)\//);
+    return match ? `https://drive.google.com/uc?export=view&id=${match[1]}` : '';
+  }
 
-        if (!Array.isArray(data)) {
-          tbody.innerHTML = `<tr><td colspan="12" class="text-center text-red-600 py-8">Gagal memuat data</td></tr>`;
-          return;
-        }
+  async function fetchData() {
+    try {
+      const res = await fetch(API_ENDPOINT + '?action=transaksi');
+      const data = await res.json();
 
-        if (data.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="12" class="text-center py-8">Tidak ada data transaksi.</td></tr>`;
-          return;
-        }
-
-        tbody.innerHTML = '';
-
-        data.forEach(item => {
-          const tgl = item.timestamp ? new Date(item.timestamp).toLocaleString('id-ID', {
-            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-          }) : '-';
-
-          const fotoPangkalan = toDirectImageURL(item.linkfotopangkalan);
-          const fotoRetur = toDirectImageURL(item.linkfotoretur);
-          const fotoPemilik = toDirectImageURL(item.linkfotopemilik);
-
-          tbody.innerHTML += `
-            <tr>
-              <td>${tgl}</td>
-              <td>${item.nama || '-'}</td>
-              <td>${item.uraian || '-'}</td>
-              <td>${item.pos || '-'}</td>
-              <td>${item.jumlahtabung !== undefined ? Number(item.jumlahtabung).toLocaleString('id-ID') : '-'}</td>
-              <td>${item.jumlahbrightgas || '-'}</td>
-              <td>${item.retur !== undefined ? item.retur : '-'}</td>
-              <td>${item.statuspemilikpangkalan || '-'}</td>
-              <td>${item.lokasi ? `<a href="${item.lokasi}" target="_blank" class="text-indigo-600 underline">Lihat</a>` : '-'}</td>
-              <td>${fotoPangkalan ? `<a href="${item.linkfotopangkalan}" target="_blank"><img src="${fotoPangkalan}" alt="Foto Pangkalan" class="thumb"></a>` : '-'}</td>
-              <td>${fotoRetur ? `<a href="${item.linkfotoretur}" target="_blank"><img src="${fotoRetur}" alt="Foto Retur" class="thumb"></a>` : '-'}</td>
-              <td>${fotoPemilik ? `<a href="${item.linkfotopemilik}" target="_blank"><img src="${fotoPemilik}" alt="Foto Bukti" class="thumb"></a>` : '-'}</td>
-            </tr>
-          `;
-        });
-      } catch (error) {
-        tbody.innerHTML = `<tr><td colspan="12" class="text-center text-red-600 py-8">Error: ${error.message}</td></tr>`;
+      if (!Array.isArray(data)) {
+        tbody.innerHTML = `<tr><td colspan="12" class="text-center text-red-600 py-8">Gagal memuat data</td></tr>`;
+        return;
       }
-    }
 
-    fetchData();
-  </script>
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="12" class="text-center py-8">Tidak ada data transaksi.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = '';
+
+      data.forEach(item => {
+        const tgl = item.timestamp ? new Date(item.timestamp).toLocaleString('id-ID', {
+          day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        }) : '-';
+
+        const fotoNota = toDirectImageURL(item.linkfotopangkalan);
+        const fotoRetur = toDirectImageURL(item.linkfotoretur);
+        const fotoBukti = toDirectImageURL(item.linkfotopemilik);
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${tgl}</td>
+            <td>${item.nama || '-'}</td>
+            <td>${item.uraian || '-'}</td>
+            <td>${item.pos || '-'}</td>
+            <td>${item.jumlahtabung !== undefined ? Number(item.jumlahtabung).toLocaleString('id-ID') : '-'}</td>
+            <td>${item.jumlahbrightgas || '-'}</td>
+            <td>${item.retur || '-'}</td>
+            <td>${item.statuspemilikpangkalan || '-'}</td>
+            <td>${item.lokasi ? `<a href="${item.lokasi}" target="_blank" class="text-indigo-600 underline">Lihat</a>` : '-'}</td>
+            <td>${fotoNota ? `<a href="${item.linkfotopangkalan}" target="_blank"><img src="${fotoNota}" alt="Foto Pangkalan" class="thumb"></a>` : '-'}</td>
+            <td>${fotoRetur ? `<a href="${item.linkfotoretur}" target="_blank"><img src="${fotoRetur}" alt="Foto Retur" class="thumb"></a>` : '-'}</td>
+            <td>${fotoBukti ? `<a href="${item.linkfotopemilik}" target="_blank"><img src="${fotoBukti}" alt="Foto Bukti" class="thumb"></a>` : '-'}</td>
+          </tr>
+        `;
+      });
+    } catch (error) {
+      tbody.innerHTML = `<tr><td colspan="12" class="text-center text-red-600 py-8">Error: ${error.message}</td></tr>`;
+    }
+  }
+
+  fetchData();
+</script>
+
 </body>
 </html>
