@@ -81,6 +81,11 @@
       renderTable(data);
     }
 
+    function renderImage(url) {
+      if (!url) return '-';
+      return `<a href="${url}" target="_blank"><img src="${url}" alt="foto" class="h-16 rounded shadow" loading="lazy" /></a>`;
+    }
+
     function renderTable(rows) {
       const filtered = rows.filter(item => {
         return (!filterPT.value || item.pos === filterPT.value) &&
@@ -94,18 +99,12 @@
           <td class="px-4 py-2">${r.uraian || '-'}</td>
           <td class="px-4 py-2">${r.pos || '-'}</td>
           <td class="px-4 py-2">${r.nominal || '-'}</td>
-          <td class="px-4 py-2">
-            ${r.foto ? `<a href="${r.foto}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}
-          </td>
+          <td class="px-4 py-2 text-center">${renderImage(r.foto)}</td>
           <td class="px-4 py-2">${r.pembayaran || '-'}</td>
-          <td class="px-4 py-2">
-            ${r.buktitransfer ? `<a href="${r.buktitransfer}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}
-          </td>
+          <td class="px-4 py-2 text-center">${renderImage(r.buktitransfer)}</td>
           <td class="px-4 py-2">${r.brightgas || '0'}</td>
           <td class="px-4 py-2">${r.retur || '0'}</td>
-          <td class="px-4 py-2">
-            ${r.buktiretur ? `<a href="${r.buktiretur}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}
-          </td>
+          <td class="px-4 py-2 text-center">${renderImage(r.buktiretur)}</td>
           <td class="px-4 py-2">
             ${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}
           </td>
