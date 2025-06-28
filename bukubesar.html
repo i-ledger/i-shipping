@@ -37,7 +37,7 @@
             <th class="px-4 py-2">Foto</th>
             <th class="px-4 py-2">Pembayaran</th>
             <th class="px-4 py-2">Bukti Transfer</th>
-            <th class="px-4 py-2">Bright Gas(12Kg||5,5Kg)</th>
+            <th class="px-4 py-2">Bright Gas</th>
             <th class="px-4 py-2">Retur</th>
             <th class="px-4 py-2">Bukti Retur</th>
             <th class="px-4 py-2">Lokasi</th>
@@ -54,17 +54,13 @@
     const filterPT = document.getElementById('filterPT');
     const filterPangkalan = document.getElementById('filterPangkalan');
     const rekapBody = document.getElementById('rekapBody');
-
     let allData = [];
 
+    // Convert Google Drive view link to direct image link
     function convertDriveUrl(url) {
       if (!url) return null;
-      let id = null;
-      const match1 = url.match(/\/d\/([^/]+)\//);
-      const match2 = url.match(/[?&]id=([^&]+)/);
-      if (match1) id = match1[1];
-      else if (match2) id = match2[1];
-      return id ? `https://drive.google.com/uc?id=${id}` : null;
+      const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      return match ? `https://drive.google.com/uc?id=${match[1]}` : null;
     }
 
     function renderImage(url) {
@@ -75,10 +71,10 @@
     }
 
     function renderTable(rows) {
-      const filtered = rows.filter(item => {
-        return (!filterPT.value || item.pos === filterPT.value) &&
-               (!filterPangkalan.value || item.uraian === filterPangkalan.value);
-      });
+      const filtered = rows.filter(item =>
+        (!filterPT.value || item.pos === filterPT.value) &&
+        (!filterPangkalan.value || item.uraian === filterPangkalan.value)
+      );
 
       rekapBody.innerHTML = filtered.map(r => `
         <tr class="border-b hover:bg-gray-50">
