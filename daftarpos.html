@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kelola POS (Uraian ⇄ Kategori)</title>
+  <title>Kelola Data Pangkalan </title>
   <style>
     :root {
       --primary: #007BFF;
@@ -114,8 +114,8 @@
 
     <!-- Form Tambah POS -->
     <div class="form-group">
-<input type="text" id="uraianInput" class="uppercase" placeholder="Uraian (misal: KERTAS)" />
-<input type="text" id="posInput" class="uppercase" placeholder="Pos (misal: ATK)" />
+<input type="text" id="uraianInput" class="uppercase" placeholder="Nama Pangkalan" />
+<input type="text" id="posInput" class="uppercase" placeholder="Nama PT" />
 
       <button onclick="tambahPos()">Tambah</button>
     </div>
@@ -131,8 +131,8 @@
       <thead>
         <tr>
           <th>No.</th>
-          <th>Uraian</th>
-          <th>Pos</th>
+          <th>Nama Pangkalan</th>
+          <th>Nama PT</th>
           <th>Aksi</th>
         </tr>
       </thead>
