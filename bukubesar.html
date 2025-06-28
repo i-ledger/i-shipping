@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Rekap Pengiriman</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -33,7 +33,7 @@
             <th class="px-4 py-2">Nama</th>
             <th class="px-4 py-2">Nama Pangkalan</th>
             <th class="px-4 py-2">Nama PT</th>
-            <th class="px-4 py-2">Jumlah Pengiriman (3Kg)</th>
+            <th class="px-4 py-2">Jumlah (3Kg)</th>
             <th class="px-4 py-2">Foto</th>
             <th class="px-4 py-2">Pembayaran</th>
             <th class="px-4 py-2">Bukti Transfer</th>
@@ -50,78 +50,73 @@
 
   <script src="config.js"></script>
   <script>
-    const API_URL = API_ENDPOINT + '?action=transaksi';
-    const filterPT = document.getElementById('filterPT');
-    const filterPangkalan = document.getElementById('filterPangkalan');
-    const rekapBody = document.getElementById('rekapBody');
-    let allData = [];
+    const API_URL   = API_ENDPOINT + '?action=transaksi';
+    const filterPT  = document.getElementById('filterPT');
+    const filterPgl = document.getElementById('filterPangkalan');
+    const bodyEl    = document.getElementById('rekapBody');
+    let allData     = [];
 
-    // Convert Google Drive view link to direct image link
-    function convertDriveUrl(url) {
-      if (!url) return null;
-      const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-      return match ? `https://drive.google.com/uc?id=${match[1]}` : null;
+    function extractFileId(url) {
+      const m = url.match(/\/d\/([A-Za-z0-9_-]+)/);
+      return m ? m[1] : null;
     }
 
-    function renderImage(url) {
-      const imgUrl = convertDriveUrl(url);
-      return imgUrl
-        ? `<img src="${imgUrl}" alt="foto" class="h-20 rounded shadow mx-auto" loading="lazy" />`
-        : '-';
+    function renderThumb(url) {
+      const id = extractFileId(url);
+      if (!id) return '-';
+      // sz parameter = max width (320px); img height auto
+      const thumb = `https://drive.google.com/thumbnail?authuser=0&sz=w320&id=${id}`;
+      // clickable to open full view
+      return `<a href="${url}" target="_blank">
+                <img src="${thumb}" class="h-20 rounded shadow mx-auto" loading="lazy"/>
+              </a>`;
     }
 
-    function renderTable(rows) {
-      const filtered = rows.filter(item =>
-        (!filterPT.value || item.pos === filterPT.value) &&
-        (!filterPangkalan.value || item.uraian === filterPangkalan.value)
-      );
-
-      rekapBody.innerHTML = filtered.map(r => `
+    function renderRow(r) {
+      return `
         <tr class="border-b hover:bg-gray-50">
           <td class="px-4 py-2">${r.timestamp || '-'}</td>
-          <td class="px-4 py-2">${r.nama || '-'}</td>
-          <td class="px-4 py-2">${r.uraian || '-'}</td>
-          <td class="px-4 py-2">${r.pos || '-'}</td>
-          <td class="px-4 py-2 text-center">${r.nominal || '0'}</td>
-          <td class="px-4 py-2 text-center">${renderImage(r.foto)}</td>
-          <td class="px-4 py-2">${r.pembayaran || '-'}</td>
-          <td class="px-4 py-2 text-center">${renderImage(r.buktitransfer)}</td>
-          <td class="px-4 py-2 text-center">${r.brightgas || '0'}</td>
-          <td class="px-4 py-2 text-center">${r.retur || '0'}</td>
-          <td class="px-4 py-2 text-center">${renderImage(r.buktiretur)}</td>
+          <td class="px-4 py-2">${r.nama      || '-'}</td>
+          <td class="px-4 py-2">${r.uraian    || '-'}</td>
+          <td class="px-4 py-2">${r.pos       || '-'}</td>
+          <td class="px-4 py-2 text-center">${r.nominal|| '0'}</td>
+          <td class="px-4 py-2 text-center">${renderThumb(r.foto)}</td>
+          <td class="px-4 py-2">${r.pembayaran|| '-'}</td>
+          <td class="px-4 py-2 text-center">${renderThumb(r.buktitransfer)}</td>
+          <td class="px-4 py-2 text-center">${r.brightgas|| '0'}</td>
+          <td class="px-4 py-2 text-center">${r.retur    || '0'}</td>
+          <td class="px-4 py-2 text-center">${renderThumb(r.buktiretur)}</td>
           <td class="px-4 py-2 text-center">
             ${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}
           </td>
-        </tr>
-      `).join('');
+        </tr>`;
+    }
+
+    function renderTable(data) {
+      const filtered = data.filter(d =>
+        (!filterPT.value  || d.pos    === filterPT.value) &&
+        (!filterPgl.value || d.uraian === filterPgl.value)
+      );
+      bodyEl.innerHTML = filtered.map(renderRow).join('');
     }
 
     async function fetchData() {
-      const now = new Date();
-      const yyyy = now.getFullYear();
-      const mm = String(now.getMonth() + 1).padStart(2, '0');
-      const dd = String(now.getDate()).padStart(2, '0');
-      const hariIni = `${yyyy}-${mm}-${dd}`;
-
-      const res = await fetch(`${API_URL}&start=${hariIni}&end=${hariIni}`);
-      const data = await res.json();
-
-      if (!data || !Array.isArray(data)) return;
-
+      const d = new Date();
+      const t= `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const res = await fetch(`${API_URL}&start=${t}&end=${t}`);
+      const data= await res.json();
+      if (!Array.isArray(data)) return;
       allData = data;
-
-      const uniquePT = [...new Set(data.map(d => d.pos))].sort();
-      const uniquePangkalan = [...new Set(data.map(d => d.uraian))].sort();
-
-      filterPT.innerHTML = '<option value="">Semua</option>' + uniquePT.map(p => `<option>${p}</option>`).join('');
-      filterPangkalan.innerHTML = '<option value="">Semua</option>' + uniquePangkalan.map(p => `<option>${p}</option>`).join('');
-
+      // populate filters
+      const pts = [...new Set(data.map(d=>d.pos))].sort();
+      const pgl = [...new Set(data.map(d=>d.uraian))].sort();
+      filterPT.innerHTML  = '<option value="">Semua</option>' + pts.map(p=>`<option>${p}</option>`).join('');
+      filterPgl.innerHTML = '<option value="">Semua</option>' + pgl.map(p=>`<option>${p}</option>`).join('');
       renderTable(data);
     }
 
-    filterPT.addEventListener('change', () => renderTable(allData));
-    filterPangkalan.addEventListener('change', () => renderTable(allData));
-
+    filterPT.addEventListener('change', ()=>renderTable(allData));
+    filterPgl.addEventListener('change', ()=>renderTable(allData));
     fetchData();
   </script>
 </body>
