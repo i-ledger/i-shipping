@@ -36,7 +36,9 @@
             <th class="px-4 py-2">Jumlah</th>
             <th class="px-4 py-2">Bright Gas</th>
             <th class="px-4 py-2">Retur</th>
-            <th class="px-4 py-2">Link Foto</th>
+            <th class="px-4 py-2">Status</th>
+            <th class="px-4 py-2">Link Bukti</th>
+            <th class="px-4 py-2">Lokasi</th>
           </tr>
         </thead>
         <tbody id="rekapBody"></tbody>
@@ -90,12 +92,16 @@
           <td class="px-4 py-2">${r.uraian || '-'}</td>
           <td class="px-4 py-2">${r.pos || '-'}</td>
           <td class="px-4 py-2">${r.nominal || '-'}</td>
-          <td class="px-4 py-2">${r.brightgas || '-'}</td>
-          <td class="px-4 py-2">${r.retur || '-'}</td>
-          <td class="px-4 py-2 space-x-2">
+          <td class="px-4 py-2">${r.brightgas || '0'}</td>
+          <td class="px-4 py-2">${r.retur || '0'}</td>
+          <td class="px-4 py-2">${r.pembayaran || '-'}</td>
+          <td class="px-4 py-2 space-y-1 space-x-1">
             ${r.foto ? `<a href="${r.foto}" target="_blank" class="text-blue-600 underline">Nota</a>` : ''}
-            ${r.buktitransfer ? `| <a href="${r.buktitransfer}" target="_blank" class="text-blue-600 underline">Pemilik</a>` : ''}
-            ${r.buktiretur ? `| <a href="${r.buktiretur}" target="_blank" class="text-blue-600 underline">Retur</a>` : ''}
+            ${r.buktitransfer ? `<a href="${r.buktitransfer}" target="_blank" class="text-blue-600 underline">Transfer</a>` : ''}
+            ${r.buktiretur ? `<a href="${r.buktiretur}" target="_blank" class="text-blue-600 underline">Retur</a>` : ''}
+          </td>
+          <td class="px-4 py-2">
+            ${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}
           </td>
         </tr>
       `).join('');
