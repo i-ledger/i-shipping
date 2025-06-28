@@ -1,614 +1,111 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Buku Besar - i-ledger</title>
-  <style>
-    :root {
-      --primary: #2563eb;
-      --gray: #f9fafb;
-      --border: #e5e7eb;
-      --text: #111827;
-    }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      padding: 2rem;
-      background-color: var(--gray);
-      color: var(--text);
-      display: flex;
-    }
-
-    .sidebar {
-      width: 200px;
-      padding: 1rem;
-      background-color: #fff;
-      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-      margin-right: 2rem;
-      border-radius: 0.75rem;
-    }
-
-    .sidebar h3 {
-      margin-top: 0;
-      font-size: 1.25rem;
-      color: var(--primary);
-    }
-
-    .sidebar ul {
-      list-style-type: none;
-      padding-left: 0;
-    }
-
-    .sidebar ul li {
-      padding: 0.5rem;
-      cursor: pointer;
-      border-bottom: 1px solid var(--border);
-      color: var(--primary);
-    }
-
-    .sidebar ul li:hover {
-      background-color: var(--primary);
-      color: white;
-    }
-
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .controls label {
-      font-size: 0.9rem;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .controls input[type="date"] {
-      padding: 0.4rem;
-      font-size: 0.9rem;
-    }
-
-    .controls button {
-      background-color: var(--primary);
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 0.25rem;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
-
-    .table-container {
-      overflow-x: auto;
-      background: white;
-      border-radius: 0.75rem;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
-      padding: 1rem;
-      flex-grow: 1;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 900px;
-    }
-
-    thead {
-      background-color: var(--primary);
-      color: white;
-    }
-
-    th, td {
-      padding: 12px 16px;
-      border: 1px solid var(--border);
-      text-align: left;
-      vertical-align: top;
-      font-size: 14px;
-    }
-
-    th {
-      font-weight: 600;
-    }
-
-    td img {
-      max-width: 80px;
-      max-height: 80px;
-      object-fit: cover;
-      border: 1px solid #ddd;
-      border-radius: 0.5rem;
-      padding: 3px;
-      background: #fff;
-    }
-
-    .error {
-      color: red;
-      font-style: italic;
-    }
-
-    /* Spinner styles */
-    .spinner {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid var(--primary);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: translate(-50%, -50%) rotate(0deg); }
-      100% { transform: translate(-50%, -50%) rotate(360deg); }
-    }
-
-    @media (max-width: 600px) {
-      h2 {
-        font-size: 1.5rem;
-      }
-
-      th, td {
-        font-size: 13px;
-        padding: 8px 10px;
-      }
-
-      .controls {
-        flex-direction: column;
-      }
-
-      .sidebar {
-        width: 100%;
-        margin-right: 0;
-      }
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin i-Shipping SES_GS</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  table { border-collapse: collapse; width: 100%; }
+  th, td { padding: 0.75rem 1rem; border: 1px solid #ddd; text-align: left; vertical-align: middle; }
+  th { background-color: #4f46e5; color: white; position: sticky; top: 0; z-index: 10; }
+  tbody tr:nth-child(even) { background-color: #f3f4f6; }
+  .container { max-width: 1200px; margin: auto; padding: 2rem; }
+  img.thumb { width: 80px; border-radius: 0.5rem; }
+</style>
 </head>
-<body>
-  <!-- Spinner element -->
-  <div class="spinner" id="loadingSpinner"></div>
-<div class="sidebar" id="sidebar">
-  <button onclick="location.href='dashboard.html'" style="width: 100%; margin-bottom: 1rem; background-color: var(--primary); color: white; padding: 0.5rem; border: none; border-radius: 0.5rem; cursor: pointer;">
-    Dashboard
-  </button>
-  <h3>Daftar Pos</h3>
-  <ul id="posList"></ul>
-</div>
-  <div>
-    <h2>Data Buku Besar - i-Ledger</h2>
-    <div class="controls">
-      <label>Mulai:
-        <input type="date" id="startDate" />
-      </label>
-      <label>Selesai:
-        <input type="date" id="endDate" />
-      </label>
-      <button id="filterBtn">Filter</button>
-      <button id="resetBtn">Reset</button>
-      <button id="excelBtn">Download Buku Besar(Excel)</button>
-      <button id="downloadExcelPerPosBtn">Download Data PerPOS(Excel)</button>
-      <button id="pdfBtn">Download Foto PerPOS(pdf)</button>
-    </div>
-    <div class="table-container" id="tableContainer">
-      <table id="ledgerTable">
-        <thead>
-          <tr>
-            <th>Timestamp</th>
-            <th>Nama</th>
-            <th>Uraian</th>
-            <th>Pos</th>
-            <th>Nominal</th>
-            <th>Foto Nota</th>
-            <th>Pembayaran</th>
-            <th>Bukti Transfer</th>
-          </tr>
-        </thead>
-        <tbody id="ledgerTableBody"></tbody>
-      </table>
-      <div id="totalNominal" style="font-weight: bold; margin-top: 1rem;">Total Nominal: Rp 0</div>
-    </div>
+<body class="bg-gradient-to-br from-indigo-100 to-white min-h-screen font-sans">
+
+<div class="container">
+  <div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-extrabold text-indigo-700">Data Transaksi i-Shipping SES_GS</h1>
+    <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg font-semibold">Logout</button>
   </div>
 
-  <!-- Library for Excel export -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-  <!-- Libraries for PDF export -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  
-  <script src="config.js"></script>
-  <script>
-      if (localStorage.getItem('loggedIn') !== 'true') {
-      window.location.href = 'login.html';
-    }
+  <table id="transaksiTable">
+    <thead>
+      <tr>
+        <th>Tanggal</th>
+        <th>Nama</th>
+        <th>Nama Pangkalan</th>
+        <th>Nama PT</th>
+        <th>Jumlah LPG 3Kg</th>
+        <th>Bright Gas</th>
+        <th>Retur</th>
+        <th>Pembayaran</th>
+        <th>Lokasi</th>
+        <th>Foto Pangkalan</th>
+        <th>Foto Retur</th>
+        <th>Foto Bukti</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td colspan="12" class="text-center py-8 text-gray-500">Memuat data...</td></tr>
+    </tbody>
+  </table>
+</div>
 
-    const endpoint = API_ENDPOINT + '?action=transaksi';
-    const posEndpoint = API_ENDPOINT + '?action=namapos';
-    let allData = [];
-    let allPos = [];
+<script>
+  const API_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyrw10g_NvT_Ykq9R3yPm4M9SzYOXIx-YYSAGMWJirHeiWLK3EWEachjawcNiCDsnzZ/exec';
 
-    function formatRupiah(angka) {
-      const num = parseInt(angka.toString().replace(/[^\d]/g, ""));
-      return isNaN(num) ? "" : num.toLocaleString("id-ID", { style: "currency", currency: "IDR" });
-    }
+  if (localStorage.getItem('loggedIn') !== 'true') {
+    window.location.href = 'login.html';
+  }
 
-    function isValidBase64(str) {
-      return typeof str === "string" && str.startsWith("data:image/") && str.includes("base64,");
-    }
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    localStorage.removeItem('loggedIn');
+    window.location.href = 'login.html';
+  });
 
-    function formatTanggalIndonesia(datetimeStr) {
-      const date = new Date(datetimeStr);
-      if (isNaN(date)) return datetimeStr;
-      const pad = n => n.toString().padStart(2, '0');
-      const hari = pad(date.getDate());
-      const bulan = pad(date.getMonth() + 1);
-      const tahun = date.getFullYear();
-      const jam = pad(date.getHours());
-      const menit = pad(date.getMinutes());
-      const detik = pad(date.getSeconds());
-      return `${hari}/${bulan}/${tahun} ${jam}:${menit}:${detik}`;
-    }
+  const tbody = document.querySelector('#transaksiTable tbody');
 
-    async function fetchData() {
-      document.getElementById("loadingSpinner").style.display = "block";  // Show spinner
-      try {
-        const res = await fetch(endpoint);
-        if (!res.ok) throw new Error('Gagal memuat data. Status: ' + res.status);
- allData = await res.json();
-filterCurrentMonthData();
-      } catch (error) {
-        console.error(error);
-      } finally {
-        document.getElementById("loadingSpinner").style.display = "none";  // Hide spinner
-      }
-    }
+  async function fetchData() {
+    try {
+      const res = await fetch(API_ENDPOINT + '?action=transaksi');
+      const data = await res.json();
 
-    async function fetchPos() {
-      const res = await fetch(posEndpoint);
-      if (!res.ok) throw new Error('Gagal memuat data pos. Status: ' + res.status);
-      allPos = await res.json();
-      renderPosList(allPos);
-    }
-
-    function renderPosList(posData) {
-      const posList = document.getElementById("posList");
-      posList.innerHTML = "";
-      posData.forEach(pos => {
-        const li = document.createElement("li");
-        li.textContent = pos.nama_pos;
-        li.onclick = () => filterByPos(pos.nama_pos);
-        posList.appendChild(li);
-      });
-    }
-function extractDriveId(url) {
-  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)\//);
-  return match ? match[1] : null;
-}
-
-    function renderTable(data) {
-      const tbody = document.getElementById("ledgerTableBody");
-      tbody.innerHTML = "";
-      let totalNominal = 0;
-      if (!data || data.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='8'>Tidak ada data untuk ditampilkan</td></tr>";
-        document.getElementById("totalNominal").textContent = "Total Nominal: Rp 0";
+      if (!Array.isArray(data)) {
+        tbody.innerHTML = `<tr><td colspan="12" class="text-center text-red-600 py-8">Gagal memuat data</td></tr>`;
         return;
       }
+
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="12" class="text-center py-8">Tidak ada data transaksi.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = '';
 
       data.forEach(item => {
-        const nominal = item.nominal ? parseInt(item.nominal) : 0;
-        totalNominal += nominal;
-const fotoNota = item.foto && item.foto.includes('https://') 
-  ? `<a href="${item.foto}" target="_blank"><img src="https://drive.google.com/thumbnail?id=${extractDriveId(item.foto)}&sz=w200" alt="Foto Nota" /></a>` 
-  : '<span class="error">Foto Nota tidak ada</span>';
+        // Format tanggal dari timestamp
+        const tgl = item.timestamp ? new Date(item.timestamp).toLocaleString('id-ID', {
+          day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        }) : '-';
 
-const buktitransfer = item.buktitransfer && item.buktitransfer.includes('https://') 
-  ? `<a href="${item.buktitransfer}" target="_blank"><img src="https://drive.google.com/thumbnail?id=${extractDriveId(item.buktitransfer)}&sz=w200" alt="Bukti Transfer" /></a>` 
-  : '<span class="error">Bukti Transfer tidak ada</span>';
-
-        const row = document.createElement("tr");
-        row.innerHTML = 
-          `<td>${formatTanggalIndonesia(item.timestamp)}</td>
-          <td>${item.nama || ""}</td>
-          <td>${item.uraian || ""}</td>
-          <td>${item.pos || ""}</td>
-          <td>${nominal ? formatRupiah(nominal) : ""}</td>
-          <td>${fotoNota}</td>
-          <td>${item.pembayaran || ""}</td>
-          <td>${buktitransfer}</td>`;
-        tbody.appendChild(row);
+        tbody.innerHTML += `
+          <tr>
+            <td>${tgl}</td>
+            <td>${item.nama || '-'}</td>
+            <td>${item.uraian || '-'}</td>
+            <td>${item.pos || '-'}</td>
+            <td>${item.jumlahtabung !== undefined ? Number(item.jumlahtabung).toLocaleString('id-ID') : '-'}</td>
+            <td>${item.jumlahbrightgas !== undefined ? item.jumlahbrightgas : '-'}</td>
+            <td>${item.retur !== undefined ? item.retur : '-'}</td>
+            <td>${item.statuspemilikpangkalan || '-'}</td>
+            <td>${item.lokasi ? `<a href="${item.lokasi}" target="_blank" class="text-indigo-600 underline">Lihat</a>` : '-'}</td>
+            <td>${item.linkfotopangkalan ? `<a href="${item.linkfotopangkalan}" target="_blank"><img src="${item.linkfotopangkalan}" alt="Foto Pangkalan" class="thumb"></a>` : '-'}</td>
+            <td>${item.linkfotoretur ? `<a href="${item.linkfotoretur}" target="_blank"><img src="${item.linkfotoretur}" alt="Foto Retur" class="thumb"></a>` : '-'}</td>
+            <td>${item.linkfotopemilik ? `<a href="${item.linkfotopemilik}" target="_blank"><img src="${item.linkfotopemilik}" alt="Foto Bukti" class="thumb"></a>` : '-'}</td>
+          </tr>
+        `;
       });
-      document.getElementById("totalNominal").textContent = `Total Nominal: ${formatRupiah(totalNominal)}`;
-    }
-
-function filterByPos(pos, startDate, endDate) {
-  // Ambil nilai startDate dan endDate dari inputan
-  startDate = document.getElementById("startDate").value;
-  endDate = document.getElementById("endDate").value;
-
-  // Jika salah satu tanggal kosong, tampilkan semua data
-  if (!startDate || !endDate) {
-    renderTable(allData);
-    return;
-  }
-
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  // Tambahkan waktu agar tanggal selesai mencakup seluruh hari
-  end.setHours(23, 59, 59, 999);
-
-  // Filter data berdasarkan tanggal
-  let filteredData = allData.filter(item => {
-    const timestamp = new Date(item.timestamp);
-    return timestamp >= start && timestamp <= end;
-  });
-
-  // Memfilter berdasarkan pos jika pos dipilih
-  if (pos) {
-    filteredData = filteredData.filter(item => item.pos === pos);
-  }
-
-  // Render tabel dengan data yang sudah difilter
-  renderTable(filteredData);
-}
-    function filterByDate() {
-      const startDate = document.getElementById("startDate").value;
-      const endDate = document.getElementById("endDate").value;
-      if (!startDate || !endDate) {
-        renderTable(allData);
-        return;
-      }
-
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      // Tambahkan waktu agar tanggal selesai mencakup seluruh hari
-      end.setHours(23, 59, 59, 999);
-
-      const filtered = allData.filter(item => {
-        const timestamp = new Date(item.timestamp);
-        return timestamp >= start && timestamp <= end;
-      });
-
-      renderTable(filtered);
-    }
-  // pasang event listener setelah DOM siap
-  window.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('filterBtn')
-      .addEventListener('click', filterByDate);
-   });
-
-function filterCurrentMonthData() {
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-
-  const filtered = allData.filter(item => {
-    const date = new Date(item.timestamp);
-    return (
-      date.getMonth() === currentMonth &&
-      date.getFullYear() === currentYear
-    );
-  });
-  renderTable(filtered);
-}
-    function resetFilter() {
-      document.getElementById("startDate").value = "";
-      document.getElementById("endDate").value = "";
-      renderTable(allData);
-    }
-  // pasang event listener setelah DOM siap
-  window.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('resetBtn')
-      .addEventListener('click', resetFilter);
-   });
-    // Download Excel
-    document.getElementById("excelBtn").addEventListener("click", function () {
-      const table = document.getElementById("ledgerTable");
-      const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
-      XLSX.writeFile(wb, "buku_besar.xlsx");
-    });
-// Download Excel PER POST
-document.getElementById("downloadExcelPerPosBtn").onclick = () => {
-  if (!allData.length) {
-    alert("Data tidak tersedia!");
-    return;
-  }
-
-  // Pastikan filterByDate sudah dipanggil sebelumnya atau filter data berdasarkan tanggal langsung di sini
-  const startDate = document.getElementById("startDate").value;
-  const endDate = document.getElementById("endDate").value;
-  
-  let filteredData = allData;  // Data yang sudah difilter berdasarkan tanggal
-  
-  if (startDate && endDate) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999); // Mengatur tanggal selesai mencakup seluruh hari
-
-    filteredData = allData.filter(item => {
-      const timestamp = new Date(item.timestamp);
-      return timestamp >= start && timestamp <= end;
-    });
-  }
-
-  const wb = XLSX.utils.book_new();
-  const posList = [...new Set(filteredData.map(d => d.pos))];
-
-  posList.forEach(pos => {
-    const posFilteredData = filteredData.filter(d => d.pos === pos);
-    const sheetData = posFilteredData.map((item, index) => {
-      console.log("timestamp asli:", item.timestamp);  // Debug
-      return {
-        No: index + 1,
-        Tanggal: parseTanggal(item.timestamp),       // Pakai parseTanggal
-        Nama: item.nama,
-        Uraian: item.uraian,
-        POS: item.pos,
-        Pembayaran: item.pembayaran,
-        Nominal: item.nominal
-      };
-    });
-
-    const ws = XLSX.utils.json_to_sheet(sheetData);
-    XLSX.utils.book_append_sheet(wb, ws, pos);
-  });
-
-  XLSX.writeFile(wb, "i-Ledger_Per_POS.xlsx");
-};
-
-// Coba parsing tanggal dengan fleksibel
-function parseTanggal(input) {
-  if (!input) return "-";
-  const date = new Date(input);
-
-  if (isNaN(date)) {
-    // Kalau format tidak valid
-    return input; // biar kita lihat nanti bentuk aslinya apa
-  }
-
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
-}
-    // Download PDF
-// Download PDF
-// Tambahkan fungsi helper untuk convert URL gambar ke base64
-async function getImageBase64FromURL(url) {
-  try {
-    const response = await fetch(url, { mode: 'cors' });
-    const blob = await response.blob();
-    return await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  } catch (err) {
-    console.error("Gagal konversi gambar:", err);
-    return null;
-  }
-}
-
-// Download PDF
-function getImageBase64ViaImgTag(url) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "Anonymous";
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0);
-      try {
-        const dataURL = canvas.toDataURL("image/jpeg");
-        resolve(dataURL);
-      } catch (err) {
-        reject("Gagal convert canvas ke base64");
-      }
-    };
-    img.onerror = () => reject("Gagal load gambar dari URL");
-    img.src = url;
-  });
-}
-
-async function downloadPDFWithImages() {
-  if (!allData.length) {
-    alert("Data tidak tersedia!");
-    return;
-  }
-
-  const startDate = document.getElementById("startDate").value;
-  const endDate = document.getElementById("endDate").value;
-  let filteredData = allData;
-
-  if (startDate && endDate) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999);
-    filteredData = allData.filter(item => {
-      const timestamp = new Date(item.timestamp);
-      return timestamp >= start && timestamp <= end;
-    });
-  }
-
-  const posList = [...new Set(filteredData.map(d => d.pos))];
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  for (const pos of posList) {
-    const posFilteredData = filteredData.filter(d => d.pos === pos);
-    for (const item of posFilteredData) {
-      doc.addPage();
-      doc.setFontSize(12);
-      doc.text(`Pos: ${pos}`, 6, 6);
-      doc.text(`Tanggal: ${parseTanggal(item.timestamp)}`, 6, 12);
-      doc.text(`Nama: ${item.nama}`, 6, 18);
-      doc.text(`Uraian: ${item.uraian}`, 6, 24);
-      doc.text(`Nominal: ${item.nominal}`, 6, 30);
-      doc.text(`Pembayaran: ${item.pembayaran}`, 6, 36);
-      let y = 42;
-
-      // Foto Nota
-      doc.text("Foto Nota:", 6, y); y += 6;
-      if (item.foto) {
-        try {
-          const fotoBase64 = await getImageBase64ViaImgTag(item.foto);
-          doc.addImage(fotoBase64, 'JPEG', 6, y, 80, 60);
-          y += 65;
-        } catch {
-          doc.text("Gagal tampilkan foto nota.", 10, y);
-          y += 10;
-        }
-      } else {
-        doc.text("Tidak ada foto nota.", 10, y); y += 10;
-      }
-
-      // Bukti Transfer
-      doc.text("Bukti Transfer:", 6, y); y += 6;
-      if (item.buktitransfer) {
-        try {
-          const buktitransferBase64 = await getImageBase64ViaImgTag(item.buktitransfer);
-          doc.addImage(buktitransferBase64, 'JPEG', 6, y, 80, 60);
-          y += 65;
-        } catch {
-          doc.text("Gagal tampilkan bukti transfer.", 10, y);
-          y += 10;
-        }
-      } else {
-        doc.text("Tidak ada bukti transfer.", 10, y); y += 10;
-      }
+    } catch (error) {
+      tbody.innerHTML = `<tr><td colspan="12" class="text-center text-red-600 py-8">Error: ${error.message}</td></tr>`;
     }
   }
 
-  doc.deletePage(1); // Hapus halaman kosong pertama
-  doc.save("Foto_Nota.pdf");
-}
+  fetchData();
+</script>
 
-document.getElementById("pdfBtn")?.addEventListener("click", downloadPDFWithImages);
-
-
-
-    function filterCurrentMonthData() {
-      const now = new Date();
-      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      lastDay.setHours(23, 59, 59, 999);
-      const filtered = allData.filter(item => {
-        const t = new Date(item.timestamp);
-        return t >= firstDay && t <= lastDay;
-      });
-      renderTable(filtered);
-    }
-
-    fetchData();
-    fetchPos();
-  setTimeout(() => localStorage.removeItem('loggedIn'), 300000);
-  </script>
 </body>
 </html>
