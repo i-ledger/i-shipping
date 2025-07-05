@@ -163,7 +163,6 @@
   <script src="config.js"></script>
   <script src="kamera-kanvas.js"></script>
   <script>
-    if (localStorage.getItem('loggedIn') !== 'true') window.location.href = 'login.html';
 
     const API_NAMA = API_ENDPOINT + '?action=nama';
     const API_POS = API_ENDPOINT + '?action=pos';
@@ -325,7 +324,6 @@
       });
     });
 
-    setTimeout(() => localStorage.removeItem('loggedIn'), 300000);
   </script>
 </body>
 </html>
