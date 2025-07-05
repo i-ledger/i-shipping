@@ -1,102 +1,166 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>i-Shipping SES_GS</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .spinner {
-      border: 4px solid rgba(99, 102, 241, 0.2);
-      border-top-color: #6366f1;
-      border-radius: 50%;
-      width: 48px;
-      height: 48px;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    canvas { display: none; }
-    #loadingOverlay {
-      backdrop-filter: blur(3px);
-      background-color: rgba(0,0,0,0.4);
-    }
-  </style>
-</head>
-<body class="bg-gradient-to-br from-indigo-100 to-white min-h-screen flex items-center justify-center p-6 relative font-sans">
-  <div id="loadingOverlay" class="hidden fixed inset-0 z-50 flex items-center justify-center">
-    <div class="spinner"></div>
-  </div>
+const cameras = {
+  Nota: { videoEl: 'videoNota', canvasEl: 'canvasNota', previewEl: 'previewNota' },
+  Retur: { videoEl: 'videoRetur', canvasEl: 'canvasRetur', previewEl: 'previewRetur' },
+  Bukti: { videoEl: 'videoBukti', canvasEl: 'canvasBukti', previewEl: 'previewBukti' },
+};
 
-  <div id="popupNotif" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-3xl shadow-2xl p-8 max-w-sm text-center opacity-0 pointer-events-none transition-opacity duration-300 z-60">
-    <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto mb-4 h-14 w-14 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-    </svg>
-    <h3 class="text-xl font-semibold text-gray-900 mb-2">Barang sudah terkirim</h3>
-    <p class="text-gray-600 mb-6">Terimakasih</p>
-    <button id="closePopupBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6 py-2 font-semibold transition">Tutup</button>
-  </div>
+const constraints = {
+  audio: false,
+  video: {
+    facingMode: { ideal: 'environment' },
+    width: { ideal: 1280 },
+    height: { ideal: 720 }
+  }
+};
 
-  <a href="dashboard.html" class="absolute top-6 right-6 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl shadow-lg font-semibold transition">Ke Dashboard</a>
+async function startCamera(key) {
+  const video = document.getElementById(cameras[key].videoEl);
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject = stream;
+    video.play();
+  } catch (err) {
+    alert('❌ Tidak bisa mengakses kamera: ' + err.message);
+  }
+}
 
-  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-10">
-    <h2 class="text-4xl font-extrabold text-indigo-700 mb-8 text-center tracking-tight">i-Shipping SES_GS</h2>
-    <form id="ledgerForm" class="space-y-8">
+function stopCamera(key) {
+  const video = document.getElementById(cameras[key].videoEl);
+  const stream = video.srcObject;
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+    video.srcObject = null;
+  }
+}
 
-      <!-- Form lainnya seperti nama, uraian, pos, nominal, brightgas -->
+function takeSnapshot(key) {
+  const video = document.getElementById(cameras[key].videoEl);
+  const canvas = document.getElementById(cameras[key].canvasEl);
+  const preview = document.getElementById(cameras[key].previewEl);
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Foto Pangkalan</label>
-        <div class="relative">
-          <video id="videoNota" autoplay playsinline class="w-full h-64 object-cover rounded-xl shadow-lg border"></video>
-          <canvas id="canvasNota" class="hidden"></canvas>
-          <img id="previewNota" class="w-full mt-4 hidden rounded-xl border shadow" />
-          <button id="ambilNota" type="button" onclick="takeSnapshot('Nota')" class="mt-4 w-16 h-16 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center justify-center shadow-lg transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h4l2-3h6l2 3h4v13H3V7z" />
-            </svg>
-          </button>
-        </div>
-      </div>
+  const outputWidth = 640;
+  const outputHeight = 480;
+  canvas.width = outputWidth;
+  canvas.height = outputHeight;
 
-      <div id="returFotoContainer" class="hidden">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Foto Retur</label>
-        <div class="relative">
-          <video id="videoRetur" autoplay playsinline class="w-full h-64 object-cover rounded-xl shadow-lg border"></video>
-          <canvas id="canvasRetur" class="hidden"></canvas>
-          <img id="previewRetur" class="w-full mt-4 hidden rounded-xl border shadow" />
-          <button id="ambilRetur" type="button" onclick="takeSnapshot('Retur')" class="mt-4 w-16 h-16 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center justify-center shadow-lg transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h4l2-3h6l2 3h4v13H3V7z" />
-            </svg>
-          </button>
-        </div>
-      </div>
+  const ctx = canvas.getContext('2d');
 
-      <div id="buktiTransferContainer" class="hidden">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Foto Pemilik + Pangkalan</label>
-        <div class="relative">
-          <video id="videoBukti" autoplay playsinline class="w-full h-64 object-cover rounded-xl shadow-lg border"></video>
-          <canvas id="canvasBukti" class="hidden"></canvas>
-          <img id="previewBukti" class="w-full mt-4 hidden rounded-xl border shadow" />
-          <button id="ambilBukti" type="button" onclick="takeSnapshot('Bukti')" class="mt-4 w-16 h-16 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center justify-center shadow-lg transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h4l2-3h6l2 3h4v13H3V7z" />
-            </svg>
-          </button>
-        </div>
-      </div>
+  const videoWidth = video.videoWidth;
+  const videoHeight = video.videoHeight;
+  const videoRatio = videoWidth / videoHeight;
+  const outputRatio = outputWidth / outputHeight;
 
-      <!-- Tombol Submit -->
-      <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 hover:from-indigo-700 hover:via-indigo-800 hover:to-indigo-900 text-white font-extrabold py-4 rounded-3xl shadow-xl text-xl transition">
-        Submit
-      </button>
-    </form>
-  </div>
+  let sx, sy, sWidth, sHeight;
 
-  <script src="config.js"></script>
-  <script src="kamera-kanvas.js"></script>
-  <!-- Tambahkan script form dan handler sesuai sebelumnya -->
-</body>
-</html>
+  if (videoRatio > outputRatio) {
+    sHeight = videoHeight;
+    sWidth = sHeight * outputRatio;
+    sx = (videoWidth - sWidth) / 2;
+    sy = 0;
+  } else {
+    sWidth = videoWidth;
+    sHeight = sWidth / outputRatio;
+    sx = 0;
+    sy = (videoHeight - sHeight) / 2;
+  }
+
+  ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, outputWidth, outputHeight);
+
+  const dataURL = canvas.toDataURL('image/jpeg');
+  preview.src = dataURL;
+  preview.classList.remove('hidden');
+  video.classList.add('hidden');
+
+  stopCamera(key);
+  window[`foto${key}Base64`] = dataURL.split(',')[1];
+
+  addRemoveButton(preview, key);
+  const takeBtn = document.getElementById(`ambil${key}`);
+  if (takeBtn) takeBtn.classList.add('hidden');
+}
+
+function addRemoveButton(previewEl, key) {
+  removeExistingRemoveButton(previewEl);
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.innerHTML = '❌';
+  btn.className = 'remove-btn';
+
+  btn.onclick = (e) => {
+    e.preventDefault();
+
+    previewEl.src = '';
+    previewEl.classList.add('hidden');
+
+    const video = document.getElementById(cameras[key].videoEl);
+    video.classList.remove('hidden');
+    startCamera(key);
+
+    const takeBtn = document.getElementById(`ambil${key}`);
+    if (takeBtn) takeBtn.classList.remove('hidden');
+
+    delete window[`foto${key}Base64`];
+
+    btn.remove();
+  };
+
+  previewEl.parentElement.style.position = 'relative';
+  previewEl.parentElement.appendChild(btn);
+}
+
+function removeExistingRemoveButton(previewEl) {
+  const existing = previewEl.parentElement.querySelector('.remove-btn');
+  if (existing) existing.remove();
+}
+
+// Event khusus untuk Retur
+const returInput = document.getElementById('retur');
+returInput.addEventListener('input', (e) => {
+  const val = parseInt(e.target.value);
+  const container = document.getElementById('returFotoContainer');
+  const video = document.getElementById(cameras['Retur'].videoEl);
+  const preview = document.getElementById(cameras['Retur'].previewEl);
+
+  if (val > 0) {
+    container.classList.remove('hidden');
+    preview.classList.add('hidden');
+    video.classList.remove('hidden');
+    startCamera('Retur');
+  } else {
+    container.classList.add('hidden');
+    stopCamera('Retur');
+  }
+});
+
+// Event untuk Bukti Transfer
+const pembayaranInput = document.getElementById('pembayaran');
+pembayaranInput.addEventListener('change', (e) => {
+  const show = e.target.value === 'Ya';
+  const container = document.getElementById('buktiTransferContainer');
+  const video = document.getElementById(cameras['Bukti'].videoEl);
+  const preview = document.getElementById(cameras['Bukti'].previewEl);
+
+  container.classList.toggle('hidden', !show);
+  if (show) {
+    preview.classList.add('hidden');
+    video.classList.remove('hidden');
+    startCamera('Bukti');
+  } else {
+    stopCamera('Bukti');
+  }
+});
+
+// Kamera Pangkalan langsung aktif saat halaman dimuat
+window.addEventListener('DOMContentLoaded', () => {
+  const video = document.getElementById(cameras['Nota'].videoEl);
+  const preview = document.getElementById(cameras['Nota'].previewEl);
+  preview.classList.add('hidden');
+  video.classList.remove('hidden');
+  startCamera('Nota');
+
+  ['Nota', 'Retur', 'Bukti'].forEach(k => {
+    const btn = document.getElementById(`ambil${k}`);
+    if (!btn) console.warn(`Tombol ambil${k} tidak ditemukan di HTML`);
+  });
+});
