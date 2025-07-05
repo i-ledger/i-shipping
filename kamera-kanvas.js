@@ -38,8 +38,8 @@ function takeSnapshot(key) {
   const canvas = document.getElementById(cameras[key].canvasEl);
   const preview = document.getElementById(cameras[key].previewEl);
 
-  const outputWidth = 640;
-  const outputHeight = 480;
+  const outputWidth = 1280;
+  const outputHeight = 1024;
   canvas.width = outputWidth;
   canvas.height = outputHeight;
 
