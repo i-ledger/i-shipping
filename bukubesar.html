@@ -52,8 +52,8 @@
             <th class="px-4 py-2">Nama Pangkalan</th>
             <th class="px-4 py-2">Jumlah Pengiriman (3Kg)</th>
             <th class="px-4 py-2">Retur</th>
-            <th class="px-4 py-2">Bright Gas (12Kg|5,5Kg)</th>
-            <th class="px-4 py-2">Pemilik sedang dilokasi</th>
+            <th class="px-4 py-2">Bright Gas</th>
+            <th class="px-4 py-2">Pemilik di lokasi</th>
             <th class="px-4 py-2">Foto Pangkalan</th>
             <th class="px-4 py-2">Pemilik Pangkalan</th>
             <th class="px-4 py-2">Bukti Retur</th>
@@ -79,25 +79,30 @@
     let allData = [];
 
     function extractFileId(url) {
-      const m = url.match(/\/d\/([A-Za-z0-9_-]+)/);
-      return m ? m[1] : null;
+      if (!url) return null;
+      const directId = url.match(/id=([A-Za-z0-9_-]+)/);
+      const fileId = url.match(/\/d\/([A-Za-z0-9_-]+)/);
+      return directId ? directId[1] : (fileId ? fileId[1] : null);
     }
+
     function renderThumb(url) {
       const id = extractFileId(url);
       if (!id) return '-';
-      const thumbUrl = `https://drive.google.com/thumbnail?authuser=0&sz=w320&id=${id}`;
-      return `<a href="${url}" target="_blank"><img src="${thumbUrl}" class="h-20 rounded shadow mx-auto" /></a>`;
+      const thumbUrl = `https://drive.google.com/uc?export=view&id=${id}`;
+      return `<a href="${thumbUrl}" target="_blank"><img src="${thumbUrl}" class="h-20 rounded shadow mx-auto" loading="lazy" /></a>`;
     }
+
     function formatDate(ts) {
       const d = new Date(ts);
-      const dd = String(d.getDate()).padStart(2,'0');
-      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
       const yyyy = d.getFullYear();
-      const hh = String(d.getHours()).padStart(2,'0');
-      const mi = String(d.getMinutes()).padStart(2,'0');
-      const ss = String(d.getSeconds()).padStart(2,'0');
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mi = String(d.getMinutes()).padStart(2, '0');
+      const ss = String(d.getSeconds()).padStart(2, '0');
       return `${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
     }
+
     function renderRow(r) {
       return `
         <tr class="border-b hover:bg-gray-50">
@@ -115,9 +120,10 @@
           <td class="px-4 py-2 text-center">${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}</td>
         </tr>`;
     }
+
     function renderTable(data) {
       const from = fromInput.value ? new Date(fromInput.value + 'T00:00:00') : null;
-      const to   = toInput.value   ? new Date(toInput.value   + 'T23:59:59') : null;
+      const to = toInput.value ? new Date(toInput.value + 'T23:59:59') : null;
       const filtered = data.filter(r => {
         const d = new Date(r.timestamp);
         return (!from || d >= from) && (!to || d <= to) &&
@@ -126,25 +132,28 @@
       });
       rekapBody.innerHTML = filtered.map(renderRow).join('');
     }
+
     async function fetchData() {
-      const res  = await fetch(API_URL);
+      const res = await fetch(API_URL);
       const data = await res.json();
       if (!Array.isArray(data)) return;
       allData = data;
       const today = new Date().toISOString().split('T')[0];
       fromInput.value = today;
-      toInput.value   = today;
-      const pts  = [...new Set(data.map(d=>d.pos))].sort();
-      const pgls = [...new Set(data.map(d=>d.uraian))].sort();
-      filterPT.innerHTML        = '<option value="">Semua</option>' + pts.map(p=>`<option>${p}</option>`).join('');
-      filterPangkalan.innerHTML = '<option value="">Semua</option>' + pgls.map(p=>`<option>${p}</option>`).join('');
+      toInput.value = today;
+      const pts = [...new Set(data.map(d => d.pos))].sort();
+      const pgls = [...new Set(data.map(d => d.uraian))].sort();
+      filterPT.innerHTML = '<option value="">Semua</option>' + pts.map(p => `<option>${p}</option>`).join('');
+      filterPangkalan.innerHTML = '<option value="">Semua</option>' + pgls.map(p => `<option>${p}</option>`).join('');
       renderTable(allData);
     }
-    filterBtn.addEventListener('click', ()=>renderTable(allData));
-    filterPT.addEventListener('change', ()=>renderTable(allData));
-    filterPangkalan.addEventListener('change', ()=>renderTable(allData));
-    downloadBtn.addEventListener('click', ()=>{
-      const header = ['Timestamp','Nama PT','Driver/Kernet','Nama Pangkalan','Jumlah Pengiriman','Retur','Bright Gas','Pemilik sedang dilokasi','Foto Pangkalan','Pemilik Pangkalan','Bukti Retur','Lokasi'];
+
+    filterBtn.addEventListener('click', () => renderTable(allData));
+    filterPT.addEventListener('change', () => renderTable(allData));
+    filterPangkalan.addEventListener('change', () => renderTable(allData));
+
+    downloadBtn.addEventListener('click', () => {
+      const header = ['Timestamp', 'Nama PT', 'Driver/Kernet', 'Nama Pangkalan', 'Jumlah Pengiriman', 'Retur', 'Bright Gas', 'Pemilik di lokasi', 'Foto Pangkalan', 'Pemilik Pangkalan', 'Bukti Retur', 'Lokasi'];
       const rows = allData.filter(r => {
         const d = new Date(r.timestamp);
         return (!fromInput.value || d >= new Date(fromInput.value + 'T00:00:00')) && (!toInput.value || d <= new Date(toInput.value + 'T23:59:59'));
@@ -153,10 +162,13 @@
         r.foto, r.buktitransfer, r.buktiretur, r.lokasi
       ]);
       let csv = header.join(',') + '\n';
-      rows.forEach(r => { csv += r.map(c=>`"${(c||'').toString().replace(/"/g,'""')}"`).join(',') + '\n'; });
+      rows.forEach(r => { csv += r.map(c => `"${(c || '').toString().replace(/"/g, '""')}"`).join(',') + '\n'; });
       const blob = new Blob([csv], { type: 'text/csv' });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a'); a.href = url; a.download = 'rekap_pengiriman.csv'; a.click();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'rekap_pengiriman.csv';
+      a.click();
     });
 
     fetchData();
