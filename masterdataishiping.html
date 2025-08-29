@@ -1,15 +1,16 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Rekap Pengiriman</title>
+  <title>Master Data i-shipping</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-6 font-sans">
   <div class="max-w-7xl mx-auto bg-white p-6 rounded-2xl shadow-xl">
     <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 space-y-4 md:space-y-0">
-      <h1 class="text-3xl font-bold text-indigo-700">Rekap Pengiriman</h1>
+      <h1 class="text-3xl font-bold text-indigo-700">Master Data Pengiriman</h1>
       <div class="space-x-2">
         <a href="dashboard.html" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-xl">Dashboard</a>
         <button id="downloadBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl">Download Excel</button>
@@ -46,6 +47,7 @@
       <table class="min-w-full table-auto border border-gray-300 text-sm" id="rekapTable">
         <thead class="bg-indigo-600 text-white">
           <tr>
+            <th class="px-4 py-2">#</th>
             <th class="px-4 py-2">Timestamp</th>
             <th class="px-4 py-2">Nama PT</th>
             <th class="px-4 py-2">Driver/Kernet</th>
@@ -58,7 +60,7 @@
             <th class="px-4 py-2">Pemilik Pangkalan</th>
             <th class="px-4 py-2">Bukti Retur</th>
             <th class="px-4 py-2">Lokasi</th>
-            <th class="px-4 py-2">Aksi</th> <!-- 🔥 Tambahan -->
+            <th class="px-4 py-2">Aksi</th>
           </tr>
         </thead>
         <tbody id="rekapBody"></tbody>
@@ -66,9 +68,59 @@
     </div>
   </div>
 
+  <!-- Modal Edit -->
+  <div id="editModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-2xl mx-4">
+      <h2 class="text-xl font-semibold mb-4">Edit Transaksi</h2>
+      <form id="editForm" class="space-y-3">
+        <input type="hidden" id="editRow" />
+        <div>
+          <label class="block text-sm font-medium">Timestamp</label>
+          <input id="editTimestamp" type="datetime-local" class="w-full border p-2 rounded-xl"/>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium">Nama PT</label>
+            <input id="editPos" type="text" class="w-full border p-2 rounded-xl"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Driver/Kernet</label>
+            <input id="editNama" type="text" class="w-full border p-2 rounded-xl"/>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Nama Pangkalan</label>
+          <input id="editUraian" type="text" class="w-full border p-2 rounded-xl"/>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-sm font-medium">Jumlah Pengiriman</label>
+            <input id="editNominal" type="number" class="w-full border p-2 rounded-xl"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Retur</label>
+            <input id="editRetur" type="number" class="w-full border p-2 rounded-xl"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Bright Gas</label>
+            <input id="editBright" type="number" class="w-full border p-2 rounded-xl"/>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" id="cancelEdit" class="px-4 py-2 rounded-xl bg-gray-200 hover:bg-gray-300">Batal</button>
+          <button type="submit" id="saveEdit" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="config.js"></script>
   <script>
     const API_URL = API_ENDPOINT + '?action=transaksi';
+    const GET_URL = API_ENDPOINT + '?action=transaksi'; // full fetch (no filters)
+    const POST_URL = API_ENDPOINT; // POST to same endpoint
+
     const fromInput = document.getElementById('fromDate');
     const toInput = document.getElementById('toDate');
     const filterBtn = document.getElementById('filterDateBtn');
@@ -76,6 +128,18 @@
     const filterPangkalan = document.getElementById('filterPangkalan');
     const rekapBody = document.getElementById('rekapBody');
     const downloadBtn = document.getElementById('downloadBtn');
+
+    const editModal = document.getElementById('editModal');
+    const editForm = document.getElementById('editForm');
+    const editRowInput = document.getElementById('editRow');
+    const editTimestamp = document.getElementById('editTimestamp');
+    const editPos = document.getElementById('editPos');
+    const editNama = document.getElementById('editNama');
+    const editUraian = document.getElementById('editUraian');
+    const editNominal = document.getElementById('editNominal');
+    const editRetur = document.getElementById('editRetur');
+    const editBright = document.getElementById('editBright');
+    const cancelEdit = document.getElementById('cancelEdit');
 
     let allData = [];
 
@@ -96,7 +160,9 @@
     }
 
     function formatDate(ts) {
+      if (!ts) return '-';
       const d = new Date(ts);
+      if (isNaN(d)) return ts; // fallback
       const dd = String(d.getDate()).padStart(2, '0');
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const yyyy = d.getFullYear();
@@ -106,9 +172,23 @@
       return `${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
     }
 
-    function renderRow(r) {
+    function toDateTimeLocalInput(ts) {
+      if (!ts) return '';
+      const d = new Date(ts);
+      if (isNaN(d)) return '';
+      // create yyyy-mm-ddThh:ii
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mi = String(d.getMinutes()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+    }
+
+    function renderRow(r, idx) {
       return `
         <tr class="border-b hover:bg-gray-50">
+          <td class="px-4 py-2 text-center">${r.__row || (idx+2)}</td>
           <td class="px-4 py-2">${formatDate(r.timestamp)}</td>
           <td class="px-4 py-2">${r.pos || '-'}</td>
           <td class="px-4 py-2">${r.nama || '-'}</td>
@@ -122,8 +202,7 @@
           <td class="px-4 py-2 text-center">${renderThumb(r.buktiretur)}</td>
           <td class="px-4 py-2 text-center">${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}</td>
           <td class="px-4 py-2 text-center">
-            <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded" onclick="editTransaksi('${r.row}')">Edit</button>
-            <button class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded" onclick="deleteTransaksi('${r.row}')">Hapus</button>
+            <button class="editBtn bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-md" data-row="${r.__row || (idx+2)}">Edit</button>
           </td>
         </tr>`;
     }
@@ -137,43 +216,40 @@
                (!filterPT.value || r.pos === filterPT.value) &&
                (!filterPangkalan.value || r.uraian === filterPangkalan.value);
       });
-      rekapBody.innerHTML = filtered.map(renderRow).join('');
+      rekapBody.innerHTML = filtered.map((r, i) => renderRow(r, i)).join('');
+      // attach edit handlers
+      document.querySelectorAll('.editBtn').forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+          const row = parseInt(ev.currentTarget.getAttribute('data-row'), 10);
+          openEditModal(row);
+        });
+      });
     }
 
     async function fetchData() {
-      const res = await fetch(API_URL);
-      const data = await res.json();
-      if (!Array.isArray(data)) return;
-      allData = data;
+      try {
+        const res = await fetch(GET_URL);
+        const data = await res.json();
+        if (!Array.isArray(data)) return;
+        // add __row property (sheet headers removed => first data row = sheet row 2)
+        data.forEach((d, i) => d.__row = i + 2);
+        allData = data;
 
-      const today = new Date().toISOString().split('T')[0];
-      fromInput.value = today;
-      toInput.value = today;
+        // default date to today
+        const today = new Date().toISOString().split('T')[0];
+        fromInput.value = today;
+        toInput.value = today;
 
-      const pts = [...new Set(data.map(d => d.pos))].sort();
-      const pgls = [...new Set(data.map(d => d.uraian))].sort();
+        const pts = [...new Set(data.map(d => d.pos).filter(Boolean))].sort();
+        const pgls = [...new Set(data.map(d => d.uraian).filter(Boolean))].sort();
 
-      filterPT.innerHTML = '<option value="">Semua</option>' + pts.map(p => `<option>${p}</option>`).join('');
-      filterPangkalan.innerHTML = '<option value="">Semua</option>' + pgls.map(p => `<option>${p}</option>`).join('');
+        filterPT.innerHTML = '<option value="">Semua</option>' + pts.map(p => `<option>${p}</option>`).join('');
+        filterPangkalan.innerHTML = '<option value="">Semua</option>' + pgls.map(p => `<option>${p}</option>`).join('');
 
-      renderTable(allData);
-    }
-
-    async function deleteTransaksi(row) {
-      if (!confirm("Yakin mau hapus transaksi ini?")) return;
-      const res = await fetch(API_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "delete", sheetName: "Transaksi", row })
-      });
-      const result = await res.json();
-      alert(result.message || "Berhasil dihapus");
-      fetchData(); // refresh tabel
-    }
-
-    function editTransaksi(row) {
-      alert("Edit transaksi row: " + row + " (belum diimplementasi)");
-      // nanti bisa bikin popup form edit disini
+        renderTable(allData);
+      } catch (err) {
+        console.error('fetchData error', err);
+      }
     }
 
     filterBtn.addEventListener('click', () => renderTable(allData));
@@ -199,6 +275,122 @@
       a.href = url;
       a.download = 'rekap_pengiriman.csv';
       a.click();
+    });
+
+    // Edit modal helpers
+    function openEditModal(row) {
+      const rec = allData.find(d => d.__row === row);
+      if (!rec) return alert('Data tidak ditemukan untuk row ' + row);
+      editRowInput.value = row;
+      editTimestamp.value = toDateTimeLocalInput(rec.timestamp);
+      editPos.value = rec.pos || '';
+      editNama.value = rec.nama || '';
+      editUraian.value = rec.uraian || '';
+      editNominal.value = rec.nominal || 0;
+      editRetur.value = rec.retur || 0;
+      editBright.value = rec.brightgas || 0;
+      editModal.classList.remove('hidden');
+      editModal.classList.add('flex');
+    }
+
+    function closeEditModal() {
+      editModal.classList.add('hidden');
+      editModal.classList.remove('flex');
+    }
+
+    cancelEdit.addEventListener('click', (e) => {
+      e.preventDefault();
+      closeEditModal();
+    });
+
+    // submit edit
+    editForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const row = parseInt(editRowInput.value, 10);
+      if (isNaN(row)) return alert('Row tidak valid');
+
+      // Build values array matching sheet order:
+      // A: Timestamp
+      // B: Nama (driver)
+      // C: Uraian (pangkalan)
+      // D: Pos (Nama PT)
+      // E: Nominal
+      // F: Foto
+      // G: Pembayaran
+      // H: Buktitransfer
+      // I: BrightGas
+      // J: Retur
+      // K: Buktiretur
+      // L: Lokasi
+
+      const existing = allData.find(d => d.__row === row) || {};
+
+      // timestamp: convert datetime-local to a string representation accepted by Sheets
+      const tsVal = editTimestamp.value ? new Date(editTimestamp.value) : (existing.timestamp || new Date());
+      // If tsVal is Date, convert to ISO string for safer transmission; Apps Script will parse when setting?
+      // We'll send as JS Date string so Sheets may auto-convert. Alternative: keep numeric? This is acceptable.
+      const tsToSave = tsVal instanceof Date && !isNaN(tsVal) ? tsVal.toString() : tsVal;
+
+      const values = [
+        tsToSave,
+        (editNama.value || existing.nama || ''),
+        (editUraian.value || existing.uraian || ''),
+        (editPos.value || existing.pos || ''),
+        (Number(editNominal.value) || 0),
+        (existing.foto || ''),           // keep foto
+        (existing.pembayaran || ''),     // keep pembayaran
+        (existing.buktitransfer || ''),  // keep bukti
+        (Number(editBright.value) || 0),
+        (Number(editRetur.value) || 0),
+        (existing.buktiretur || ''),     // keep bukti retur
+        (existing.lokasi || '')
+      ];
+
+      try {
+        const body = {
+          action: "edit",
+          sheet: "Transaksi",
+          payload: { row: row, values: values }
+        };
+        const resp = await fetch(POST_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'Text/Plain' },
+          body: JSON.stringify(body)
+        });
+        const j = await resp.json();
+        if (j && j.status === 'success') {
+          // update local copy
+          const idx = allData.findIndex(d => d.__row === row);
+          if (idx !== -1) {
+            // reflect changes locally (keep other fields)
+            allData[idx].timestamp = tsVal instanceof Date && !isNaN(tsVal) ? tsVal.toISOString() : tsToSave;
+            allData[idx].nama = values[1];
+            allData[idx].uraian = values[2];
+            allData[idx].pos = values[3];
+            allData[idx].nominal = values[4];
+            allData[idx].foto = values[5];
+            allData[idx].pembayaran = values[6];
+            allData[idx].buktitransfer = values[7];
+            allData[idx].brightgas = values[8];
+            allData[idx].retur = values[9];
+            allData[idx].buktiretur = values[10];
+            allData[idx].lokasi = values[11];
+          }
+          renderTable(allData);
+          closeEditModal();
+          alert('Update berhasil');
+        } else {
+          alert('Gagal update: ' + (j && j.message ? j.message : JSON.stringify(j)));
+        }
+      } catch (err) {
+        console.error('edit error', err);
+        alert('Terjadi error saat mengirim update');
+      }
+    });
+
+    // click outside modal to close
+    editModal.addEventListener('click', (ev) => {
+      if (ev.target === editModal) closeEditModal();
     });
 
     fetchData();
