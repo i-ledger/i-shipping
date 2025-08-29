@@ -58,7 +58,7 @@
             <th class="px-4 py-2">Pemilik Pangkalan</th>
             <th class="px-4 py-2">Bukti Retur</th>
             <th class="px-4 py-2">Lokasi</th>
-            <th class="px-4 py-2">Aksi</th> <!-- 🔥 kolom aksi -->
+            <th class="px-4 py-2">Aksi</th> <!-- 🔥 Tambahan -->
           </tr>
         </thead>
         <tbody id="rekapBody"></tbody>
@@ -122,6 +122,7 @@
           <td class="px-4 py-2 text-center">${renderThumb(r.buktiretur)}</td>
           <td class="px-4 py-2 text-center">${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}</td>
           <td class="px-4 py-2 text-center">
+            <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded" onclick="editTransaksi('${r.row}')">Edit</button>
             <button class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded" onclick="deleteTransaksi('${r.row}')">Hapus</button>
           </td>
         </tr>`;
@@ -166,8 +167,13 @@
         body: JSON.stringify({ action: "delete", sheetName: "Transaksi", row })
       });
       const result = await res.json();
-      alert(result.message || "Transaksi dihapus");
-      fetchData();
+      alert(result.message || "Berhasil dihapus");
+      fetchData(); // refresh tabel
+    }
+
+    function editTransaksi(row) {
+      alert("Edit transaksi row: " + row + " (belum diimplementasi)");
+      // nanti bisa bikin popup form edit disini
     }
 
     filterBtn.addEventListener('click', () => renderTable(allData));
@@ -175,7 +181,7 @@
     filterPangkalan.addEventListener('change', () => renderTable(allData));
 
     downloadBtn.addEventListener('click', () => {
-      const header = ['Timestamp','Nama PT','Driver/Kernet','Nama Pangkalan','Jumlah Pengiriman','Retur','Bright Gas','Pemilik di lokasi','Foto Pangkalan','Pemilik Pangkalan','Bukti Retur','Lokasi'];
+      const header = ['Timestamp', 'Nama PT', 'Driver/Kernet', 'Nama Pangkalan', 'Jumlah Pengiriman', 'Retur', 'Bright Gas', 'Pemilik di lokasi', 'Foto Pangkalan', 'Pemilik Pangkalan', 'Bukti Retur', 'Lokasi'];
       const rows = allData.filter(r => {
         const d = new Date(r.timestamp);
         return (!fromInput.value || d >= new Date(fromInput.value + 'T00:00:00')) && (!toInput.value || d <= new Date(toInput.value + 'T23:59:59'));
