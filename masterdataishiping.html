@@ -244,3 +244,32 @@
           r.foto,
           editPembayaran.value,
          
+ filterBtn.addEventListener('click', () => renderTable(allData));
+    filterPT.addEventListener('change', () => renderTable(allData));
+    filterPangkalan.addEventListener('change', () => renderTable(allData));
+
+    downloadBtn.addEventListener('click', () => {
+      const header = ['Timestamp', 'Nama PT', 'Driver/Kernet', 'Nama Pangkalan', 'Jumlah Pengiriman', 'Retur', 'Bright Gas', 'Pemilik di lokasi', 'Foto Pangkalan', 'Pemilik Pangkalan', 'Bukti Retur', 'Lokasi'];
+      const rows = allData.filter(r => {
+        const d = new Date(r.timestamp);
+        return (!fromInput.value || d >= new Date(fromInput.value + 'T00:00:00')) && (!toInput.value || d <= new Date(toInput.value + 'T23:59:59'));
+      }).map(r => [
+        formatDate(r.timestamp), r.pos, r.nama, r.uraian, r.nominal, r.retur, r.brightgas, r.pembayaran,
+        r.foto, r.buktitransfer, r.buktiretur, r.lokasi
+      ]);
+      let csv = header.join(',') + '\n';
+      rows.forEach(r => {
+        csv += r.map(c => `"${(c || '').toString().replace(/"/g, '""')}"`).join(',') + '\n';
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'rekap_pengiriman.csv';
+      a.click();
+    });
+
+    fetchData();
+  </script>
+</body>
+</html>
