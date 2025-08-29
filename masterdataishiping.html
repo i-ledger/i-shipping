@@ -1,206 +1,169 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Buku Besar</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Buku Besar i-Ledger</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Load config.js lebih dulu -->
-  <script src="config.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen p-4">
+<body class="bg-gray-100">
 
-  <div class="container mx-auto">
-    <h1 class="text-2xl font-bold mb-4">📒 Buku Besar</h1>
-
-    <!-- Filter -->
-    <div class="flex flex-wrap gap-2 mb-4">
-      <input type="date" id="startDate" class="border p-2 rounded">
-      <input type="date" id="endDate" class="border p-2 rounded">
-      <input type="text" id="filterPos" placeholder="Filter Pos" class="border p-2 rounded">
-      <input type="text" id="filterUraian" placeholder="Filter Uraian" class="border p-2 rounded">
-      <button onclick="loadData()" class="bg-blue-500 text-white px-4 py-2 rounded">Filter</button>
-      <button onclick="downloadCSV()" class="bg-green-500 text-white px-4 py-2 rounded">Download CSV</button>
-    </div>
-
-    <!-- Tabel -->
-    <div class="overflow-x-auto bg-white shadow rounded-lg">
-      <table class="w-full border-collapse" id="dataTable">
-        <thead>
-          <tr class="bg-gray-200 text-left">
-            <th class="p-2">Tanggal</th>
-            <th class="p-2">Nama</th>
-            <th class="p-2">Uraian</th>
-            <th class="p-2">Pos</th>
-            <th class="p-2">Nominal</th>
-            <th class="p-2">Pembayaran</th>
-            <th class="p-2">Foto Nota</th>
-            <th class="p-2">Bukti Transfer</th>
-            <th class="p-2">Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
+  <div class="p-4">
+    <h1 class="text-2xl font-bold mb-4">📘 Buku Besar</h1>
+    <table class="w-full border bg-white rounded-lg overflow-hidden">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="px-2 py-1">#</th>
+          <th class="px-2 py-1">Tanggal</th>
+          <th class="px-2 py-1">POS</th>
+          <th class="px-2 py-1">Nama</th>
+          <th class="px-2 py-1">Uraian</th>
+          <th class="px-2 py-1">Nominal</th>
+          <th class="px-2 py-1">Retur</th>
+          <th class="px-2 py-1">BrightGas</th>
+          <th class="px-2 py-1">Pembayaran</th>
+          <th class="px-2 py-1">Foto Nota</th>
+          <th class="px-2 py-1">Bukti</th>
+          <th class="px-2 py-1">Bukti Retur</th>
+          <th class="px-2 py-1">Lokasi</th>
+          <th class="px-2 py-1">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="dataBody"></tbody>
+    </table>
   </div>
 
   <!-- Modal Edit -->
-  <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
-    <div class="bg-white p-6 rounded-lg w-full max-w-lg">
-      <h2 class="text-xl font-bold mb-4">Edit Data</h2>
-      <form id="editForm" class="space-y-3">
+  <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 w-96">
+      <h2 class="text-lg font-bold mb-4">✏️ Edit Transaksi</h2>
+      <form id="editForm" class="space-y-2">
         <input type="hidden" id="editRow">
-        <div>
-          <label class="block">Tanggal</label>
-          <input type="datetime-local" id="editTanggal" class="border p-2 rounded w-full">
-        </div>
-        <div>
-          <label class="block">Nama</label>
-          <input type="text" id="editNama" class="border p-2 rounded w-full">
-        </div>
-        <div>
-          <label class="block">Uraian</label>
-          <input type="text" id="editUraian" class="border p-2 rounded w-full">
-        </div>
-        <div>
-          <label class="block">Pos</label>
-          <input type="text" id="editPos" class="border p-2 rounded w-full">
-        </div>
-        <div>
-          <label class="block">Nominal</label>
-          <input type="number" id="editNominal" class="border p-2 rounded w-full">
-        </div>
-        <div>
-          <label class="block">Pembayaran</label>
-          <input type="text" id="editPembayaran" class="border p-2 rounded w-full">
-        </div>
-        <div class="flex gap-2">
-          <button type="button" onclick="saveEdit()" class="bg-blue-500 text-white px-4 py-2 rounded">Simpan</button>
-          <button type="button" onclick="closeModal()" class="bg-gray-500 text-white px-4 py-2 rounded">Batal</button>
+        <label class="block">Tanggal
+          <input type="datetime-local" id="editTimestamp" class="border rounded w-full px-2 py-1">
+        </label>
+        <label class="block">POS
+          <input type="text" id="editPT" class="border rounded w-full px-2 py-1">
+        </label>
+        <label class="block">Nama
+          <input type="text" id="editNama" class="border rounded w-full px-2 py-1">
+        </label>
+        <label class="block">Uraian
+          <input type="text" id="editUraian" class="border rounded w-full px-2 py-1">
+        </label>
+        <label class="block">Nominal
+          <input type="number" id="editNominal" class="border rounded w-full px-2 py-1">
+        </label>
+        <label class="block">Retur
+          <input type="number" id="editRetur" class="border rounded w-full px-2 py-1">
+        </label>
+        <label class="block">Bright Gas
+          <input type="number" id="editBrightGas" class="border rounded w-full px-2 py-1">
+        </label>
+        <label class="block">Pembayaran
+          <input type="text" id="editPembayaran" class="border rounded w-full px-2 py-1">
+        </label>
+        <div class="flex justify-end space-x-2 pt-3">
+          <button type="button" class="px-3 py-1 bg-gray-400 text-white rounded" onclick="closeEdit()">Batal</button>
+          <button type="submit" class="px-3 py-1 bg-blue-600 text-white rounded">Simpan</button>
         </div>
       </form>
     </div>
   </div>
 
-  <script>
-    let allData = [];
+<script>
+const API_ENDPOINT = "https://script.google.com/macros/s/AKfycbwqzD5nZkTrExGUjdACTyELqeEYhWNvayryYunToK-jLB9EjLehJSDjLGVrbLPhRFhi/exec"; // ganti dengan URL Apps Script kamu
+let allData = [];
 
-    // pastikan config.js sudah load
-    if (!window.API_ENDPOINT) {
-      alert("❌ API_ENDPOINT belum diset. Pastikan config.js sudah dimuat!");
+function formatDate(ts) {
+  if (!ts) return "-";
+  return new Date(ts).toLocaleString("id-ID");
+}
+function renderThumb(url) {
+  return url ? `<a href="${url}" target="_blank"><img src="${url}" class="h-10 mx-auto"/></a>` : "-";
+}
+
+function renderRow(r, index) {
+  return `
+    <tr class="border-b hover:bg-gray-50">
+      <td class="px-2 py-1 text-center">${index + 1}</td>
+      <td class="px-2 py-1">${formatDate(r.timestamp)}</td>
+      <td class="px-2 py-1">${r.pos || "-"}</td>
+      <td class="px-2 py-1">${r.nama || "-"}</td>
+      <td class="px-2 py-1">${r.uraian || "-"}</td>
+      <td class="px-2 py-1 text-right">${r.nominal || 0}</td>
+      <td class="px-2 py-1 text-center">${r.retur || 0}</td>
+      <td class="px-2 py-1 text-center">${r.brightgas || 0}</td>
+      <td class="px-2 py-1">${r.pembayaran || "-"}</td>
+      <td class="px-2 py-1 text-center">${renderThumb(r.foto)}</td>
+      <td class="px-2 py-1 text-center">${renderThumb(r.bukti)}</td>
+      <td class="px-2 py-1 text-center">${renderThumb(r.buktiretur)}</td>
+      <td class="px-2 py-1 text-center">${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : "-"}</td>
+      <td class="px-2 py-1 text-center">
+        <button class="bg-yellow-400 hover:bg-yellow-500 text-white px-2 py-1 rounded" onclick="openEdit(${r.row})">Edit</button>
+      </td>
+    </tr>`;
+}
+
+async function fetchData() {
+  const res = await fetch(API_ENDPOINT + "?action=transaksi&sheet=Transaksi");
+  const data = await res.json();
+  allData = data; // simpan semua data
+  dataBody.innerHTML = data.map((r,i) => renderRow(r,i)).join("");
+}
+
+function openEdit(row) {
+  const r = allData.find(d => d.row == row);
+  if (!r) return alert("Data tidak ditemukan");
+
+  editRow.value = r.row;
+  editTimestamp.value = r.timestamp ? new Date(r.timestamp).toISOString().slice(0,16) : "";
+  editPT.value = r.pos || "";
+  editNama.value = r.nama || "";
+  editUraian.value = r.uraian || "";
+  editNominal.value = r.nominal || 0;
+  editRetur.value = r.retur || 0;
+  editBrightGas.value = r.brightgas || 0;
+  editPembayaran.value = r.pembayaran || "";
+  editModal.classList.remove("hidden");
+}
+function closeEdit() { editModal.classList.add("hidden"); }
+
+editForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const payload = {
+    action: "updateTransaksi",
+    sheet: "Transaksi",
+    payload: {
+      row: editRow.value,
+      timestamp: editTimestamp.value,
+      pos: editPT.value,
+      nama: editNama.value,
+      uraian: editUraian.value,
+      nominal: editNominal.value,
+      retur: editRetur.value,
+      brightgas: editBrightGas.value,
+      pembayaran: editPembayaran.value
     }
+  };
 
-    async function loadData() {
-      const start = document.getElementById("startDate").value;
-      const end = document.getElementById("endDate").value;
-      const pos = document.getElementById("filterPos").value;
-      const uraian = document.getElementById("filterUraian").value;
+  const res = await fetch(API_ENDPOINT, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(payload)
+  });
+  const result = await res.json();
+  if (result.status === "success") {
+    alert("Data berhasil diperbarui!");
+    closeEdit();
+    fetchData();
+  } else {
+    alert("Gagal update: " + result.message);
+  }
+});
 
-      const url = `${window.API_ENDPOINT}?action=transaksi&sheet=Transaksi&start=${start}&end=${end}&pos=${pos}&uraian=${uraian}`;
-      const res = await fetch(url);
-      allData = await res.json();
-      renderTable();
-    }
+fetchData();
+</script>
 
-    function renderTable() {
-      const body = document.getElementById("tableBody");
-      body.innerHTML = "";
-      allData.forEach((row, i) => {
-        const tr = document.createElement("tr");
-        tr.classList.add("border-b");
-        tr.innerHTML = `
-          <td class="p-2">${row.tanggal || ""}</td>
-          <td class="p-2">${row.nama || ""}</td>
-          <td class="p-2">${row.uraian || ""}</td>
-          <td class="p-2">${row.pos || ""}</td>
-          <td class="p-2">${row.nominal || ""}</td>
-          <td class="p-2">${row.pembayaran || ""}</td>
-          <td class="p-2">${row.fotonota ? `<img src="${row.fotonota}" class="h-16">` : "-"}</td>
-          <td class="p-2">${row.fotobukti ? `<img src="${row.fotobukti}" class="h-16">` : "-"}</td>
-          <td class="p-2">
-            <button onclick="openEdit(${i})" class="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
-          </td>
-        `;
-        body.appendChild(tr);
-      });
-    }
-
-    function openEdit(index) {
-      const row = allData[index];
-      document.getElementById("editRow").value = row._row || (index + 2); // default baris di Sheet
-      document.getElementById("editTanggal").value = row.tanggal ? formatForInput(row.tanggal) : "";
-      document.getElementById("editNama").value = row.nama || "";
-      document.getElementById("editUraian").value = row.uraian || "";
-      document.getElementById("editPos").value = row.pos || "";
-      document.getElementById("editNominal").value = row.nominal || "";
-      document.getElementById("editPembayaran").value = row.pembayaran || "";
-
-      document.getElementById("editModal").classList.remove("hidden");
-      document.getElementById("editModal").classList.add("flex");
-    }
-
-    function closeModal() {
-      document.getElementById("editModal").classList.add("hidden");
-      document.getElementById("editModal").classList.remove("flex");
-    }
-
-    async function saveEdit() {
-      const row = document.getElementById("editRow").value;
-      const values = [
-        document.getElementById("editTanggal").value,
-        document.getElementById("editNama").value,
-        document.getElementById("editUraian").value,
-        document.getElementById("editPos").value,
-        Number(document.getElementById("editNominal").value),
-        "", // fotoNota biar tetap lama
-        document.getElementById("editPembayaran").value,
-        "", // fotoBukti biar tetap lama
-        "", // brightgas
-        "", // retur
-        "", // returFoto
-        ""  // lokasi
-      ];
-
-      const res = await fetch(window.API_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "updateTransaksi",
-          sheet: "Transaksi",
-          payload: { row: Number(row), values }
-        })
-      });
-
-      const result = await res.json();
-      if (result.status === "success") {
-        alert("✅ Data berhasil diupdate");
-        closeModal();
-        loadData();
-      } else {
-        alert("❌ Gagal update: " + result.message);
-      }
-    }
-
-    function formatForInput(dateStr) {
-      const d = new Date(dateStr);
-      return d.toISOString().slice(0,16);
-    }
-
-    function downloadCSV() {
-      let csv = "Tanggal,Nama,Uraian,Pos,Nominal,Pembayaran\n";
-      allData.forEach(r => {
-        csv += `${r.tanggal},${r.nama},${r.uraian},${r.pos},${r.nominal},${r.pembayaran}\n`;
-      });
-      const blob = new Blob([csv], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "bukubesar.csv";
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    loadData();
-  </script>
 </body>
 </html>
