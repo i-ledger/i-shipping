@@ -223,7 +223,7 @@
     // --- EDIT FUNCTION ---
     function openEdit(index) {
       const r = allData[index];
-      editRowInput.value = r.row; // row dikirim backend
+      editRowInput.value = r.row; // row asli dari backend
       editTimestamp.value = new Date(r.timestamp).toISOString().slice(0,16);
       editPT.value = r.pos;
       editNama.value = r.nama;
@@ -254,7 +254,7 @@
       const res = await fetch(API_ENDPOINT + '?action=updateTransaksi', {
         method: 'POST',
         body: JSON.stringify(payload),
-        headers: { 'Content-Type': 'Text/Plain' }
+        headers: { 'Content-Type': 'application/json' }
       });
       const result = await res.json();
       if (result.success) {
