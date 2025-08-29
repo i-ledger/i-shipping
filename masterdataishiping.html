@@ -157,73 +157,67 @@
 
     function formatDate(ts) {
       const d = new Date(ts);
-      const dd = String(d.getDate()).padStart(2, '0');
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2,'0');
+      const mm = String(d.getMonth()+1).padStart(2,'0');
       const yyyy = d.getFullYear();
-      const hh = String(d.getHours()).padStart(2, '0');
-      const mi = String(d.getMinutes()).padStart(2, '0');
-      const ss = String(d.getSeconds()).padStart(2, '0');
+      const hh = String(d.getHours()).padStart(2,'0');
+      const mi = String(d.getMinutes()).padStart(2,'0');
+      const ss = String(d.getSeconds()).padStart(2,'0');
       return `${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
     }
 
-    function renderRow(r, index) {
+    function renderRow(r,index) {
       return `
         <tr class="border-b hover:bg-gray-50">
-          <td class="px-4 py-2 text-center">${index + 1}</td>
+          <td class="px-4 py-2 text-center">${index+1}</td>
           <td class="px-4 py-2">${formatDate(r.timestamp)}</td>
-          <td class="px-4 py-2">${r.pos || '-'}</td>
-          <td class="px-4 py-2">${r.nama || '-'}</td>
-          <td class="px-4 py-2">${r.uraian || '-'}</td>
-          <td class="px-4 py-2 text-center">${r.nominal || '0'}</td>
-          <td class="px-4 py-2 text-center">${r.retur || '0'}</td>
-          <td class="px-4 py-2 text-center">${r.brightgas || '0'}</td>
-          <td class="px-4 py-2">${r.pembayaran || '-'}</td>
+          <td class="px-4 py-2">${r.pos||'-'}</td>
+          <td class="px-4 py-2">${r.nama||'-'}</td>
+          <td class="px-4 py-2">${r.uraian||'-'}</td>
+          <td class="px-4 py-2 text-center">${r.nominal||'0'}</td>
+          <td class="px-4 py-2 text-center">${r.retur||'0'}</td>
+          <td class="px-4 py-2 text-center">${r.brightgas||'0'}</td>
+          <td class="px-4 py-2">${r.pembayaran||'-'}</td>
           <td class="px-4 py-2 text-center">${renderThumb(r.foto)}</td>
           <td class="px-4 py-2 text-center">${renderThumb(r.buktitransfer)}</td>
           <td class="px-4 py-2 text-center">${renderThumb(r.buktiretur)}</td>
-          <td class="px-4 py-2 text-center">${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}</td>
+          <td class="px-4 py-2 text-center">${r.lokasi?`<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>`:'-'}</td>
           <td class="px-4 py-2 text-center">
             <button class="bg-yellow-400 hover:bg-yellow-500 text-white px-2 py-1 rounded-xl" onclick="openEdit(${index})">Edit</button>
           </td>
         </tr>`;
     }
 
-    function renderTable(data) {
-      const from = fromInput.value ? new Date(fromInput.value + 'T00:00:00') : null;
-      const to = toInput.value ? new Date(toInput.value + 'T23:59:59') : null;
-      const filtered = data.filter(r => {
-        const d = new Date(r.timestamp);
-        return (!from || d >= from) && (!to || d <= to) &&
-               (!filterPT.value || r.pos === filterPT.value) &&
-               (!filterPangkalan.value || r.uraian === filterPangkalan.value);
+    function renderTable(data){
+      const from = fromInput.value ? new Date(fromInput.value+'T00:00:00') : null;
+      const to = toInput.value ? new Date(toInput.value+'T23:59:59') : null;
+      const filtered = data.filter(r=>{
+        const d=new Date(r.timestamp);
+        return (!from||d>=from)&&(!to||d<=to)&&
+               (!filterPT.value||r.pos===filterPT.value)&&
+               (!filterPangkalan.value||r.uraian===filterPangkalan.value);
       });
-      rekapBody.innerHTML = filtered.map((r,i) => renderRow(r,i)).join('');
+      rekapBody.innerHTML = filtered.map((r,i)=>renderRow(r,i)).join('');
     }
 
-    async function fetchData() {
+    async function fetchData(){
       const res = await fetch(API_URL);
       const data = await res.json();
-      if (!Array.isArray(data)) return;
+      if(!Array.isArray(data)) return;
       allData = data;
-
       const today = new Date().toISOString().split('T')[0];
-      fromInput.value = today;
-      toInput.value = today;
-
-      const pts = [...new Set(data.map(d => d.pos))].sort();
-      const pgls = [...new Set(data.map(d => d.uraian))].sort();
-      filterPT.innerHTML = '<option value="">Semua</option>' + pts.map(p => `<option>${p}</option>`).join('');
-      filterPangkalan.innerHTML = '<option value="">Semua</option>' + pgls.map(p => `<option>${p}</option>`).join('');
-
+      fromInput.value=today; toInput.value=today;
+      const pts=[...new Set(data.map(d=>d.pos))].sort();
+      const pgls=[...new Set(data.map(d=>d.uraian))].sort();
+      filterPT.innerHTML='<option value="">Semua</option>'+pts.map(p=>`<option>${p}</option>`).join('');
+      filterPangkalan.innerHTML='<option value="">Semua</option>'+pgls.map(p=>`<option>${p}</option>`).join('');
       renderTable(allData);
     }
 
-    // --- EDIT FUNCTION ---
-    function openEdit(index) {
+    function openEdit(index){
       const r = allData[index];
       editRowInput.value = index;
-      const d = new Date(r.timestamp);
-      editTimestamp.value = d.toISOString().slice(0,16);
+      editTimestamp.value = new Date(r.timestamp).toISOString().slice(0,16);
       editPT.value = r.pos;
       editNama.value = r.nama;
       editUraian.value = r.uraian;
@@ -234,16 +228,15 @@
       editModal.classList.remove('hidden');
     }
 
-    closeModal.addEventListener('click', () => editModal.classList.add('hidden'));
+    closeModal.addEventListener('click',()=>editModal.classList.add('hidden'));
 
-    editForm.addEventListener('submit', async (e) => {
+    editForm.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const index = parseInt(editRowInput.value,10);
       const r = allData[index];
-
       const payload = {
-        row: index + 2, // header = 1
-        values: [
+        row: index+2,
+        values:[
           new Date(editTimestamp.value).toISOString(),
           editNama.value,
           editUraian.value,
@@ -255,46 +248,63 @@
           editBrightGas.value,
           r.buktitransfer,
           r.buktiretur,
-          r.lokasi || ''
+          r.lokasi||''
         ]
       };
-
-      try {
-        const res = await fetch(API_ENDPOINT + '?action=update', {
-          method: 'POST',
-          body: JSON.stringify(payload),
-          headers: { 'Content-Type': 'application/json' }
+      try{
+        const res = await fetch(API_ENDPOINT+'?action=update',{
+          method:'POST',
+          body:JSON.stringify(payload),
+          headers:{'Content-Type':'application/json'}
         });
         const result = await res.json();
-        if (result.success) {
-          allData[index].timestamp = payload.values[0];
-          allData[index].nama = editNama.value;
-          allData[index].uraian = editUraian.value;
-          allData[index].pos = editPT.value;
-          allData[index].nominal = editNominal.value;
-          allData[index].pembayaran = editPembayaran.value;
-          allData[index].retur = editRetur.value;
-          allData[index].brightgas = editBrightGas.value;
+        if(result.success){
+          allData[index].timestamp=payload.values[0];
+          allData[index].nama=editNama.value;
+          allData[index].uraian=editUraian.value;
+          allData[index].pos=editPT.value;
+          allData[index].nominal=editNominal.value;
+          allData[index].pembayaran=editPembayaran.value;
+          allData[index].retur=editRetur.value;
+          allData[index].brightgas=editBrightGas.value;
           renderTable(allData);
           editModal.classList.add('hidden');
           alert('Data berhasil diperbarui!');
-        } else {
-          alert('Gagal update data');
-        }
-      } catch (err) {
-        console.error(err);
-        alert('Terjadi error saat update');
-      }
+        } else { alert('Gagal update data'); }
+      }catch(err){ console.error(err); alert('Terjadi error saat update'); }
     });
 
-    filterBtn.addEventListener('click', () => renderTable(allData));
-    filterPT.addEventListener('change', () => renderTable(allData));
-    filterPangkalan.addEventListener('change', () => renderTable(allData));
+    filterBtn.addEventListener('click',()=>renderTable(allData));
+    filterPT.addEventListener('change',()=>renderTable(allData));
+    filterPangkalan.addEventListener('change',()=>renderTable(allData));
 
-    downloadBtn.addEventListener('click', () => {
-      const header = ['Timestamp','Nama PT','Driver/Kernet','Nama Pangkalan','Jumlah Pengiriman','Retur','Bright Gas','Pemilik di lokasi','Foto Pangkalan','Pemilik Pangkalan','Bukti Retur','Lokasi'];
-      const rows = allData.filter(r => {
-        const d = new Date(r.timestamp);
-        return (!fromInput.value || d >= new Date(fromInput.value + 'T00:00:00')) && (!toInput.value || d <= new Date(toInput.value + 'T23:59:59'));
-      }).map(r => [
-        formatDate(r.timestamp), r.pos, r.nama, r.uraian, r.nominal, r.re
+    downloadBtn.addEventListener('click',()=>{
+      let csv='Timestamp,Nama PT,Driver/Kernet,Nama Pangkalan,Jumlah Pengiriman,Retur,Bright Gas,Pemilik di lokasi,Foto Pangkalan,Pemilik Pangkalan,Bukti Retur,Lokasi\n';
+      allData.forEach(r=>{
+        const row=[
+          `"${formatDate(r.timestamp)}"`,
+          `"${r.pos||''}"`,
+          `"${r.nama||''}"`,
+          `"${r.uraian||''}"`,
+          `"${r.nominal||0}"`,
+          `"${r.retur||0}"`,
+          `"${r.brightgas||0}"`,
+          `"${r.pembayaran||''}"`,
+          `"${r.foto||''}"`,
+          `"${r.buktitransfer||''}"`,
+          `"${r.buktiretur||''}"`,
+          `"${r.lokasi||''}"`
+        ];
+        csv+=row.join(',')+'\n';
+      });
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      const link=document.createElement('a');
+      link.href=URL.createObjectURL(blob);
+      link.download='rekap_pengiriman.csv';
+      link.click();
+    });
+
+    fetchData();
+  </script>
+</body>
+</html>
