@@ -254,7 +254,7 @@
       const res = await fetch(API_ENDPOINT + '?action=updateTransaksi', {
         method: 'POST',
         body: JSON.stringify(payload),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'Text/Plain' }
       });
       const result = await res.json();
       if (result.success) {
