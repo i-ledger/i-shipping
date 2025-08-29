@@ -68,11 +68,15 @@
   </div>
 
   <!-- Modal Edit -->
-  <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center">
+  <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center">
     <div class="bg-white p-6 rounded-xl w-full max-w-md">
       <h2 class="text-xl font-bold mb-4">Edit Data</h2>
       <form id="editForm" class="space-y-3">
         <input type="hidden" id="editRow" />
+        <div>
+          <label>Tanggal & Waktu</label>
+          <input type="datetime-local" id="editTimestamp" class="w-full border p-2 rounded-xl" />
+        </div>
         <div>
           <label>Nama PT</label>
           <input type="text" id="editPT" class="w-full border p-2 rounded-xl" />
@@ -123,6 +127,7 @@
     const editModal = document.getElementById('editModal');
     const editForm = document.getElementById('editForm');
     const editRowInput = document.getElementById('editRow');
+    const editTimestamp = document.getElementById('editTimestamp');
     const editPT = document.getElementById('editPT');
     const editNama = document.getElementById('editNama');
     const editUraian = document.getElementById('editUraian');
@@ -217,6 +222,8 @@
     function openEdit(index) {
       const r = allData[index];
       editRowInput.value = index;
+      const d = new Date(r.timestamp);
+      editTimestamp.value = d.toISOString().slice(0,16);
       editPT.value = r.pos;
       editNama.value = r.nama;
       editUraian.value = r.uraian;
@@ -234,11 +241,10 @@
       const index = parseInt(editRowInput.value,10);
       const r = allData[index];
 
-      // Payload untuk backend (Apps Script)
       const payload = {
         row: index + 2, // header = 1
         values: [
-          r.timestamp,
+          new Date(editTimestamp.value).toISOString(),
           editNama.value,
           editUraian.value,
           editPT.value,
@@ -254,24 +260,24 @@
       };
 
       try {
-        const res = await fetch(API_ENDPOINT, {
+        const res = await fetch(API_ENDPOINT + '?action=update', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'updateTransaksi', ...payload })
+          body: JSON.stringify(payload),
+          headers: { 'Content-Type': 'application/json' }
         });
         const result = await res.json();
         if (result.success) {
-          // update local allData
-          r.nama = editNama.value;
-          r.uraian = editUraian.value;
-          r.pos = editPT.value;
-          r.nominal = editNominal.value;
-          r.retur = editRetur.value;
-          r.brightgas = editBrightGas.value;
-          r.pembayaran = editPembayaran.value;
+          allData[index].timestamp = payload.values[0];
+          allData[index].nama = editNama.value;
+          allData[index].uraian = editUraian.value;
+          allData[index].pos = editPT.value;
+          allData[index].nominal = editNominal.value;
+          allData[index].pembayaran = editPembayaran.value;
+          allData[index].retur = editRetur.value;
+          allData[index].brightgas = editBrightGas.value;
           renderTable(allData);
           editModal.classList.add('hidden');
-          alert('Data berhasil diperbarui');
+          alert('Data berhasil diperbarui!');
         } else {
           alert('Gagal update data');
         }
@@ -286,27 +292,9 @@
     filterPangkalan.addEventListener('change', () => renderTable(allData));
 
     downloadBtn.addEventListener('click', () => {
-      const header = ['Timestamp', 'Nama PT', 'Driver/Kernet', 'Nama Pangkalan', 'Jumlah Pengiriman', 'Retur', 'Bright Gas', 'Pemilik di lokasi', 'Foto Pangkalan', 'Pemilik Pangkalan', 'Bukti Retur', 'Lokasi'];
+      const header = ['Timestamp','Nama PT','Driver/Kernet','Nama Pangkalan','Jumlah Pengiriman','Retur','Bright Gas','Pemilik di lokasi','Foto Pangkalan','Pemilik Pangkalan','Bukti Retur','Lokasi'];
       const rows = allData.filter(r => {
         const d = new Date(r.timestamp);
         return (!fromInput.value || d >= new Date(fromInput.value + 'T00:00:00')) && (!toInput.value || d <= new Date(toInput.value + 'T23:59:59'));
       }).map(r => [
-        formatDate(r.timestamp), r.pos, r.nama, r.uraian, r.nominal, r.retur, r.brightgas, r.pembayaran,
-        r.foto, r.buktitransfer, r.buktiretur, r.lokasi
-      ]);
-      let csv = header.join(',') + '\n';
-      rows.forEach(r => {
-        csv += r.map(c => `"${(c || '').toString().replace(/"/g, '""')}"`).join(',') + '\n';
-      });
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'rekap_pengiriman.csv';
-      a.click();
-    });
-
-    fetchData();
-  </script>
-</body>
-</html>
+        formatDate(r.timestamp), r.pos, r.nama, r.uraian, r.nominal, r.re
