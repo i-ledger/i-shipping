@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -12,11 +11,12 @@
     <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 space-y-4 md:space-y-0">
       <h1 class="text-3xl font-bold text-indigo-700">Master Data Pengiriman</h1>
       <div class="space-x-2">
-        <a href="https://ishippingv2.pages.dev/dashboard" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-xl">Dashboard</a>
+        <a href="dashboard.html" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-xl">Dashboard</a>
         <button id="downloadBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl">Download Excel</button>
       </div>
     </div>
 
+    <!-- Filter -->
     <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
       <div>
         <label class="block mb-1 font-semibold">Dari Tanggal</label>
@@ -43,6 +43,7 @@
       </div>
     </div>
 
+    <!-- Table -->
     <div class="overflow-x-auto">
       <table class="min-w-full table-auto border border-gray-300 text-sm" id="rekapTable">
         <thead class="bg-indigo-600 text-white">
@@ -117,9 +118,8 @@
 
   <script src="config.js"></script>
   <script>
-    const API_URL = API_ENDPOINT + '?action=transaksi';
-    const GET_URL = API_ENDPOINT + '?action=transaksi'; // full fetch (no filters)
-    const POST_URL = API_ENDPOINT; // POST to same endpoint
+    const GET_URL = API_ENDPOINT + '?action=transaksi';
+    const POST_URL = API_ENDPOINT;
 
     const fromInput = document.getElementById('fromDate');
     const toInput = document.getElementById('toDate');
@@ -149,40 +149,18 @@
       const fileId = url.match(/\/d\/([A-Za-z0-9_-]+)/);
       return directId ? directId[1] : (fileId ? fileId[1] : null);
     }
-
     function renderThumb(url) {
       const id = extractFileId(url);
       if (!id) return '-';
-      const thumbUrl = `https://drive.google.com/thumbnail?id=${id}&sz=w300`;
       return `<a href="https://drive.google.com/uc?export=view&id=${id}" target="_blank">
-                <img src="${thumbUrl}" class="h-20 rounded shadow mx-auto" loading="lazy" />
+                <img src="https://drive.google.com/thumbnail?id=${id}&sz=w300" class="h-20 rounded shadow mx-auto" />
               </a>`;
     }
-
     function formatDate(ts) {
       if (!ts) return '-';
       const d = new Date(ts);
-      if (isNaN(d)) return ts; // fallback
-      const dd = String(d.getDate()).padStart(2, '0');
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const yyyy = d.getFullYear();
-      const hh = String(d.getHours()).padStart(2, '0');
-      const mi = String(d.getMinutes()).padStart(2, '0');
-      const ss = String(d.getSeconds()).padStart(2, '0');
-      return `${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
-    }
-
-    function toDateTimeLocalInput(ts) {
-      if (!ts) return '';
-      const d = new Date(ts);
-      if (isNaN(d)) return '';
-      // create yyyy-mm-ddThh:ii
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      const hh = String(d.getHours()).padStart(2, '0');
-      const mi = String(d.getMinutes()).padStart(2, '0');
-      return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+      if (isNaN(d)) return ts;
+      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
     }
 
     function renderRow(r, idx) {
@@ -201,8 +179,9 @@
           <td class="px-4 py-2 text-center">${renderThumb(r.buktitransfer)}</td>
           <td class="px-4 py-2 text-center">${renderThumb(r.buktiretur)}</td>
           <td class="px-4 py-2 text-center">${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}</td>
-          <td class="px-4 py-2 text-center">
-            <button class="editBtn bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-md" data-row="${r.__row || (idx+2)}">Edit</button>
+          <td class="px-4 py-2 text-center space-x-1">
+            <button class="editBtn bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-md" data-row="${r.__row}">Edit</button>
+            <button class="deleteBtn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md" data-row="${r.__row}">Hapus</button>
           </td>
         </tr>`;
     }
@@ -217,181 +196,45 @@
                (!filterPangkalan.value || r.uraian === filterPangkalan.value);
       });
       rekapBody.innerHTML = filtered.map((r, i) => renderRow(r, i)).join('');
-      // attach edit handlers
-      document.querySelectorAll('.editBtn').forEach(btn => {
-        btn.addEventListener('click', (ev) => {
-          const row = parseInt(ev.currentTarget.getAttribute('data-row'), 10);
-          openEditModal(row);
+      document.querySelectorAll('.editBtn').forEach(btn => btn.addEventListener('click', e => openEditModal(parseInt(e.target.dataset.row,10))));
+      document.querySelectorAll('.deleteBtn').forEach(btn => btn.addEventListener('click', e => deleteTransaksi(parseInt(e.target.dataset.row,10))));
+    }
+
+    async function deleteTransaksi(row) {
+      if (!confirm("Yakin mau hapus transaksi ini?")) return;
+      try {
+        const body = { action:"delete", sheet:"Transaksi", payload:{ row } };
+        const resp = await fetch(POST_URL, {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify(body)
         });
-      });
+        const j = await resp.json();
+        if (j && j.status==="success") {
+          allData = allData.filter(d => d.__row !== row);
+          renderTable(allData);
+          alert("Data berhasil dihapus");
+        } else {
+          alert("Gagal hapus: "+(j && j.message? j.message:JSON.stringify(j)));
+        }
+      } catch(err) {
+        console.error(err);
+        alert("Terjadi error saat hapus data");
+      }
     }
 
     async function fetchData() {
-      try {
-        const res = await fetch(GET_URL);
-        const data = await res.json();
-        if (!Array.isArray(data)) return;
-        // add __row property (sheet headers removed => first data row = sheet row 2)
-        data.forEach((d, i) => d.__row = i + 2);
-        allData = data;
-
-        // default date to today
-        const today = new Date().toISOString().split('T')[0];
-        fromInput.value = today;
-        toInput.value = today;
-
-        const pts = [...new Set(data.map(d => d.pos).filter(Boolean))].sort();
-        const pgls = [...new Set(data.map(d => d.uraian).filter(Boolean))].sort();
-
-        filterPT.innerHTML = '<option value="">Semua</option>' + pts.map(p => `<option>${p}</option>`).join('');
-        filterPangkalan.innerHTML = '<option value="">Semua</option>' + pgls.map(p => `<option>${p}</option>`).join('');
-
-        renderTable(allData);
-      } catch (err) {
-        console.error('fetchData error', err);
-      }
+      const res = await fetch(GET_URL);
+      const data = await res.json();
+      if (!Array.isArray(data)) return;
+      data.forEach((d,i)=>d.__row=i+2);
+      allData=data;
+      renderTable(allData);
     }
 
     filterBtn.addEventListener('click', () => renderTable(allData));
     filterPT.addEventListener('change', () => renderTable(allData));
     filterPangkalan.addEventListener('change', () => renderTable(allData));
-
-    downloadBtn.addEventListener('click', () => {
-      const header = ['Timestamp', 'Nama PT', 'Driver/Kernet', 'Nama Pangkalan', 'Jumlah Pengiriman', 'Retur', 'Bright Gas', 'Pemilik di lokasi', 'Foto Pangkalan', 'Pemilik Pangkalan', 'Bukti Retur', 'Lokasi'];
-      const rows = allData.filter(r => {
-        const d = new Date(r.timestamp);
-        return (!fromInput.value || d >= new Date(fromInput.value + 'T00:00:00')) && (!toInput.value || d <= new Date(toInput.value + 'T23:59:59'));
-      }).map(r => [
-        formatDate(r.timestamp), r.pos, r.nama, r.uraian, r.nominal, r.retur, r.brightgas, r.pembayaran,
-        r.foto, r.buktitransfer, r.buktiretur, r.lokasi
-      ]);
-      let csv = header.join(',') + '\n';
-      rows.forEach(r => {
-        csv += r.map(c => `"${(c || '').toString().replace(/"/g, '""')}"`).join(',') + '\n';
-      });
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'rekap_pengiriman.csv';
-      a.click();
-    });
-
-    // Edit modal helpers
-    function openEditModal(row) {
-      const rec = allData.find(d => d.__row === row);
-      if (!rec) return alert('Data tidak ditemukan untuk row ' + row);
-      editRowInput.value = row;
-      editTimestamp.value = toDateTimeLocalInput(rec.timestamp);
-      editPos.value = rec.pos || '';
-      editNama.value = rec.nama || '';
-      editUraian.value = rec.uraian || '';
-      editNominal.value = rec.nominal || 0;
-      editRetur.value = rec.retur || 0;
-      editBright.value = rec.brightgas || 0;
-      editModal.classList.remove('hidden');
-      editModal.classList.add('flex');
-    }
-
-    function closeEditModal() {
-      editModal.classList.add('hidden');
-      editModal.classList.remove('flex');
-    }
-
-    cancelEdit.addEventListener('click', (e) => {
-      e.preventDefault();
-      closeEditModal();
-    });
-
-    // submit edit
-    editForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const row = parseInt(editRowInput.value, 10);
-      if (isNaN(row)) return alert('Row tidak valid');
-
-      // Build values array matching sheet order:
-      // A: Timestamp
-      // B: Nama (driver)
-      // C: Uraian (pangkalan)
-      // D: Pos (Nama PT)
-      // E: Nominal
-      // F: Foto
-      // G: Pembayaran
-      // H: Buktitransfer
-      // I: BrightGas
-      // J: Retur
-      // K: Buktiretur
-      // L: Lokasi
-
-      const existing = allData.find(d => d.__row === row) || {};
-
-      // timestamp: convert datetime-local to a string representation accepted by Sheets
-      const tsVal = editTimestamp.value ? new Date(editTimestamp.value) : (existing.timestamp || new Date());
-      // If tsVal is Date, convert to ISO string for safer transmission; Apps Script will parse when setting?
-      // We'll send as JS Date string so Sheets may auto-convert. Alternative: keep numeric? This is acceptable.
-      const tsToSave = tsVal instanceof Date && !isNaN(tsVal) ? tsVal.toString() : tsVal;
-
-      const values = [
-        tsToSave,
-        (editNama.value || existing.nama || ''),
-        (editUraian.value || existing.uraian || ''),
-        (editPos.value || existing.pos || ''),
-        (Number(editNominal.value) || 0),
-        (existing.foto || ''),           // keep foto
-        (existing.pembayaran || ''),     // keep pembayaran
-        (existing.buktitransfer || ''),  // keep bukti
-        (Number(editBright.value) || 0),
-        (Number(editRetur.value) || 0),
-        (existing.buktiretur || ''),     // keep bukti retur
-        (existing.lokasi || '')
-      ];
-
-      try {
-        const body = {
-          action: "edit",
-          sheet: "Transaksi",
-          payload: { row: row, values: values }
-        };
-        const resp = await fetch(POST_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'Text/Plain' },
-          body: JSON.stringify(body)
-        });
-        const j = await resp.json();
-        if (j && j.status === 'success') {
-          // update local copy
-          const idx = allData.findIndex(d => d.__row === row);
-          if (idx !== -1) {
-            // reflect changes locally (keep other fields)
-            allData[idx].timestamp = tsVal instanceof Date && !isNaN(tsVal) ? tsVal.toISOString() : tsToSave;
-            allData[idx].nama = values[1];
-            allData[idx].uraian = values[2];
-            allData[idx].pos = values[3];
-            allData[idx].nominal = values[4];
-            allData[idx].foto = values[5];
-            allData[idx].pembayaran = values[6];
-            allData[idx].buktitransfer = values[7];
-            allData[idx].brightgas = values[8];
-            allData[idx].retur = values[9];
-            allData[idx].buktiretur = values[10];
-            allData[idx].lokasi = values[11];
-          }
-          renderTable(allData);
-          closeEditModal();
-          alert('Update berhasil');
-        } else {
-          alert('Gagal update: ' + (j && j.message ? j.message : JSON.stringify(j)));
-        }
-      } catch (err) {
-        console.error('edit error', err);
-        alert('Terjadi error saat mengirim update');
-      }
-    });
-
-    // click outside modal to close
-    editModal.addEventListener('click', (ev) => {
-      if (ev.target === editModal) closeEditModal();
-    });
 
     fetchData();
   </script>
