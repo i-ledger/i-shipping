@@ -68,7 +68,7 @@
   </div>
 
   <!-- Modal Edit -->
-  <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center">
+  <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center">
     <div class="bg-white p-6 rounded-xl w-full max-w-md">
       <h2 class="text-xl font-bold mb-4">Edit Data</h2>
       <form id="editForm" class="space-y-3">
@@ -174,7 +174,7 @@
           <td class="px-4 py-2 text-center">${r.brightgas || '0'}</td>
           <td class="px-4 py-2">${r.pembayaran || '-'}</td>
           <td class="px-4 py-2 text-center">${renderThumb(r.foto)}</td>
-          <td class="px-4 py-2 text-center">${renderThumb(r.bukti)}</td>
+          <td class="px-4 py-2 text-center">${renderThumb(r.buktitransfer)}</td>
           <td class="px-4 py-2 text-center">${renderThumb(r.buktiretur)}</td>
           <td class="px-4 py-2 text-center">${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}</td>
           <td class="px-4 py-2 text-center">
@@ -233,8 +233,10 @@
       e.preventDefault();
       const index = parseInt(editRowInput.value,10);
       const r = allData[index];
+
+      // Payload untuk backend (Apps Script)
       const payload = {
-        row: index + 2, // row di sheet (header = 1)
+        row: index + 2, // header = 1
         values: [
           r.timestamp,
           editNama.value,
@@ -243,8 +245,43 @@
           editNominal.value,
           r.foto,
           editPembayaran.value,
-         
- filterBtn.addEventListener('click', () => renderTable(allData));
+          editRetur.value,
+          editBrightGas.value,
+          r.buktitransfer,
+          r.buktiretur,
+          r.lokasi || ''
+        ]
+      };
+
+      try {
+        const res = await fetch(API_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'updateTransaksi', ...payload })
+        });
+        const result = await res.json();
+        if (result.success) {
+          // update local allData
+          r.nama = editNama.value;
+          r.uraian = editUraian.value;
+          r.pos = editPT.value;
+          r.nominal = editNominal.value;
+          r.retur = editRetur.value;
+          r.brightgas = editBrightGas.value;
+          r.pembayaran = editPembayaran.value;
+          renderTable(allData);
+          editModal.classList.add('hidden');
+          alert('Data berhasil diperbarui');
+        } else {
+          alert('Gagal update data');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Terjadi error saat update');
+      }
+    });
+
+    filterBtn.addEventListener('click', () => renderTable(allData));
     filterPT.addEventListener('change', () => renderTable(allData));
     filterPangkalan.addEventListener('change', () => renderTable(allData));
 
