@@ -68,42 +68,46 @@
   </div>
 
   <!-- Modal Edit -->
-  <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center">
+  <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50">
     <div class="bg-white p-6 rounded-xl w-full max-w-md">
       <h2 class="text-xl font-bold mb-4">Edit Data</h2>
       <form id="editForm" class="space-y-3">
         <input type="hidden" id="editRow" />
         <div>
-          <label>Tanggal & Waktu</label>
+          <label class="block font-semibold">Tanggal & Waktu</label>
           <input type="datetime-local" id="editTimestamp" class="w-full border p-2 rounded-xl" />
         </div>
         <div>
-          <label>Nama PT</label>
+          <label class="block font-semibold">Nama PT</label>
           <input type="text" id="editPT" class="w-full border p-2 rounded-xl" />
         </div>
         <div>
-          <label>Driver/Kernet</label>
+          <label class="block font-semibold">Driver/Kernet</label>
           <input type="text" id="editNama" class="w-full border p-2 rounded-xl" />
         </div>
         <div>
-          <label>Nama Pangkalan</label>
+          <label class="block font-semibold">Nama Pangkalan</label>
           <input type="text" id="editUraian" class="w-full border p-2 rounded-xl" />
         </div>
         <div>
-          <label>Jumlah Pengiriman</label>
+          <label class="block font-semibold">Jumlah Pengiriman</label>
           <input type="number" id="editNominal" class="w-full border p-2 rounded-xl" />
         </div>
         <div>
-          <label>Retur</label>
+          <label class="block font-semibold">Retur</label>
           <input type="number" id="editRetur" class="w-full border p-2 rounded-xl" />
         </div>
         <div>
-          <label>Bright Gas</label>
+          <label class="block font-semibold">Bright Gas</label>
           <input type="number" id="editBrightGas" class="w-full border p-2 rounded-xl" />
         </div>
         <div>
-          <label>Pemilik di lokasi</label>
+          <label class="block font-semibold">Pemilik di lokasi</label>
           <input type="text" id="editPembayaran" class="w-full border p-2 rounded-xl" />
+        </div>
+        <div>
+          <label class="block font-semibold">Lokasi</label>
+          <input type="text" id="editLokasi" class="w-full border p-2 rounded-xl" />
         </div>
         <div class="flex justify-end space-x-2">
           <button type="button" id="closeModal" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl">Batal</button>
@@ -115,6 +119,7 @@
 
   <script src="config.js"></script>
   <script>
+    // NOTE: config.js must define API_ENDPOINT (base Apps Script URL)
     const API_URL = API_ENDPOINT + '?action=transaksi';
     const fromInput = document.getElementById('fromDate');
     const toInput = document.getElementById('toDate');
@@ -135,6 +140,7 @@
     const editRetur = document.getElementById('editRetur');
     const editBrightGas = document.getElementById('editBrightGas');
     const editPembayaran = document.getElementById('editPembayaran');
+    const editLokasi = document.getElementById('editLokasi');
     const closeModal = document.getElementById('closeModal');
 
     let allData = [];
@@ -157,153 +163,221 @@
 
     function formatDate(ts) {
       const d = new Date(ts);
-      const dd = String(d.getDate()).padStart(2,'0');
-      const mm = String(d.getMonth()+1).padStart(2,'0');
+      if (isNaN(d)) return '-';
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
       const yyyy = d.getFullYear();
-      const hh = String(d.getHours()).padStart(2,'0');
-      const mi = String(d.getMinutes()).padStart(2,'0');
-      const ss = String(d.getSeconds()).padStart(2,'0');
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mi = String(d.getMinutes()).padStart(2, '0');
+      const ss = String(d.getSeconds()).padStart(2, '0');
       return `${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
     }
 
-    function renderRow(r,index) {
+    // renderRow: r = data object, displayIndex = number shown in table, dataIndex = index in allData
+    function renderRow(r, displayIndex, dataIndex) {
       return `
         <tr class="border-b hover:bg-gray-50">
-          <td class="px-4 py-2 text-center">${index+1}</td>
+          <td class="px-4 py-2 text-center">${displayIndex + 1}</td>
           <td class="px-4 py-2">${formatDate(r.timestamp)}</td>
-          <td class="px-4 py-2">${r.pos||'-'}</td>
-          <td class="px-4 py-2">${r.nama||'-'}</td>
-          <td class="px-4 py-2">${r.uraian||'-'}</td>
-          <td class="px-4 py-2 text-center">${r.nominal||'0'}</td>
-          <td class="px-4 py-2 text-center">${r.retur||'0'}</td>
-          <td class="px-4 py-2 text-center">${r.brightgas||'0'}</td>
-          <td class="px-4 py-2">${r.pembayaran||'-'}</td>
+          <td class="px-4 py-2">${r.pos || '-'}</td>
+          <td class="px-4 py-2">${r.nama || '-'}</td>
+          <td class="px-4 py-2">${r.uraian || '-'}</td>
+          <td class="px-4 py-2 text-center">${r.nominal ?? '0'}</td>
+          <td class="px-4 py-2 text-center">${r.retur ?? '0'}</td>
+          <td class="px-4 py-2 text-center">${r.brightgas ?? '0'}</td>
+          <td class="px-4 py-2">${r.pembayaran || '-'}</td>
           <td class="px-4 py-2 text-center">${renderThumb(r.foto)}</td>
           <td class="px-4 py-2 text-center">${renderThumb(r.buktitransfer)}</td>
           <td class="px-4 py-2 text-center">${renderThumb(r.buktiretur)}</td>
-          <td class="px-4 py-2 text-center">${r.lokasi?`<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>`:'-'}</td>
+          <td class="px-4 py-2 text-center">${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}</td>
           <td class="px-4 py-2 text-center">
-            <button class="bg-yellow-400 hover:bg-yellow-500 text-white px-2 py-1 rounded-xl" onclick="openEdit(${index})">Edit</button>
+            <button class="bg-yellow-400 hover:bg-yellow-500 text-white px-2 py-1 rounded-xl" onclick="openEdit(${dataIndex})">Edit</button>
           </td>
         </tr>`;
     }
 
-    function renderTable(data){
-      const from = fromInput.value ? new Date(fromInput.value+'T00:00:00') : null;
-      const to = toInput.value ? new Date(toInput.value+'T23:59:59') : null;
-      const filtered = data.filter(r=>{
-        const d=new Date(r.timestamp);
-        return (!from||d>=from)&&(!to||d<=to)&&
-               (!filterPT.value||r.pos===filterPT.value)&&
-               (!filterPangkalan.value||r.uraian===filterPangkalan.value);
-      });
-      rekapBody.innerHTML = filtered.map((r,i)=>renderRow(r,i)).join('');
+    // renderTable: build a view array that keeps original indexes
+    function renderTable(data) {
+      const from = fromInput.value ? new Date(fromInput.value + 'T00:00:00') : null;
+      const to = toInput.value ? new Date(toInput.value + 'T23:59:59') : null;
+
+      const view = data
+        .map((r, idx) => ({ r, idx }))
+        .filter(item => {
+          const d = new Date(item.r.timestamp);
+          if (isNaN(d)) return false;
+          const matchDate = (!from || d >= from) && (!to || d <= to);
+          const matchPT = !filterPT.value || item.r.pos === filterPT.value;
+          const matchPgl = !filterPangkalan.value || item.r.uraian === filterPangkalan.value;
+          return matchDate && matchPT && matchPgl;
+        });
+
+      rekapBody.innerHTML = view.map((item, i) => renderRow(item.r, i, item.idx)).join('');
     }
 
-    async function fetchData(){
-      const res = await fetch(API_URL);
-      const data = await res.json();
-      if(!Array.isArray(data)) return;
-      allData = data;
-      const today = new Date().toISOString().split('T')[0];
-      fromInput.value=today; toInput.value=today;
-      const pts=[...new Set(data.map(d=>d.pos))].sort();
-      const pgls=[...new Set(data.map(d=>d.uraian))].sort();
-      filterPT.innerHTML='<option value="">Semua</option>'+pts.map(p=>`<option>${p}</option>`).join('');
-      filterPangkalan.innerHTML='<option value="">Semua</option>'+pgls.map(p=>`<option>${p}</option>`).join('');
-      renderTable(allData);
+    async function fetchData() {
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        if (!Array.isArray(data)) return;
+        allData = data;
+
+        const today = new Date().toISOString().split('T')[0];
+        fromInput.value = today;
+        toInput.value = today;
+
+        const pts = [...new Set(data.map(d => d.pos))].filter(Boolean).sort();
+        const pgls = [...new Set(data.map(d => d.uraian))].filter(Boolean).sort();
+        filterPT.innerHTML = '<option value="">Semua</option>' + pts.map(p => `<option>${p}</option>`).join('');
+        filterPangkalan.innerHTML = '<option value="">Semua</option>' + pgls.map(p => `<option>${p}</option>`).join('');
+
+        renderTable(allData);
+      } catch (err) {
+        console.error('fetchData error', err);
+      }
     }
 
-    function openEdit(index){
-      const r = allData[index];
-      editRowInput.value = index;
-      editTimestamp.value = new Date(r.timestamp).toISOString().slice(0,16);
-      editPT.value = r.pos;
-      editNama.value = r.nama;
-      editUraian.value = r.uraian;
-      editNominal.value = r.nominal;
-      editRetur.value = r.retur;
-      editBrightGas.value = r.brightgas;
-      editPembayaran.value = r.pembayaran;
+    // convert Date -> datetime-local value (local tz)
+    function toDatetimeLocalValue(date) {
+      const d = new Date(date);
+      if (isNaN(d)) return '';
+      const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+      return local.toISOString().slice(0,16);
+    }
+
+    function openEdit(dataIndex) {
+      const r = allData[dataIndex];
+      editRowInput.value = dataIndex;
+      editTimestamp.value = toDatetimeLocalValue(r.timestamp);
+      editPT.value = r.pos || '';
+      editNama.value = r.nama || '';
+      editUraian.value = r.uraian || '';
+      editNominal.value = r.nominal ?? 0;
+      editRetur.value = r.retur ?? 0;
+      editBrightGas.value = r.brightgas ?? 0;
+      editPembayaran.value = r.pembayaran || '';
+      editLokasi.value = r.lokasi || '';
       editModal.classList.remove('hidden');
     }
 
-    closeModal.addEventListener('click',()=>editModal.classList.add('hidden'));
+    closeModal.addEventListener('click', () => editModal.classList.add('hidden'));
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') editModal.classList.add('hidden'); });
 
-    editForm.addEventListener('submit', async (e)=>{
+    editForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const index = parseInt(editRowInput.value,10);
-      const r = allData[index];
+      const dataIndex = parseInt(editRowInput.value, 10);
+      if (isNaN(dataIndex)) return alert('Index data tidak valid');
+
+      const r = allData[dataIndex];
+
+      // Build values array in the SAME ORDER as sheet columns:
+      // [ Timestamp, Nama, Uraian, Pos, Nominal, Foto, Pembayaran, Buktitransfer, BrightGas, Retur, Buktiretur, Lokasi ]
+      const newTimestampISO = new Date(editTimestamp.value).toISOString();
+      const values = [
+        newTimestampISO,                       // A: Timestamp
+        editNama.value,                        // B: Nama
+        editUraian.value,                      // C: Uraian
+        editPT.value,                          // D: Pos
+        Number(editNominal.value) || 0,        // E: Jumlah Tabung
+        r.foto || '',                          // F: Foto Pangkalan (jika tidak ganti)
+        editPembayaran.value || '',            // G: Status Pemilik Pangkalan
+        r.buktitransfer || '',                 // H: Link Foto Pemilik (tidak diganti di modal)
+        Number(editBrightGas.value) || 0,      // I: Bright Gas
+        Number(editRetur.value) || 0,          // J: Retur
+        r.buktiretur || '',                    // K: Bukti Retur (tidak diganti di modal)
+        editLokasi.value || ''                 // L: Lokasi
+      ];
+
       const payload = {
-        row: index+2,
-        values:[
-          new Date(editTimestamp.value).toISOString(),
-          editNama.value,
-          editUraian.value,
-          editPT.value,
-          editNominal.value,
-          r.foto,
-          editPembayaran.value,
-          editRetur.value,
-          editBrightGas.value,
-          r.buktitransfer,
-          r.buktiretur,
-          r.lokasi||''
-        ]
+        row: dataIndex + 2, // +2 karena header row ada di 1
+        values
       };
-      try{
-        const res = await fetch(API_ENDPOINT+'?action=update',{
-          method:'POST',
-          body:JSON.stringify(payload),
-          headers:{'Content-Type':'application/json'}
+
+      try {
+        // POST ke Apps Script sesuai struktur backend 'edit'
+        const res = await fetch(API_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'edit', sheet: 'Transaksi', payload })
         });
         const result = await res.json();
-        if(result.success){
-          allData[index].timestamp=payload.values[0];
-          allData[index].nama=editNama.value;
-          allData[index].uraian=editUraian.value;
-          allData[index].pos=editPT.value;
-          allData[index].nominal=editNominal.value;
-          allData[index].pembayaran=editPembayaran.value;
-          allData[index].retur=editRetur.value;
-          allData[index].brightgas=editBrightGas.value;
+
+        // backend mengembalikan {status:'success'} atau {status:'error', message:...}
+        if (result && result.status === 'success') {
+          // update local data & re-render (tetap simpan foto/bukti lama jika tidak diganti)
+          allData[dataIndex].timestamp = values[0];
+          allData[dataIndex].nama = values[1];
+          allData[dataIndex].uraian = values[2];
+          allData[dataIndex].pos = values[3];
+          allData[dataIndex].nominal = values[4];
+          allData[dataIndex].foto = values[5];
+          allData[dataIndex].pembayaran = values[6];
+          allData[dataIndex].buktitransfer = values[7];
+          allData[dataIndex].brightgas = values[8];
+          allData[dataIndex].retur = values[9];
+          allData[dataIndex].buktiretur = values[10];
+          allData[dataIndex].lokasi = values[11];
+
           renderTable(allData);
           editModal.classList.add('hidden');
           alert('Data berhasil diperbarui!');
-        } else { alert('Gagal update data'); }
-      }catch(err){ console.error(err); alert('Terjadi error saat update'); }
+        } else {
+          console.error('update failed', result);
+          alert('Gagal update data: ' + (result && result.message ? result.message : 'unknown'));
+        }
+      } catch (err) {
+        console.error('submit edit error', err);
+        alert('Terjadi error saat update');
+      }
     });
 
-    filterBtn.addEventListener('click',()=>renderTable(allData));
-    filterPT.addEventListener('change',()=>renderTable(allData));
-    filterPangkalan.addEventListener('change',()=>renderTable(allData));
+    filterBtn.addEventListener('click', () => renderTable(allData));
+    filterPT.addEventListener('change', () => renderTable(allData));
+    filterPangkalan.addEventListener('change', () => renderTable(allData));
 
-    downloadBtn.addEventListener('click',()=>{
-      let csv='Timestamp,Nama PT,Driver/Kernet,Nama Pangkalan,Jumlah Pengiriman,Retur,Bright Gas,Pemilik di lokasi,Foto Pangkalan,Pemilik Pangkalan,Bukti Retur,Lokasi\n';
-      allData.forEach(r=>{
-        const row=[
+    downloadBtn.addEventListener('click', () => {
+      // buat CSV berdasar tampilan (filtered)
+      const from = fromInput.value ? new Date(fromInput.value + 'T00:00:00') : null;
+      const to = toInput.value ? new Date(toInput.value + 'T23:59:59') : null;
+      const view = allData
+        .map((r, idx) => ({ r, idx }))
+        .filter(item => {
+          const d = new Date(item.r.timestamp);
+          if (isNaN(d)) return false;
+          const matchDate = (!from || d >= from) && (!to || d <= to);
+          const matchPT = !filterPT.value || item.r.pos === filterPT.value;
+          const matchPgl = !filterPangkalan.value || item.r.uraian === filterPangkalan.value;
+          return matchDate && matchPT && matchPgl;
+        });
+
+      let csv = 'Timestamp,Nama PT,Driver/Kernet,Nama Pangkalan,Jumlah Pengiriman,Retur,Bright Gas,Pemilik di lokasi,Foto Pangkalan,Pemilik Pangkalan,Bukti Retur,Lokasi\n';
+      view.forEach(item => {
+        const r = item.r;
+        const row = [
           `"${formatDate(r.timestamp)}"`,
-          `"${r.pos||''}"`,
-          `"${r.nama||''}"`,
-          `"${r.uraian||''}"`,
-          `"${r.nominal||0}"`,
-          `"${r.retur||0}"`,
-          `"${r.brightgas||0}"`,
-          `"${r.pembayaran||''}"`,
-          `"${r.foto||''}"`,
-          `"${r.buktitransfer||''}"`,
-          `"${r.buktiretur||''}"`,
-          `"${r.lokasi||''}"`
+          `"${(r.pos||'').toString().replace(/"/g,'""')}"`,
+          `"${(r.nama||'').toString().replace(/"/g,'""')}"`,
+          `"${(r.uraian||'').toString().replace(/"/g,'""')}"`,
+          `"${r.nominal ?? 0}"`,
+          `"${r.retur ?? 0}"`,
+          `"${r.brightgas ?? 0}"`,
+          `"${(r.pembayaran||'').toString().replace(/"/g,'""')}"`,
+          `"${(r.foto||'').toString().replace(/"/g,'""')}"`,
+          `"${(r.buktitransfer||'').toString().replace(/"/g,'""')}"`,
+          `"${(r.buktiretur||'').toString().replace(/"/g,'""')}"`,
+          `"${(r.lokasi||'').toString().replace(/"/g,'""')}"`
         ];
-        csv+=row.join(',')+'\n';
+        csv += row.join(',') + '\n';
       });
-      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-      const link=document.createElement('a');
-      link.href=URL.createObjectURL(blob);
-      link.download='rekap_pengiriman.csv';
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'rekap_pengiriman.csv';
       link.click();
     });
 
+    // init
     fetchData();
   </script>
 </body>
