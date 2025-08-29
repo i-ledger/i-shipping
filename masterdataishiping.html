@@ -353,7 +353,7 @@
         };
         const resp = await fetch(POST_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'Text/Plain' },
           body: JSON.stringify(body)
         });
         const j = await resp.json();
