@@ -341,90 +341,89 @@
       closeEditModal();
     });
 
-    // submit edit
-    editForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const row = parseInt(editRowInput.value, 10);
-      if (isNaN(row)) return alert('Row tidak valid');
+// helper untuk format timestamp ke dd/MM/yyyy HH:mm:ss
+function formatForSheet(date) {
+  if (!(date instanceof Date) || isNaN(date)) return '';
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yyyy = date.getFullYear();
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mi = String(date.getMinutes()).padStart(2, '0');
+  const ss = String(date.getSeconds()).padStart(2, '0');
+  return `${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
+}
 
-      // Build values array matching sheet order:
-      // A: Timestamp
-      // B: Nama (driver)
-      // C: Uraian (pangkalan)
-      // D: Pos (Nama PT)
-      // E: Nominal
-      // F: Foto
-      // G: Pembayaran
-      // H: Buktitransfer
-      // I: BrightGas
-      // J: Retur
-      // K: Buktiretur
-      // L: Lokasi
+// submit edit
+editForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const row = parseInt(editRowInput.value, 10);
+  if (isNaN(row)) return alert('Row tidak valid');
 
-      const existing = allData.find(d => d.__row === row) || {};
+  const existing = allData.find(d => d.__row === row) || {};
 
-      // timestamp: convert datetime-local to a string representation accepted by Sheets
-      const tsVal = editTimestamp.value ? new Date(editTimestamp.value) : (existing.timestamp || new Date());
-      // If tsVal is Date, convert to ISO string for safer transmission; Apps Script will parse when setting?
-      // We'll send as JS Date string so Sheets may auto-convert. Alternative: keep numeric? This is acceptable.
-      const tsToSave = tsVal instanceof Date && !isNaN(tsVal) ? tsVal.toString() : tsVal;
+  // Ambil timestamp dari input, jika kosong pakai existing / sekarang
+  const tsVal = editTimestamp.value
+    ? new Date(editTimestamp.value)
+    : (existing.timestamp ? new Date(existing.timestamp) : new Date());
 
-      const values = [
-        tsToSave,
-        (editNama.value || existing.nama || ''),
-        (editUraian.value || existing.uraian || ''),
-        (editPos.value || existing.pos || ''),
-        (Number(editNominal.value) || 0),
-        (existing.foto || ''),           // keep foto
-        (existing.pembayaran || ''),     // keep pembayaran
-        (existing.buktitransfer || ''),  // keep bukti
-        (Number(editBright.value) || 0),
-        (Number(editRetur.value) || 0),
-        (existing.buktiretur || ''),     // keep bukti retur
-        (existing.lokasi || '')
-      ];
+  // format timestamp ke dd/MM/yyyy HH:mm:ss
+  const tsToSave = formatForSheet(tsVal);
 
-      try {
-        const body = {
-          action: "edit",
-          sheet: "Transaksi",
-          payload: { row: row, values: values }
-        };
-        const resp = await fetch(POST_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'Text/Plain' },
-          body: JSON.stringify(body)
-        });
-        const j = await resp.json();
-        if (j && j.status === 'success') {
-          // update local copy
-          const idx = allData.findIndex(d => d.__row === row);
-          if (idx !== -1) {
-            // reflect changes locally (keep other fields)
-            allData[idx].timestamp = tsVal instanceof Date && !isNaN(tsVal) ? tsVal.toISOString() : tsToSave;
-            allData[idx].nama = values[1];
-            allData[idx].uraian = values[2];
-            allData[idx].pos = values[3];
-            allData[idx].nominal = values[4];
-            allData[idx].foto = values[5];
-            allData[idx].pembayaran = values[6];
-            allData[idx].buktitransfer = values[7];
-            allData[idx].brightgas = values[8];
-            allData[idx].retur = values[9];
-            allData[idx].buktiretur = values[10];
-            allData[idx].lokasi = values[11];
-          }
-          renderTable(allData);
-          closeEditModal();
-          alert('Update berhasil');
-        } else {
-          alert('Gagal update: ' + (j && j.message ? j.message : JSON.stringify(j)));
-        }
-      } catch (err) {
-        console.error('edit error', err);
-        alert('Terjadi error saat mengirim update');
-      }
+  const values = [
+    tsToSave,
+    (editNama.value || existing.nama || ''),
+    (editUraian.value || existing.uraian || ''),
+    (editPos.value || existing.pos || ''),
+    (Number(editNominal.value) || 0),
+    (existing.foto || ''),           // keep foto
+    (existing.pembayaran || ''),     // keep pembayaran
+    (existing.buktitransfer || ''),  // keep bukti
+    (Number(editBright.value) || 0),
+    (Number(editRetur.value) || 0),
+    (existing.buktiretur || ''),     // keep bukti retur
+    (existing.lokasi || '')
+  ];
+
+  try {
+    const body = {
+      action: "edit",
+      sheet: "Transaksi",
+      payload: { row: row, values: values }
+    };
+    const resp = await fetch(POST_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'Text/Plain' },
+      body: JSON.stringify(body)
     });
+    const j = await resp.json();
+    if (j && j.status === 'success') {
+      // update local copy
+      const idx = allData.findIndex(d => d.__row === row);
+      if (idx !== -1) {
+        allData[idx].timestamp = tsToSave; // ✅ selalu format dd/MM/yyyy HH:mm:ss
+        allData[idx].nama = values[1];
+        allData[idx].uraian = values[2];
+        allData[idx].pos = values[3];
+        allData[idx].nominal = values[4];
+        allData[idx].foto = values[5];
+        allData[idx].pembayaran = values[6];
+        allData[idx].buktitransfer = values[7];
+        allData[idx].brightgas = values[8];
+        allData[idx].retur = values[9];
+        allData[idx].buktiretur = values[10];
+        allData[idx].lokasi = values[11];
+      }
+      renderTable(allData);
+      closeEditModal();
+      alert('Update berhasil');
+    } else {
+      alert('Gagal update: ' + (j && j.message ? j.message : JSON.stringify(j)));
+    }
+  } catch (err) {
+    console.error('edit error', err);
+    alert('Terjadi error saat mengirim update');
+  }
+});
 
     // click outside modal to close
     editModal.addEventListener('click', (ev) => {
