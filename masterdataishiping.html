@@ -320,7 +320,7 @@
       const rec = allData.find(d => d.__row === row);
       if (!rec) return alert('Data tidak ditemukan untuk row ' + row);
       editRowInput.value = row;
-      editTimestamp.value = rec.timestamp|| '';
+      editTimestamp.value = toDateTimeLocalInput(rec.timestamp);
       editPos.value = rec.pos || '';
       editNama.value = rec.nama || '';
       editUraian.value = rec.uraian || '';
@@ -401,18 +401,18 @@
           const idx = allData.findIndex(d => d.__row === row);
           if (idx !== -1) {
             // reflect changes locally (keep other fields)
-            allData[idx].timestamp = values[1];
-            allData[idx].nama = values[2];
-            allData[idx].uraian = values[3];
-            allData[idx].pos = values[4];
-            allData[idx].nominal = values[5];
-            allData[idx].foto = values[6];
-            allData[idx].pembayaran = values[7];
-            allData[idx].buktitransfer = values[8];
-            allData[idx].brightgas = values[9];
-            allData[idx].retur = values[10];
-            allData[idx].buktiretur = values[11];
-            allData[idx].lokasi = values[12];
+            allData[idx].timestamp = tsVal instanceof Date && !isNaN(tsVal) ? tsVal.toISOString() : tsToSave;
+            allData[idx].nama = values[1];
+            allData[idx].uraian = values[2];
+            allData[idx].pos = values[3];
+            allData[idx].nominal = values[4];
+            allData[idx].foto = values[5];
+            allData[idx].pembayaran = values[6];
+            allData[idx].buktitransfer = values[7];
+            allData[idx].brightgas = values[8];
+            allData[idx].retur = values[9];
+            allData[idx].buktiretur = values[10];
+            allData[idx].lokasi = values[11];
           }
           renderTable(allData);
           closeEditModal();
