@@ -320,7 +320,7 @@
       const rec = allData.find(d => d.__row === row);
       if (!rec) return alert('Data tidak ditemukan untuk row ' + row);
       editRowInput.value = row;
-      editTimestamp.value = toDateTimeLocalInput(rec.timestamp);
+      editTimestamp.value = rec.timestamp|| '';
       editPos.value = rec.pos || '';
       editNama.value = rec.nama || '';
       editUraian.value = rec.uraian || '';
