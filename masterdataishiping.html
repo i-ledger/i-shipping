@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Master Data i-shipping</title>
   <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50">
   <!-- Modal PIN -->
   <div id="pinModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div class="bg-white p-6 rounded-2xl shadow-xl w-80 text-center">
@@ -29,54 +31,55 @@
         </div>
       </div>
 
-    <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-      <div>
-        <label class="block mb-1 font-semibold">Dari Tanggal</label>
-        <input type="date" id="fromDate" class="w-full border p-2 rounded-xl" />
+      <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+        <div>
+          <label class="block mb-1 font-semibold">Dari Tanggal</label>
+          <input type="date" id="fromDate" class="w-full border p-2 rounded-xl" />
+        </div>
+        <div>
+          <label class="block mb-1 font-semibold">Sampai Tanggal</label>
+          <input type="date" id="toDate" class="w-full border p-2 rounded-xl" />
+        </div>
+        <div class="flex items-end">
+          <button id="filterDateBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl">Filter</button>
+        </div>
+        <div>
+          <label class="block mb-1 font-semibold">Filter Nama PT</label>
+          <select id="filterPT" class="w-full border p-2 rounded-xl">
+            <option value="">Semua</option>
+          </select>
+        </div>
+        <div>
+          <label class="block mb-1 font-semibold">Filter Pangkalan</label>
+          <select id="filterPangkalan" class="w-full border p-2 rounded-xl">
+            <option value="">Semua</option>
+          </select>
+        </div>
       </div>
-      <div>
-        <label class="block mb-1 font-semibold">Sampai Tanggal</label>
-        <input type="date" id="toDate" class="w-full border p-2 rounded-xl" />
-      </div>
-      <div class="flex items-end">
-        <button id="filterDateBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl">Filter</button>
-      </div>
-      <div>
-        <label class="block mb-1 font-semibold">Filter Nama PT</label>
-        <select id="filterPT" class="w-full border p-2 rounded-xl">
-          <option value="">Semua</option>
-        </select>
-      </div>
-      <div>
-        <label class="block mb-1 font-semibold">Filter Pangkalan</label>
-        <select id="filterPangkalan" class="w-full border p-2 rounded-xl">
-          <option value="">Semua</option>
-        </select>
-      </div>
-    </div>
 
-    <div class="overflow-x-auto">
-      <table class="min-w-full table-auto border border-gray-300 text-sm" id="rekapTable">
-        <thead class="bg-indigo-600 text-white">
-          <tr>
-            <th class="px-4 py-2">#</th>
-            <th class="px-4 py-2">Timestamp</th>
-            <th class="px-4 py-2">Nama PT</th>
-            <th class="px-4 py-2">Driver/Kernet</th>
-            <th class="px-4 py-2">Nama Pangkalan</th>
-            <th class="px-4 py-2">Jumlah Pengiriman (3Kg)</th>
-            <th class="px-4 py-2">Retur</th>
-            <th class="px-4 py-2">Bright Gas</th>
-            <th class="px-4 py-2">Pemilik di lokasi</th>
-            <th class="px-4 py-2">Foto Pangkalan</th>
-            <th class="px-4 py-2">Pemilik Pangkalan</th>
-            <th class="px-4 py-2">Bukti Retur</th>
-            <th class="px-4 py-2">Lokasi</th>
-            <th class="px-4 py-2">Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="rekapBody"></tbody>
-      </table>
+      <div class="overflow-x-auto">
+        <table class="min-w-full table-auto border border-gray-300 text-sm" id="rekapTable">
+          <thead class="bg-indigo-600 text-white">
+            <tr>
+              <th class="px-4 py-2">#</th>
+              <th class="px-4 py-2">Timestamp</th>
+              <th class="px-4 py-2">Nama PT</th>
+              <th class="px-4 py-2">Driver/Kernet</th>
+              <th class="px-4 py-2">Nama Pangkalan</th>
+              <th class="px-4 py-2">Jumlah Pengiriman (3Kg)</th>
+              <th class="px-4 py-2">Retur</th>
+              <th class="px-4 py-2">Bright Gas</th>
+              <th class="px-4 py-2">Pemilik di lokasi</th>
+              <th class="px-4 py-2">Foto Pangkalan</th>
+              <th class="px-4 py-2">Pemilik Pangkalan</th>
+              <th class="px-4 py-2">Bukti Retur</th>
+              <th class="px-4 py-2">Lokasi</th>
+              <th class="px-4 py-2">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="rekapBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -127,9 +130,14 @@
     </div>
   </div>
 
+  <!-- Overlay Loading -->
+  <div id="loadingOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-indigo-600 border-solid"></div>
+  </div>
+
   <script src="config.js"></script>
   <script>
-    // ===== PIN Handling =====
+    /* === PIN Handling === */
     const CORRECT_PIN = "030500";
     const pinModal = document.getElementById("pinModal");
     const pinInput = document.getElementById("pinInput");
@@ -147,17 +155,14 @@
         pinInput.focus();
       }
     });
-
     pinInput.addEventListener("keypress", (e) => {
       if (e.key === "Enter") pinSubmit.click();
     });
 
-    // ===== Existing Script (fetch, edit, etc) =====
-
-    
+    /* === Variabel Global === */
     const API_URL = API_ENDPOINT + '?action=transaksi';
-    const GET_URL = API_ENDPOINT + '?action=transaksi'; // full fetch (no filters)
-    const POST_URL = API_ENDPOINT; // POST to same endpoint
+    const GET_URL = API_ENDPOINT + '?action=transaksi';
+    const POST_URL = API_ENDPOINT;
 
     const fromInput = document.getElementById('fromDate');
     const toInput = document.getElementById('toDate');
@@ -180,10 +185,11 @@
     const cancelEdit = document.getElementById('cancelEdit');
 
     let allData = [];
+
     function showLoading(show = true) {
-  document.getElementById("loadingOverlay").classList.toggle("hidden", !show);
-}
-   
+      document.getElementById("loadingOverlay").classList.toggle("hidden", !show);
+    }
+
     function extractFileId(url) {
       if (!url) return null;
       const directId = url.match(/id=([A-Za-z0-9_-]+)/);
@@ -203,7 +209,7 @@
     function formatDate(ts) {
       if (!ts) return '-';
       const d = new Date(ts);
-      if (isNaN(d)) return ts; // fallback
+      if (isNaN(d)) return ts;
       const dd = String(d.getDate()).padStart(2, '0');
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const yyyy = d.getFullYear();
@@ -217,7 +223,6 @@
       if (!ts) return '';
       const d = new Date(ts);
       if (isNaN(d)) return '';
-      // create yyyy-mm-ddThh:ii
       const yyyy = d.getFullYear();
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const dd = String(d.getDate()).padStart(2, '0');
@@ -226,35 +231,33 @@
       return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
     }
 
-function renderRow(r, idx) {
-  return `
-    <tr class="border-b hover:bg-gray-50">
-      <td class="px-4 py-2 text-center">${r.__row || (idx+2)}</td>
-      <td class="px-4 py-2">${formatDate(r.timestamp)}</td>
-      <td class="px-4 py-2">${r.pos || '-'}</td>
-      <td class="px-4 py-2">${r.nama || '-'}</td>
-      <td class="px-4 py-2">${r.uraian || '-'}</td>
-      <td class="px-4 py-2 text-center">${r.nominal || '0'}</td>
-      <td class="px-4 py-2 text-center">${r.retur || '0'}</td>
-      <td class="px-4 py-2 text-center">${r.brightgas || '0'}</td>
-      <td class="px-4 py-2">${r.pembayaran || '-'}</td>
-      <td class="px-4 py-2 text-center">${renderThumb(r.foto)}</td>
-      <td class="px-4 py-2 text-center">${renderThumb(r.buktitransfer)}</td>
-      <td class="px-4 py-2 text-center">${renderThumb(r.buktiretur)}</td>
-      <td class="px-4 py-2 text-center">
-        ${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}
-      </td>
-      <td class="px-4 py-2 text-center">
-        <div class="flex gap-1 justify-center">
-          <button class="px-2 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded"
-            onclick="openEditModal(${r.__row})">✏️Edit</button>
-          <button class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded"
-            onclick="deleteRow(${r.__row})">🗑️Hapus</button>
-        </div>
-      </td>
-    </tr>
-  `;
-}
+    function renderRow(r, idx) {
+      return `
+        <tr class="border-b hover:bg-gray-50">
+          <td class="px-4 py-2 text-center">${r.__row || (idx+2)}</td>
+          <td class="px-4 py-2">${formatDate(r.timestamp)}</td>
+          <td class="px-4 py-2">${r.pos || '-'}</td>
+          <td class="px-4 py-2">${r.nama || '-'}</td>
+          <td class="px-4 py-2">${r.uraian || '-'}</td>
+          <td class="px-4 py-2 text-center">${r.nominal || '0'}</td>
+          <td class="px-4 py-2 text-center">${r.retur || '0'}</td>
+          <td class="px-4 py-2 text-center">${r.brightgas || '0'}</td>
+          <td class="px-4 py-2">${r.pembayaran || '-'}</td>
+          <td class="px-4 py-2 text-center">${renderThumb(r.foto)}</td>
+          <td class="px-4 py-2 text-center">${renderThumb(r.buktitransfer)}</td>
+          <td class="px-4 py-2 text-center">${renderThumb(r.buktiretur)}</td>
+          <td class="px-4 py-2 text-center">
+            ${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}
+          </td>
+          <td class="px-4 py-2 text-center">
+            <div class="flex gap-1 justify-center">
+              <button data-row="${r.__row}" class="editBtn px-2 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded">✏️Edit</button>
+              <button data-row="${r.__row}" class="deleteBtn px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded">🗑️Hapus</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
 
     function renderTable(data) {
       const from = fromInput.value ? new Date(fromInput.value + 'T00:00:00') : null;
@@ -266,211 +269,161 @@ function renderRow(r, idx) {
                (!filterPangkalan.value || r.uraian === filterPangkalan.value);
       });
       rekapBody.innerHTML = filtered.map((r, i) => renderRow(r, i)).join('');
-      // attach edit handlers
+
+      // event tombol edit & hapus
       document.querySelectorAll('.editBtn').forEach(btn => {
-        btn.addEventListener('click', (ev) => {
-          const row = parseInt(ev.currentTarget.getAttribute('data-row'), 10);
-          openEditModal(row);
-        });
+        btn.addEventListener('click', () => openEditModal(parseInt(btn.dataset.row)));
+      });
+      document.querySelectorAll('.deleteBtn').forEach(btn => {
+        btn.addEventListener('click', () => deleteRow(parseInt(btn.dataset.row)));
       });
     }
 
-async function fetchData() {
-  showLoading(true);
-  try {
-    const res = await fetch(GET_URL);
-    const data = await res.json();
-    if (!Array.isArray(data)) return;
-    data.forEach((d, i) => d.__row = i + 2);
-    allData = data;
+    async function fetchData() {
+      showLoading(true);
+      try {
+        const res = await fetch(GET_URL);
+        const data = await res.json();
+        if (!Array.isArray(data)) return;
+        data.forEach((d, i) => d.__row = i + 2);
+        allData = data;
 
-    const today = new Date().toISOString().split('T')[0];
-    fromInput.value = today;
-    toInput.value = today;
+        const today = new Date().toISOString().split('T')[0];
+        fromInput.value = today;
+        toInput.value = today;
 
-    const pts = [...new Set(data.map(d => d.pos).filter(Boolean))].sort();
-    const pgls = [...new Set(data.map(d => d.uraian).filter(Boolean))].sort();
+        const pts = [...new Set(data.map(d => d.pos).filter(Boolean))].sort();
+        const pgls = [...new Set(data.map(d => d.uraian).filter(Boolean))].sort();
 
-    filterPT.innerHTML = '<option value="">Semua</option>' + pts.map(p => `<option>${p}</option>`).join('');
-    filterPangkalan.innerHTML = '<option value="">Semua</option>' + pgls.map(p => `<option>${p}</option>`).join('');
+        filterPT.innerHTML = '<option value="">Semua</option>' + pts.map(p => `<option>${p}</option>`).join('');
+        filterPangkalan.innerHTML = '<option value="">Semua</option>' + pgls.map(p => `<option>${p}</option>`).join('');
 
-    renderTable(allData);
-  } catch (err) {
-    console.error('fetchData error', err);
-  } finally {
-    showLoading(false);
-  }
-}
-
-async function deleteRow(row) {
-  if (!confirm("Yakin ingin menghapus data ini?")) return;
-  showLoading(true);
-
-  try {
-    const res = await fetch(POST_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "delete",
-        sheet: "Transaksi",
-        payload: { row }
-      })
-    });
-
-    const result = await res.json();
-    if (result.status === "success") {
-      alert("Data berhasil dihapus!");
-      fetchData();
-    } else {
-      alert("Gagal menghapus data!");
+        renderTable(allData);
+      } catch (err) {
+        console.error('fetchData error', err);
+      } finally {
+        showLoading(false);
+      }
     }
-  } catch (err) {
-    console.error(err);
-    alert("Terjadi error saat menghapus data!");
-  } finally {
-    showLoading(false);
-  }
-}
 
+    async function deleteRow(row) {
+      if (!confirm("Yakin ingin menghapus data ini?")) return;
+      showLoading(true);
+      try {
+        const res = await fetch(POST_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "delete",
+            sheet: "Transaksi",
+            payload: { row }
+          })
+        });
+        const result = await res.json();
+        if (result.status === "success") {
+          alert("Data berhasil dihapus!");
+          fetchData();
+        } else {
+          alert("Gagal menghapus data!");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Terjadi error saat menghapus data!");
+      } finally {
+        showLoading(false);
+      }
+    }
 
     filterBtn.addEventListener('click', () => renderTable(allData));
     filterPT.addEventListener('change', () => renderTable(allData));
     filterPangkalan.addEventListener('change', () => renderTable(allData));
 
+    // === Download Excel ===
     downloadBtn.addEventListener('click', () => {
-      const header = ['Timestamp', 'Nama PT', 'Driver/Kernet', 'Nama Pangkalan', 'Jumlah Pengiriman', 'Retur', 'Bright Gas', 'Pemilik di lokasi', 'Foto Pangkalan', 'Pemilik Pangkalan', 'Bukti Retur', 'Lokasi'];
+      const header = ['Timestamp','Nama PT','Driver/Kernet','Nama Pangkalan','Jumlah Pengiriman','Retur','Bright Gas','Pemilik di lokasi','Foto Pangkalan','Pemilik Pangkalan','Bukti Retur','Lokasi'];
       const rows = allData.filter(r => {
         const d = new Date(r.timestamp);
         return (!fromInput.value || d >= new Date(fromInput.value + 'T00:00:00')) && (!toInput.value || d <= new Date(toInput.value + 'T23:59:59'));
       }).map(r => [
-        formatDate(r.timestamp), r.pos, r.nama, r.uraian, r.nominal, r.retur, r.brightgas, r.pembayaran,
-        r.foto, r.buktitransfer, r.buktiretur, r.lokasi
+        formatDate(r.timestamp),
+        r.pos,
+        r.nama,
+        r.uraian,
+        r.nominal,
+        r.retur,
+        r.brightgas,
+        r.pembayaran,
+        r.foto,
+        r.buktitransfer,
+        r.buktiretur,
+        r.lokasi
       ]);
-      let csv = header.join(',') + '\n';
-      rows.forEach(r => {
-        csv += r.map(c => `"${(c || '').toString().replace(/"/g, '""')}"`).join(',') + '\n';
-      });
-      const blob = new Blob([csv], { type: 'text/csv' });
+
+      const csvContent = [header, ...rows].map(e => e.map(v => `"${(v||'').toString().replace(/"/g,'""')}"`).join(",")).join("\n");
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'rekap_pengiriman.csv';
-      a.click();
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", "rekap_pengiriman.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     });
 
-    // Edit modal helpers
     function openEditModal(row) {
-      const rec = allData.find(d => d.__row === row);
-      if (!rec) return alert('Data tidak ditemukan untuk row ' + row);
-      editRowInput.value = row;
-      editTimestamp.value = toDateTimeLocalInput(rec.timestamp);
-      editPos.value = rec.pos || '';
-      editNama.value = rec.nama || '';
-      editUraian.value = rec.uraian || '';
-      editNominal.value = rec.nominal || 0;
-      editRetur.value = rec.retur || 0;
-      editBright.value = rec.brightgas || 0;
+      const d = allData.find(x => x.__row === row);
+      if (!d) return;
+      editRowInput.value = d.__row;
+      editTimestamp.value = toDateTimeLocalInput(d.timestamp);
+      editPos.value = d.pos || '';
+      editNama.value = d.nama || '';
+      editUraian.value = d.uraian || '';
+      editNominal.value = d.nominal || '';
+      editRetur.value = d.retur || '';
+      editBright.value = d.brightgas || '';
       editModal.classList.remove('hidden');
       editModal.classList.add('flex');
     }
-
-    function closeEditModal() {
+    cancelEdit.addEventListener('click', () => {
       editModal.classList.add('hidden');
       editModal.classList.remove('flex');
-    }
+    });
 
-    cancelEdit.addEventListener('click', (e) => {
+    editForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      closeEditModal();
-    });
-
-// helper untuk format timestamp ke dd/MM/yyyy HH:mm:ss
-function formatForSheet(date) {
-  if (!(date instanceof Date) || isNaN(date)) return '';
-  const dd = String(date.getDate()).padStart(2, '0');
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const yyyy = date.getFullYear();
-  const hh = String(date.getHours()).padStart(2, '0');
-  const mi = String(date.getMinutes()).padStart(2, '0');
-  const ss = String(date.getSeconds()).padStart(2, '0');
-  return `${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
-}
-
-// submit edit
-editForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const row = parseInt(editRowInput.value, 10);
-  if (isNaN(row)) return alert('Row tidak valid');
-
-  const existing = allData.find(d => d.__row === row) || {};
-
-  // Ambil timestamp dari input, jika kosong pakai existing / sekarang
-  const tsVal = editTimestamp.value
-    ? new Date(editTimestamp.value)
-    : (existing.timestamp ? new Date(existing.timestamp) : new Date());
-
-  // format timestamp ke dd/MM/yyyy HH:mm:ss
-  const tsToSave = formatForSheet(tsVal);
-
-  const values = [
-    tsToSave,
-    (editNama.value || existing.nama || ''),
-    (editUraian.value || existing.uraian || ''),
-    (editPos.value || existing.pos || ''),
-    (Number(editNominal.value) || 0),
-    (existing.foto || ''),           // keep foto
-    (existing.pembayaran || ''),     // keep pembayaran
-    (existing.buktitransfer || ''),  // keep bukti
-    (Number(editBright.value) || 0),
-    (Number(editRetur.value) || 0),
-    (existing.buktiretur || ''),     // keep bukti retur
-    (existing.lokasi || '')
-  ];
-
-  try {
-    const body = {
-      action: "edit",
-      sheet: "Transaksi",
-      payload: { row: row, values: values }
-    };
-    const resp = await fetch(POST_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'Text/Plain' },
-      body: JSON.stringify(body)
-    });
-    const j = await resp.json();
-    if (j && j.status === 'success') {
-      // update local copy
-      const idx = allData.findIndex(d => d.__row === row);
-      if (idx !== -1) {
-        allData[idx].timestamp = tsToSave; // ✅ selalu format dd/MM/yyyy HH:mm:ss
-        allData[idx].nama = values[1];
-        allData[idx].uraian = values[2];
-        allData[idx].pos = values[3];
-        allData[idx].nominal = values[4];
-        allData[idx].foto = values[5];
-        allData[idx].pembayaran = values[6];
-        allData[idx].buktitransfer = values[7];
-        allData[idx].brightgas = values[8];
-        allData[idx].retur = values[9];
-        allData[idx].buktiretur = values[10];
-        allData[idx].lokasi = values[11];
+      const row = parseInt(editRowInput.value);
+      const payload = {
+        row,
+        timestamp: editTimestamp.value,
+        pos: editPos.value,
+        nama: editNama.value,
+        uraian: editUraian.value,
+        nominal: editNominal.value,
+        retur: editRetur.value,
+        brightgas: editBright.value
+      };
+      showLoading(true);
+      try {
+        const res = await fetch(POST_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'update', sheet: 'Transaksi', payload })
+        });
+        const result = await res.json();
+        if (result.status === 'success') {
+          alert('Data berhasil diperbarui!');
+          editModal.classList.add('hidden');
+          editModal.classList.remove('flex');
+          fetchData();
+        } else {
+          alert('Gagal update data!');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error update data!');
+      } finally {
+        showLoading(false);
       }
-      renderTable(allData);
-      closeEditModal();
-      alert('Update berhasil');
-    } else {
-      alert('Gagal update: ' + (j && j.message ? j.message : JSON.stringify(j)));
-    }
-  } catch (err) {
-    console.error('edit error', err);
-    alert('Terjadi error saat mengirim update');
-  }
-});
-
-    // click outside modal to close
-    editModal.addEventListener('click', (ev) => {
-      if (ev.target === editModal) closeEditModal();
     });
 
     fetchData();
