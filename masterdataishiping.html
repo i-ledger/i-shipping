@@ -180,7 +180,10 @@
     const cancelEdit = document.getElementById('cancelEdit');
 
     let allData = [];
-
+    function showLoading(show = true) {
+  document.getElementById("loadingOverlay").classList.toggle("hidden", !show);
+}
+   
     function extractFileId(url) {
       if (!url) return null;
       const directId = url.match(/id=([A-Za-z0-9_-]+)/);
@@ -223,27 +226,35 @@
       return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
     }
 
-    function renderRow(r, idx) {
-      return `
-        <tr class="border-b hover:bg-gray-50">
-          <td class="px-4 py-2 text-center">${r.__row || (idx+2)}</td>
-          <td class="px-4 py-2">${formatDate(r.timestamp)}</td>
-          <td class="px-4 py-2">${r.pos || '-'}</td>
-          <td class="px-4 py-2">${r.nama || '-'}</td>
-          <td class="px-4 py-2">${r.uraian || '-'}</td>
-          <td class="px-4 py-2 text-center">${r.nominal || '0'}</td>
-          <td class="px-4 py-2 text-center">${r.retur || '0'}</td>
-          <td class="px-4 py-2 text-center">${r.brightgas || '0'}</td>
-          <td class="px-4 py-2">${r.pembayaran || '-'}</td>
-          <td class="px-4 py-2 text-center">${renderThumb(r.foto)}</td>
-          <td class="px-4 py-2 text-center">${renderThumb(r.buktitransfer)}</td>
-          <td class="px-4 py-2 text-center">${renderThumb(r.buktiretur)}</td>
-          <td class="px-4 py-2 text-center">${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}</td>
-          <td class="px-4 py-2 text-center">
-            <button class="editBtn bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-md" data-row="${r.__row || (idx+2)}">Edit</button>
-          </td>
-        </tr>`;
-    }
+function renderRow(r, idx) {
+  return `
+    <tr class="border-b hover:bg-gray-50">
+      <td class="px-4 py-2 text-center">${r.__row || (idx+2)}</td>
+      <td class="px-4 py-2">${formatDate(r.timestamp)}</td>
+      <td class="px-4 py-2">${r.pos || '-'}</td>
+      <td class="px-4 py-2">${r.nama || '-'}</td>
+      <td class="px-4 py-2">${r.uraian || '-'}</td>
+      <td class="px-4 py-2 text-center">${r.nominal || '0'}</td>
+      <td class="px-4 py-2 text-center">${r.retur || '0'}</td>
+      <td class="px-4 py-2 text-center">${r.brightgas || '0'}</td>
+      <td class="px-4 py-2">${r.pembayaran || '-'}</td>
+      <td class="px-4 py-2 text-center">${renderThumb(r.foto)}</td>
+      <td class="px-4 py-2 text-center">${renderThumb(r.buktitransfer)}</td>
+      <td class="px-4 py-2 text-center">${renderThumb(r.buktiretur)}</td>
+      <td class="px-4 py-2 text-center">
+        ${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}
+      </td>
+      <td class="px-4 py-2 text-center">
+        <div class="flex gap-1 justify-center">
+          <button class="px-2 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded"
+            onclick="openEditModal(${r.__row})">✏️Edit</button>
+          <button class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded"
+            onclick="deleteRow(${r.__row})">🗑️Hapus</button>
+        </div>
+      </td>
+    </tr>
+  `;
+}
 
     function renderTable(data) {
       const from = fromInput.value ? new Date(fromInput.value + 'T00:00:00') : null;
@@ -264,31 +275,63 @@
       });
     }
 
-    async function fetchData() {
-      try {
-        const res = await fetch(GET_URL);
-        const data = await res.json();
-        if (!Array.isArray(data)) return;
-        // add __row property (sheet headers removed => first data row = sheet row 2)
-        data.forEach((d, i) => d.__row = i + 2);
-        allData = data;
+async function fetchData() {
+  showLoading(true);
+  try {
+    const res = await fetch(GET_URL);
+    const data = await res.json();
+    if (!Array.isArray(data)) return;
+    data.forEach((d, i) => d.__row = i + 2);
+    allData = data;
 
-        // default date to today
-        const today = new Date().toISOString().split('T')[0];
-        fromInput.value = today;
-        toInput.value = today;
+    const today = new Date().toISOString().split('T')[0];
+    fromInput.value = today;
+    toInput.value = today;
 
-        const pts = [...new Set(data.map(d => d.pos).filter(Boolean))].sort();
-        const pgls = [...new Set(data.map(d => d.uraian).filter(Boolean))].sort();
+    const pts = [...new Set(data.map(d => d.pos).filter(Boolean))].sort();
+    const pgls = [...new Set(data.map(d => d.uraian).filter(Boolean))].sort();
 
-        filterPT.innerHTML = '<option value="">Semua</option>' + pts.map(p => `<option>${p}</option>`).join('');
-        filterPangkalan.innerHTML = '<option value="">Semua</option>' + pgls.map(p => `<option>${p}</option>`).join('');
+    filterPT.innerHTML = '<option value="">Semua</option>' + pts.map(p => `<option>${p}</option>`).join('');
+    filterPangkalan.innerHTML = '<option value="">Semua</option>' + pgls.map(p => `<option>${p}</option>`).join('');
 
-        renderTable(allData);
-      } catch (err) {
-        console.error('fetchData error', err);
-      }
+    renderTable(allData);
+  } catch (err) {
+    console.error('fetchData error', err);
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function deleteRow(row) {
+  if (!confirm("Yakin ingin menghapus data ini?")) return;
+  showLoading(true);
+
+  try {
+    const res = await fetch(POST_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "delete",
+        sheet: "Transaksi",
+        payload: { row }
+      })
+    });
+
+    const result = await res.json();
+    if (result.status === "success") {
+      alert("Data berhasil dihapus!");
+      fetchData();
+    } else {
+      alert("Gagal menghapus data!");
     }
+  } catch (err) {
+    console.error(err);
+    alert("Terjadi error saat menghapus data!");
+  } finally {
+    showLoading(false);
+  }
+}
+
 
     filterBtn.addEventListener('click', () => renderTable(allData));
     filterPT.addEventListener('change', () => renderTable(allData));
