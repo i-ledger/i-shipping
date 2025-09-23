@@ -61,7 +61,7 @@
         <table class="min-w-full table-auto border border-gray-300 text-sm" id="rekapTable">
           <thead class="bg-indigo-600 text-white">
             <tr>
-              <th class="px-4 py-2">No</th>
+              <th class="px-4 py-1">No</th>
               <th class="px-4 py-2">Timestamp</th>
               <th class="px-4 py-2">Nama PT</th>
               <th class="px-4 py-2">Driver/Kernet</th>
@@ -73,7 +73,7 @@
               <th class="px-4 py-2">Foto Pangkalan</th>
               <th class="px-4 py-2">Pemilik Pangkalan</th>
               <th class="px-4 py-2">Bukti Retur</th>
-              <th class="px-4 py-2">Lokasi</th>
+              <th class="px-4 py-1">Lokasi</th>
               <th class="px-4 py-2">Aksi</th>
             </tr>
           </thead>
@@ -234,20 +234,20 @@
     function renderRow(r, idx) {
       return `
         <tr class="border-b hover:bg-gray-50">
-          <td class="px-4 py-2 text-center">${r.__row || (idx+2)}</td>
+          <td class="px-4 py-1 text-center">${r.__row || (idx+2)}</td>
           <td class="px-4 py-2">${formatDate(r.timestamp)}</td>
           <td class="px-4 py-2">${r.pos || '-'}</td>
           <td class="px-4 py-2">${r.nama || '-'}</td>
           <td class="px-4 py-2">${r.uraian || '-'}</td>
-          <td class="px-4 py-2 text-center">${r.nominal || '0'}</td>
-          <td class="px-4 py-2 text-center">${r.retur || '0'}</td>
-          <td class="px-4 py-2 text-center">${r.brightgas || '0'}</td>
+          <td class="px-4 py-1 text-center">${r.nominal || '0'}</td>
+          <td class="px-4 py-1 text-center">${r.retur || '0'}</td>
+          <td class="px-4 py-1 text-center">${r.brightgas || '0'}</td>
           <td class="px-4 py-2">${r.pembayaran || '-'}</td>
           <td class="px-4 py-2 text-center">${renderThumb(r.foto)}</td>
           <td class="px-4 py-2 text-center">${renderThumb(r.buktitransfer)}</td>
           <td class="px-4 py-2 text-center">${renderThumb(r.buktiretur)}</td>
           <td class="px-4 py-2 text-center">
-            ${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">Lihat</a>` : '-'}
+            ${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">📍</a>` : '-'}
           </td>
           <td class="px-4 py-2 text-center">
             <div class="flex gap-1 justify-center">
