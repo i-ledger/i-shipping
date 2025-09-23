@@ -312,7 +312,7 @@
       try {
         const res = await fetch(POST_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "Text/Plain" },
           body: JSON.stringify({
             action: "delete",
             sheet: "Transaksi",
@@ -406,7 +406,7 @@
       try {
         const res = await fetch(POST_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'Text/Plain' },
           body: JSON.stringify({ action: 'update', sheet: 'Transaksi', payload })
         });
         const result = await res.json();
