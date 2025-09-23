@@ -475,16 +475,15 @@ editForm.addEventListener('submit', async (e) => {
   } catch (err) {
     console.error('edit error', err);
     alert('Terjadi error saat mengirim update');
+    } finally {
+    showLoading(false);
   }
 });
-
-    // click outside modal to close
     editModal.addEventListener('click', (ev) => {
       if (ev.target === editModal) closeEditModal();
     });
 
     fetchData();
-    showLoading(false);
   </script>
 </body>
 </html>
