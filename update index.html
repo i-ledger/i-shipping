@@ -253,7 +253,11 @@
         const val55 = parseInt(brightgas55.value) || 0;
         brightgas = `${val12} Tbg (12kg) || ${val55} Tbg (5,5 KG)`;
       }
-
+  if (!pos) {
+    alert("❌ Nama PT belum terisi. Silakan pilih Nama Pangkalan yang valid.");
+    loadingOverlay.classList.add('hidden');
+    return;
+  }
       if (!window.fotoNotaBase64) {
         alert("❌ Foto Pangkalan wajib diambil.");
         loadingOverlay.classList.add('hidden');
