@@ -204,13 +204,17 @@
       });
     });
 
-// Otomatis ubah huruf besar di input uraian
-uraianEl.addEventListener('input', () => {
-  const cursorPos = uraianEl.selectionStart; // simpan posisi kursor
-  uraianEl.value = uraianEl.value.toUpperCase(); // ubah ke huruf besar
-  uraianEl.setSelectionRange(cursorPos, cursorPos); // kembalikan posisi kursor
-  posEl.value = uraianMap[uraianEl.value] || ''; // isi otomatis Nama PT
+uraianEl.addEventListener('input', (e) => {
+  const val = e.target.value;
+  // Biarkan karakter terakhir dulu, baru ubah huruf besar tanpa ganggu spasi
+  if (val !== val.toUpperCase()) {
+    const cursor = e.target.selectionStart;
+    e.target.value = val.toUpperCase();
+    e.target.setSelectionRange(cursor, cursor);
+  }
+  posEl.value = uraianMap[e.target.value.trim()] || '';
 });
+
 
 
     nominalEl.addEventListener('input', e => {
