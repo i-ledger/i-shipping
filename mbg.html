@@ -87,13 +87,13 @@
 
       <div id="brightgasContainer" class="hidden space-y-6 mt-4">
         <div>
-          <label for="brightgas12" class="block text-sm font-medium text-gray-700 mb-2">12 KG</label>
-          <input type="number" id="brightgas12" min="0" value="0" 
+          <label for="brightgas55" class="block text-sm font-medium text-gray-700 mb-2">5.5 KG</label>
+          <input type="number" id="brightgas55" min="0" value="0" 
                  class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
-          <label for="brightgas55" class="block text-sm font-medium text-gray-700 mb-2">5.5 KG</label>
-          <input type="number" id="brightgas55" min="0" value="0" 
+          <label for="brightgas12" class="block text-sm font-medium text-gray-700 mb-2">12 KG</label>
+          <input type="number" id="brightgas12" min="0" value="0" 
                  class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
@@ -183,9 +183,9 @@
 
     const brightgasYN = document.getElementById('brightgasYN');
     const brightgasContainer = document.getElementById('brightgasContainer');
-    const brightgas12 = document.getElementById('brightgas12');
     const brightgas55 = document.getElementById('brightgas55');
-    const brightgas50 = document.getElementById('brightgas55');
+    const brightgas12 = document.getElementById('brightgas12');
+    const brightgas50 = document.getElementById('brightgas50');
 
     brightgasYN.addEventListener('change', () => {
       brightgasContainer.classList.toggle('hidden', brightgasYN.value !== 'Ya');
@@ -273,10 +273,10 @@ document.getElementById('ledgerForm').addEventListener('submit', async function 
 
   let brightgas = "0";
   if (brightgasYN.value === "Ya") {
-    const val12 = parseInt(brightgas12.value) || 0;
     const val55 = parseInt(brightgas55.value) || 0;
+    const val12 = parseInt(brightgas12.value) || 0;
     const val50 = parseInt(brightgas50.value) || 0;
-    brightgas = `${val12} Tbg (12kg) || ${val55} Tbg (5,5 KG)|| ${val50} Tbg (50 KG)`;
+    brightgas = `${val55} Tbg (5.5kg) || ${val12} Tbg (12 KG)|| ${val50} Tbg (50 KG)`;
   }
 
   if (!uraian) {
