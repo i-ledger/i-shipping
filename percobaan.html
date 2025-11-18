@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>i-Shipping SES_GS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .loader { border-top-color: #22c55e; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    video, canvas {
+      width: 100%;
+      height: auto;
+      border-radius: 1rem;
+      border: 2px solid #22c55e;
+      background-color: #f0fdf4;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-white min-h-screen flex items-center justify-center p-4 relative">
+  <div id="loadingOverlay" class="hidden absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
+  </div>
+
+  <a href="dashboard.html" class="absolute top-4 right-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow">
+    Ke Dashboard
+  </a>
+
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-xl p-8">
+    <h2 class="text-3xl font-bold text-green-700 mb-6 text-center">i-Shipping SES_GS</h2>
+    <form id="ledgerForm" class="space-y-6">
+      <!-- Form field lainnya tetap -->
+
+      <!-- 🔹 Kamera Pangkalan -->
+      <div>
+        <label class="block text-sm font-medium text-gray-600 mb-2">Kamera Pangkalan</label>
+        <video id="videoNota" autoplay muted playsinline class="rounded-xl"></video>
+        <canvas id="canvasNota" class="hidden mt-2"></canvas>
+        <button type="button" id="captureNota" class="mt-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Ambil Foto Pangkalan</button>
+      </div>
+
+      <!-- 🔹 Kamera Pemilik -->
+      <div>
+        <label class="block text-sm font-medium text-gray-600 mb-2">Kamera Pemilik Pangkalan</label>
+        <video id="videoBukti" autoplay muted playsinline class="rounded-xl"></video>
+        <canvas id="canvasBukti" class="hidden mt-2"></canvas>
+        <button type="button" id="captureBukti" class="mt-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Ambil Foto Pemilik</button>
+      </div>
+
+      <!-- 🔹 Kamera Retur -->
+      <div id="returFotoContainer" class="hidden">
+        <label class="block text-sm font-medium text-gray-600 mb-2">Kamera Retur</label>
+        <video id="videoRetur" autoplay muted playsinline class="rounded-xl"></video>
+        <canvas id="canvasRetur" class="hidden mt-2"></canvas>
+        <button type="button" id="captureRetur" class="mt-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Ambil Foto Retur</button>
+      </div>
+
+      <!-- 🔹 Submit -->
+      <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg">Submit</button>
+    </form>
+  </div>
+
+  <script src="config.js"></script>
+  <script>
+    if (localStorage.getItem('loggedIn') !== 'true') window.location.href = 'login.html';
+
+    const videoNota = document.getElementById('videoNota');
+    const canvasNota = document.getElementById('canvasNota');
+    const captureNota = document.getElementById('captureNota');
+
+    const videoBukti = document.getElementById('videoBukti');
+    const canvasBukti = document.getElementById('canvasBukti');
+    const captureBukti = document.getElementById('captureBukti');
+
+    const videoRetur = document.getElementById('videoRetur');
+    const canvasRetur = document.getElementById('canvasRetur');
+    const captureRetur = document.getElementById('captureRetur');
+
+    function startCamera(videoEl) {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        .then(stream => videoEl.srcObject = stream)
+        .catch(err => alert('Gagal membuka kamera: ' + err));
+    }
+
+    function captureImage(videoEl, canvasEl) {
+      const context = canvasEl.getContext('2d');
+      canvasEl.width = videoEl.videoWidth;
+      canvasEl.height = videoEl.videoHeight;
+      context.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+      canvasEl.classList.remove('hidden');
+      return canvasEl.toDataURL('image/jpeg').split(',')[1];
+    }
+
+    startCamera(videoNota);
+    startCamera(videoBukti);
+    startCamera(videoRetur);
+
+    let fotoNotaBase64 = "";
+    let fotoBuktiBase64 = "";
+    let returFotoBase64 = "";
+
+    captureNota.addEventListener('click', () => {
+      fotoNotaBase64 = captureImage(videoNota, canvasNota);
+    });
+
+    captureBukti.addEventListener('click', () => {
+      fotoBuktiBase64 = captureImage(videoBukti, canvasBukti);
+    });
+
+    captureRetur.addEventListener('click', () => {
+      returFotoBase64 = captureImage(videoRetur, canvasRetur);
+    });
+
+    document.getElementById('ledgerForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      document.getElementById('loadingOverlay').classList.remove('hidden');
+
+      try {
+        navigator.geolocation.getCurrentPosition(async posGeo => {
+          const lat = posGeo.coords.latitude;
+          const lng = posGeo.coords.longitude;
+          const lokasi = `https://www.google.com/maps?q=${lat},${lng}`;
+
+          const payload = {
+            action: 'addTransaksi',
+            sheet: 'Transaksi',
+            payload: {
+              nama, uraian, pos, nominal,
+              pembayaran: pembayaranVal,
+              fotoNota: fotoNotaBase64,
+              fotoBukti: fotoBuktiBase64,
+              brightgas, retur,
+              returFoto: returFotoBase64,
+              lokasi
+            }
+          };
+
+          const res = await fetch(SUBMIT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(payload)
+          });
+
+          const result = await res.json();
+          if (result.status === 'success') {
+            alert('✅ Transaksi berhasil disimpan!');
+            document.getElementById('ledgerForm').reset();
+            canvasNota.classList.add('hidden');
+            canvasBukti.classList.add('hidden');
+            canvasRetur.classList.add('hidden');
+          } else {
+            alert('❌ Gagal: ' + result.message);
+          }
+          document.getElementById('loadingOverlay').classList.add('hidden');
+        }, err => {
+          alert("❌ Gagal mengambil lokasi: " + err.message);
+          document.getElementById('loadingOverlay').classList.add('hidden');
+        });
+      } catch (err) {
+        alert('❌ Error koneksi: ' + err.message);
+        document.getElementById('loadingOverlay').classList.add('hidden');
+      }
+    });
+
+    setTimeout(() => localStorage.removeItem('loggedIn'), 300000);
+  </script>
+</body>
+</html>
