@@ -194,6 +194,7 @@ navigator.serviceWorker.register('firebase-messaging-sw.js')
 
 
 /* =========================
+/* =========================
 FIREBASE PUSH NOTIFICATION
 ========================= */
 
@@ -219,13 +220,31 @@ navigator.serviceWorker.ready.then(function(registration){
 
     if(permission === "granted"){
 
-messaging.getToken().then(function(token){
+      messaging.getToken().then(function(token){
 
-console.log("FCM TOKEN:",token);
+        console.log("FCM TOKEN:",token);
 
-localStorage.setItem("fcmToken",token);
+        localStorage.setItem("fcmToken",token);
 
-messaging.subscribeToTopic(token,"admin");
+      });
+
+    }
+
+  });
+
+});
+
+
+/* TERIMA NOTIF SAAT WEB TERBUKA */
+
+messaging.onMessage(function(payload){
+
+  console.log("Notif masuk:",payload);
+
+  new Notification(payload.notification.title,{
+    body: payload.notification.body,
+    icon: "icon.png"
+  });
 
 });
 
