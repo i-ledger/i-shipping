@@ -1,20 +1,20 @@
-importScripts("https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js");
-importScripts("https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js");
+importScripts("https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js");
+importScripts("https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js");
 
 firebase.initializeApp({
-messagingSenderId:"SENDERID"
+  messagingSenderId: "22272415602"
 });
 
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage(function(payload){
+messaging.setBackgroundMessageHandler(function(payload) {
 
-self.registration.showNotification(
-payload.notification.title,
-{
-body:payload.notification.body,
-icon:"pertamina-logoicon.png"
-}
-);
+  return self.registration.showNotification(
+    payload.notification.title,
+    {
+      body: payload.notification.body,
+      icon: "pertamina-logoicon.png"
+    }
+  );
 
 });
