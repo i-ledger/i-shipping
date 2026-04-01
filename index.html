@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>i-Shipping SES_GS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4f46e5">
+  <style>
+    /* Spinner Animasi */
+    .spinner {
+      border: 4px solid rgba(99, 102, 241, 0.2);
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    canvas { display: none; }
+    /* Backdrop blur dan overlay loading */
+    #loadingOverlay {
+      backdrop-filter: blur(3px);
+      background-color: rgba(0,0,0,0.4);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-100 to-white min-h-screen flex items-center justify-center p-6 relative font-sans">
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Popup Notif -->
+  <div id="popupNotif" 
+       class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
+              bg-white rounded-3xl shadow-2xl p-8 max-w-sm text-center
+              opacity-0 pointer-events-none transition-opacity duration-300 z-60">
+    <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto mb-4 h-14 w-14 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+    </svg>
+    <h3 class="text-xl font-semibold text-gray-900 mb-2">Barang sudah terkirim</h3>
+    <p class="text-gray-600 mb-6">Terimakasih</p>
+    <button id="closePopupBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6 py-2 font-semibold transition">Tutup</button>
+  </div>
+
+  <!-- Tombol Ke Dashboard -->
+  <a href="dashboard.html" 
+     class="absolute top-6 right-6 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl shadow-lg font-semibold transition">
+    Ke Dashboard
+  </a>
+
+  <!-- Form utama -->
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-10">
+    <h2 class="text-4xl font-extrabold text-indigo-700 mb-8 text-center tracking-tight">i-Shipping SES_GS</h2>
+    <form id="ledgerForm" class="space-y-8">
+
+      <div>
+        <label for="nama" class="block text-sm font-medium text-gray-700 mb-2">Driver/Kernet</label>
+        <select id="nama" required class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+      </div>
+
+      <div>
+        <label for="uraian" class="block text-sm font-medium text-gray-700 mb-2">Nama Pangkalan</label>
+        <input list="uraianList" id="uraian" required 
+               class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        <datalist id="uraianList"></datalist>
+      </div>
+
+      <div>
+        <label for="pos" class="block text-sm font-medium text-gray-700 mb-2">Nama PT</label>
+        <input type="text" id="pos" readonly 
+               class="mt-1 block w-full bg-gray-100 border border-gray-300 rounded-xl p-4 text-lg cursor-not-allowed" />
+      </div>
+
+      <div>
+        <label for="nominal" class="block text-sm font-medium text-gray-700 mb-2">Jumlah Pengiriman LPG 3Kg</label>
+        <input type="text" id="nominal" required 
+               class="mt-1 block w-full border border-gray-300 rounded-xl p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+
+      <div>
+        <label for="brightgasYN" class="block text-sm font-medium text-gray-700 mb-2">Apakah Driver Mengirim Bright Gas?</label>
+        <select id="brightgasYN" 
+                class="mt-1 block w-full border border-gray-300 rounded-xl p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="Tidak">Tidak</option>
+          <option value="Ya">Ya</option>
+        </select>
+      </div>
+
+      <div id="brightgasContainer" class="hidden space-y-6 mt-4">
+        <div>
+          <label for="brightgas12" class="block text-sm font-medium text-gray-700 mb-2">12 KG</label>
+          <input type="number" id="brightgas12" min="0" value="0" 
+                 class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label for="brightgas55" class="block text-sm font-medium text-gray-700 mb-2">5.5 KG</label>
+          <input type="number" id="brightgas55" min="0" value="0" 
+                 class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+      </div>
+
+      <!-- Kamera Pangkalan -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Foto Pangkalan</label>
+        <video id="videoNota" autoplay playsinline class="w-full h-64 object-cover rounded-xl shadow-lg border"></video>
+        <canvas id="canvasNota" class="hidden"></canvas>
+        <button id="ambilNota" type="button" onclick="takeSnapshot('Nota')" 
+                class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl shadow-lg font-semibold transition">
+          Ambil Foto
+        </button>
+        <img id="previewNota" class="w-full mt-4 hidden rounded-xl border shadow" />
+      </div>
+
+      <div>
+        <label for="retur" class="block text-sm font-medium text-gray-700 mb-2">Retur</label>
+        <input type="number" id="retur" required min="0" value="0" 
+               class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+
+      <div id="returFotoContainer" class="hidden">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Foto Retur</label>
+        <video id="videoRetur" autoplay playsinline class="w-full h-64 object-cover rounded-xl shadow-lg border"></video>
+        <canvas id="canvasRetur" class="hidden"></canvas>
+        <button id="ambilRetur" type="button" onclick="takeSnapshot('Retur')" 
+                class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl shadow-lg font-semibold transition">
+          Ambil Foto
+        </button>
+        <img id="previewRetur" class="w-full mt-4 hidden rounded-xl border shadow" />
+      </div>
+
+      <div>
+        <label for="pembayaran" class="block text-sm font-medium text-gray-700 mb-2">Apakah Pemilik Pangkalan berada dilokasi Pangkalan?</label>
+        <select id="pembayaran" 
+                class="mt-1 block w-full border border-gray-300 rounded-xl p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="Tidak">Tidak</option>
+          <option value="Ya">Ya</option>
+        </select>
+      </div>
+
+      <div id="buktiTransferContainer" class="hidden">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Foto Pemilik + Pangkalan</label>
+        <video id="videoBukti" autoplay playsinline class="w-full h-64 object-cover rounded-xl shadow-lg border"></video>
+        <canvas id="canvasBukti" class="hidden"></canvas>
+        <button id="ambilBukti" type="button" onclick="takeSnapshot('Bukti')" 
+                class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl shadow-lg font-semibold transition">
+          Ambil Foto
+        </button>
+        <img id="previewBukti" class="w-full mt-4 hidden rounded-xl border shadow" />
+      </div>
+
+      <button type="submit" 
+              class="w-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 hover:from-indigo-700 hover:via-indigo-800 hover:to-indigo-900 
+                     text-white font-extrabold py-4 rounded-3xl shadow-xl text-xl transition">
+        Submit
+      </button>
+    </form>
+  </div>
+
+<script src="config.js"></script>
+<script src="kamera-kanvas.js"></script>
+
+<script>
+
+/* =========================
+AKTIFKAN NOTIFICATION
+========================= */
+
+if ("Notification" in window) {
+
+  Notification.requestPermission().then(function(permission){
+    console.log("Notification permission:",permission);
+  });
+
+}
+
+/* =========================
+SERVICE WORKER PWA
+========================= */
+
+if ('serviceWorker' in navigator) {
+
+  navigator.serviceWorker.register('sw.js')
+  .then(() => {
+
+    console.log("Service Worker aktif");
+
+    Notification.requestPermission().then(permission=>{
+      console.log("Permission:", permission);
+    });
+
+  })
+  .catch(err => console.log("SW Error:", err));
+
+}
+
+/* =========================
+SCRIPT APLIKASI
+========================= */
+
+const API_NAMA = API_ENDPOINT + '?action=nama';
+const API_POS = API_ENDPOINT + '?action=pos';
+const SUBMIT_URL = API_ENDPOINT;
+
+const namaEl = document.getElementById('nama');
+const uraianEl = document.getElementById('uraian');
+const posEl = document.getElementById('pos');
+const nominalEl = document.getElementById('nominal');
+const returEl = document.getElementById('retur');
+const pembayaran = document.getElementById('pembayaran');
+const previewNota = document.getElementById('previewNota');
+const previewBukti = document.getElementById('previewBukti');
+const previewRetur = document.getElementById('previewRetur');
+const loadingOverlay = document.getElementById('loadingOverlay');
+const popupNotif = document.getElementById('popupNotif');
+const closePopupBtn = document.getElementById('closePopupBtn');
+
+const brightgasYN = document.getElementById('brightgasYN');
+const brightgasContainer = document.getElementById('brightgasContainer');
+const brightgas12 = document.getElementById('brightgas12');
+const brightgas55 = document.getElementById('brightgas55');
+
+brightgasYN.addEventListener('change', () => {
+  brightgasContainer.classList.toggle('hidden', brightgasYN.value !== 'Ya');
+});
+
+fetch(API_NAMA).then(r => r.json()).then(data => {
+  data.forEach(n => {
+    const o = document.createElement('option');
+    o.value = o.textContent = n;
+    namaEl.appendChild(o);
+  });
+});
+
+let uraianMap = {};
+fetch(API_POS).then(r => r.json()).then(data => {
+  data.forEach(row => {
+    uraianMap[row.uraian] = row.pos;
+    const o = document.createElement('option');
+    o.value = row.uraian;
+    document.getElementById('uraianList').appendChild(o);
+  });
+});
+
+uraianEl.addEventListener('input', () => {
+  posEl.value = uraianMap[uraianEl.value] || '';
+});
+
+nominalEl.addEventListener('input', e => {
+  const v = e.target.value.replace(/\D/g, '');
+  e.target.value = new Intl.NumberFormat('id-ID').format(v);
+});
+
+returEl.addEventListener('input', () => {
+  const val = parseInt(returEl.value) || 0;
+  document.getElementById('returFotoContainer').classList.toggle('hidden', val <= 0);
+});
+
+pembayaran.addEventListener('change', () => {
+  document.getElementById('buktiTransferContainer').classList.toggle('hidden', pembayaran.value !== 'Ya');
+});
+
+
+function showPopup() {
+  popupNotif.classList.remove('opacity-0', 'pointer-events-none');
+  setTimeout(() => {
+    popupNotif.classList.add('opacity-0', 'pointer-events-none');
+  }, 4000);
+}
+
+closePopupBtn.addEventListener('click', () => {
+  popupNotif.classList.add('opacity-0', 'pointer-events-none');
+});
+
+
+document.getElementById('ledgerForm').addEventListener('submit', async function (e) {
+
+  e.preventDefault();
+  loadingOverlay.classList.remove('hidden');
+
+  const nama = namaEl.value;
+  const uraian = uraianEl.value;
+  const pos = posEl.value;
+  const nominal = nominalEl.value.replace(/\D/g, '');
+  const retur = parseInt(returEl.value) || 0;
+  const pembayaranVal = pembayaran.value;
+
+  let brightgas = "0";
+
+  if (brightgasYN.value === "Ya") {
+
+    const val12 = parseInt(brightgas12.value) || 0;
+    const val55 = parseInt(brightgas55.value) || 0;
+
+    brightgas = `${val12} Tbg (12kg) || ${val55} Tbg (5,5 KG)`;
+
+  }
+
+  navigator.geolocation.getCurrentPosition(async posGeo => {
+
+    const lokasi = `https://www.google.com/maps?q=${posGeo.coords.latitude},${posGeo.coords.longitude}`;
+
+    const payload = {
+      action: 'addTransaksi',
+      sheet: 'Transaksi',
+      payload: {
+        nama, uraian, pos, nominal,
+        pembayaran: pembayaranVal,
+        fotoNota: window.fotoNotaBase64,
+        fotoBukti: window.fotoBuktiBase64 || "",
+        brightgas, retur, returFoto: window.fotoReturBase64 || "",
+        lokasi
+      }
+    };
+
+    try {
+
+      const res = await fetch(SUBMIT_URL,{
+        method:'POST',
+        headers:{'Content-Type':'text/plain'},
+        body:JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+
+      if(result.status==="success"){
+
+        showPopup();
+
+        this.reset();
+
+        previewNota.classList.add('hidden');
+        previewBukti.classList.add('hidden');
+        previewRetur.classList.add('hidden');
+
+      }
+
+    } catch(err){
+
+      alert("❌ Error "+err.message);
+
+    }
+
+    loadingOverlay.classList.add('hidden');
+
+  });
+
+});
+
+
+/* =========================
+NOTIF TRANSAKSI BARU
+========================= */
+
+let lastData = 0;
+
+async function checkTransaksiBaru(){
+
+try{
+
+const res = await fetch(API_ENDPOINT+"?action=transaksi");
+
+const data = await res.json();
+
+if(data.length > lastData){
+
+const terbaru = data[data.length-1];
+
+const nama = terbaru.nama;
+const uraian = terbaru.uraian;
+const pos = terbaru.pos;
+const nominal = terbaru.nominal;
+
+if(Notification.permission==="granted"){
+
+new Notification("🚚 Pengiriman LPG Baru",{
+body: nama+" | "+uraian+" | "+pos+" | "+nominal+" tabung",
+icon:"icon.png"
+});
+
+}
+
+}
+
+lastData = data.length;
+
+}catch(e){
+
+console.log(e);
+
+}
+
+}
+
+setInterval(checkTransaksiBaru,5000);
+
+</script>
+</body>
+</html>
