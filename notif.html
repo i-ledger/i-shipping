@@ -183,21 +183,21 @@ if ("Notification" in window) {
 SERVICE WORKER PWA
 ========================= */
 
-if('serviceWorker' in navigator){
+if ('serviceWorker' in navigator) {
 
-navigator.serviceWorker.register('sw.js')
-.then(()=>{
+  navigator.serviceWorker.register('sw.js')
+  .then(() => {
 
-console.log("Service Worker aktif");
+    console.log("Service Worker aktif");
 
-Notification.requestPermission();
+    Notification.requestPermission().then(permission=>{
+      console.log("Permission:", permission);
+    });
 
-})
-
-.catch(err=>console.log(err));
+  })
+  .catch(err => console.log("SW Error:", err));
 
 }
-
 
 /* =========================
 SCRIPT APLIKASI
