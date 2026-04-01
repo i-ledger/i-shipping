@@ -186,7 +186,7 @@ SERVICE WORKER PWA
 if ('serviceWorker' in navigator) {
 
   navigator.serviceWorker.register('sw.js')
-  .then(() => {
+  .then(function(reg){
 
     console.log("Service Worker aktif");
 
@@ -195,10 +195,13 @@ if ('serviceWorker' in navigator) {
     });
 
   })
-  .catch(err => console.log("SW Error:", err));
+  .catch(function(err){
+
+    console.log("SW Error:",err);
+
+  });
 
 }
-
 /* =========================
 SCRIPT APLIKASI
 ========================= */
