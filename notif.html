@@ -361,30 +361,39 @@ let lastData = 0;
 
 async function checkTransaksiBaru(){
 
-  try{
+try{
 
-    const res = await fetch(API_ENDPOINT+"?action=transaksi");
+const res = await fetch(API_ENDPOINT+"?action=transaksi");
 
-    const data = await res.json();
+const data = await res.json();
 
-    if(data.length > lastData){
+if(data.length > lastData){
 
-      if(Notification.permission==="granted"){
+const terbaru = data[data.length-1];
 
-        new Notification("🚚 Pengiriman LPG Baru",{
-          body:"Driver baru saja mengirim LPG",
-          icon:"icon.png"
-        });
+const nama = terbaru.nama;
+const uraian = terbaru.uraian;
+const pos = terbaru.pos;
+const nominal = terbaru.nominal;
 
-      }
+if(Notification.permission==="granted"){
 
-    }
+new Notification("🚚 Pengiriman LPG Baru",{
+body: nama+" | "+uraian+" | "+pos+" | "+nominal+" tabung",
+icon:"icon.png"
+});
 
-    lastData = data.length;
+}
 
-  }catch(e){
-    console.log(e);
-  }
+}
+
+lastData = data.length;
+
+}catch(e){
+
+console.log(e);
+
+}
 
 }
 
