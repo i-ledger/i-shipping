@@ -174,7 +174,7 @@ PWA SERVICE WORKER
 
 if ('serviceWorker' in navigator) {
 
-  navigator.serviceWorker.register('sw.js')
+navigator.serviceWorker.register('firebase-messaging-sw.js')
   .then(function(reg){
 
     console.log("Service Worker aktif");
@@ -219,25 +219,15 @@ navigator.serviceWorker.ready.then(function(registration){
 
     if(permission === "granted"){
 
-      messaging.getToken().then(function(token){
+messaging.getToken().then(function(token){
 
-        console.log("FCM TOKEN:",token);
+console.log("FCM TOKEN:",token);
 
-        localStorage.setItem("fcmToken",token);
+localStorage.setItem("fcmToken",token);
 
-      });
-fetch("https://iid.googleapis.com/iid/v1/"+token+"/rel/topics/admin",{
-method:"POST",
-headers:{
-Authorization:"key=SERVER_KEY_FIREBASE"
-}
-});
-    }
-
-  });
+messaging.subscribeToTopic(token,"admin");
 
 });
-
 
 /* =========================
 SCRIPT APLIKASI
