@@ -1,0 +1,15 @@
+{
+"name": "i-Shipping SES_GS",
+"short_name": "i-Shipping",
+"start_url": "notif.html",
+"display": "standalone",
+"background_color": "#ffffff",
+"theme_color": "#4f46e5",
+"icons": [
+{
+"src": "pertamina-logoicon.png",
+"sizes": "192x192",
+"type": "image/png"
+}
+]
+}
