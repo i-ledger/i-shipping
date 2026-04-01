@@ -1,7 +1,7 @@
 {
 "name": "i-Shipping SES_GS",
 "short_name": "i-Shipping",
-"start_url": "notif.html",
+"start_url": "index.html",
 "display": "standalone",
 "background_color": "#ffffff",
 "theme_color": "#4f46e5",
