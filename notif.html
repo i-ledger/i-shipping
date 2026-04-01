@@ -165,7 +165,6 @@
   <script src="config.js"></script>
   <script src="kamera-kanvas.js"></script>
   <script>
-    if (localStorage.getItem('loggedIn') !== 'true') window.location.href = 'login.html';
 /* =========================
 PWA SERVICE WORKER
 ========================= */
@@ -368,7 +367,6 @@ if (Notification.permission === "granted") {
       });
     });
 
-    setTimeout(() => localStorage.removeItem('loggedIn'), 300000);
   </script>
 </body>
 </html>
