@@ -1,4 +1,3 @@
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyCtLh42xjTfCkak6G3vCj0zLGR3aht3iR4",
   authDomain: "i-shipping.firebaseapp.com",
@@ -8,20 +7,23 @@ const firebaseConfig = {
   appId: "1:22272415602:web:56db1f7e871dba9ff72feb",
   measurementId: "G-5EZSK8CT9G"
 };
+
 firebase.initializeApp(firebaseConfig);
 
 const messaging = firebase.messaging();
 
-Notification.requestPermission().then(permission=>{
-if(permission==="granted"){
+Notification.requestPermission().then(permission => {
 
-messaging.getToken().then(token=>{
+if (permission === "granted") {
 
-console.log("TOKEN:",token);
+  messaging.getToken().then(token => {
 
-localStorage.setItem("fcmToken",token);
+    console.log("FCM TOKEN:", token);
 
-});
+    localStorage.setItem("fcmToken", token);
+
+  });
 
 }
+
 });
