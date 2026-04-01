@@ -166,242 +166,227 @@
 <script src="kamera-kanvas.js"></script>
 
 <script>
+
+/* =========================
+AKTIFKAN NOTIFICATION
+========================= */
+
 if ("Notification" in window) {
 
-Notification.requestPermission().then(function(permission){
-
-console.log("Notification permission:",permission);
-
-});
+  Notification.requestPermission().then(function(permission){
+    console.log("Notification permission:",permission);
+  });
 
 }
+
 /* =========================
-PWA SERVICE WORKER
+SERVICE WORKER PWA
 ========================= */
 
 if ('serviceWorker' in navigator) {
 
-navigator.serviceWorker.register('firebase-messaging-sw.js')
+  navigator.serviceWorker.register('sw.js')
   .then(function(reg){
-
     console.log("Service Worker aktif");
-
-    Notification.requestPermission().then(permission=>{
-      console.log("Permission:", permission);
-    });
-
   })
   .catch(function(err){
-
     console.log("SW Error:",err);
-
   });
 
 }
 
-
-/* =========================
-/* =========================
-FIREBASE PUSH NOTIFICATION
-========================= */
-
-/* TERIMA NOTIF SAAT WEB TERBUKA */
-
-messaging.onMessage(function(payload){
-
-  console.log("Notif masuk:",payload);
-
-  new Notification(payload.notification.title,{
-    body: payload.notification.body,
-    icon: "icon.png"
-  });
-
-});
 
 /* =========================
 SCRIPT APLIKASI
 ========================= */
 
-    const API_NAMA = API_ENDPOINT + '?action=nama';
-    const API_POS = API_ENDPOINT + '?action=pos';
-    const SUBMIT_URL = API_ENDPOINT;
+const API_NAMA = API_ENDPOINT + '?action=nama';
+const API_POS = API_ENDPOINT + '?action=pos';
+const SUBMIT_URL = API_ENDPOINT;
 
-    const namaEl = document.getElementById('nama');
-    const uraianEl = document.getElementById('uraian');
-    const posEl = document.getElementById('pos');
-    const nominalEl = document.getElementById('nominal');
-    const returEl = document.getElementById('retur');
-    const pembayaran = document.getElementById('pembayaran');
-    const previewNota = document.getElementById('previewNota');
-    const previewBukti = document.getElementById('previewBukti');
-    const previewRetur = document.getElementById('previewRetur');
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const popupNotif = document.getElementById('popupNotif');
-    const closePopupBtn = document.getElementById('closePopupBtn');
+const namaEl = document.getElementById('nama');
+const uraianEl = document.getElementById('uraian');
+const posEl = document.getElementById('pos');
+const nominalEl = document.getElementById('nominal');
+const returEl = document.getElementById('retur');
+const pembayaran = document.getElementById('pembayaran');
+const previewNota = document.getElementById('previewNota');
+const previewBukti = document.getElementById('previewBukti');
+const previewRetur = document.getElementById('previewRetur');
+const loadingOverlay = document.getElementById('loadingOverlay');
+const popupNotif = document.getElementById('popupNotif');
+const closePopupBtn = document.getElementById('closePopupBtn');
 
-    const brightgasYN = document.getElementById('brightgasYN');
-    const brightgasContainer = document.getElementById('brightgasContainer');
-    const brightgas12 = document.getElementById('brightgas12');
-    const brightgas55 = document.getElementById('brightgas55');
+const brightgasYN = document.getElementById('brightgasYN');
+const brightgasContainer = document.getElementById('brightgasContainer');
+const brightgas12 = document.getElementById('brightgas12');
+const brightgas55 = document.getElementById('brightgas55');
 
-    brightgasYN.addEventListener('change', () => {
-      brightgasContainer.classList.toggle('hidden', brightgasYN.value !== 'Ya');
-    });
+brightgasYN.addEventListener('change', () => {
+  brightgasContainer.classList.toggle('hidden', brightgasYN.value !== 'Ya');
+});
 
-    fetch(API_NAMA).then(r => r.json()).then(data => {
-      data.forEach(n => {
-        const o = document.createElement('option');
-        o.value = o.textContent = n;
-        namaEl.appendChild(o);
+fetch(API_NAMA).then(r => r.json()).then(data => {
+  data.forEach(n => {
+    const o = document.createElement('option');
+    o.value = o.textContent = n;
+    namaEl.appendChild(o);
+  });
+});
+
+let uraianMap = {};
+fetch(API_POS).then(r => r.json()).then(data => {
+  data.forEach(row => {
+    uraianMap[row.uraian] = row.pos;
+    const o = document.createElement('option');
+    o.value = row.uraian;
+    document.getElementById('uraianList').appendChild(o);
+  });
+});
+
+uraianEl.addEventListener('input', () => {
+  posEl.value = uraianMap[uraianEl.value] || '';
+});
+
+nominalEl.addEventListener('input', e => {
+  const v = e.target.value.replace(/\D/g, '');
+  e.target.value = new Intl.NumberFormat('id-ID').format(v);
+});
+
+returEl.addEventListener('input', () => {
+  const val = parseInt(returEl.value) || 0;
+  document.getElementById('returFotoContainer').classList.toggle('hidden', val <= 0);
+});
+
+pembayaran.addEventListener('change', () => {
+  document.getElementById('buktiTransferContainer').classList.toggle('hidden', pembayaran.value !== 'Ya');
+});
+
+
+function showPopup() {
+  popupNotif.classList.remove('opacity-0', 'pointer-events-none');
+  setTimeout(() => {
+    popupNotif.classList.add('opacity-0', 'pointer-events-none');
+  }, 4000);
+}
+
+closePopupBtn.addEventListener('click', () => {
+  popupNotif.classList.add('opacity-0', 'pointer-events-none');
+});
+
+
+document.getElementById('ledgerForm').addEventListener('submit', async function (e) {
+
+  e.preventDefault();
+  loadingOverlay.classList.remove('hidden');
+
+  const nama = namaEl.value;
+  const uraian = uraianEl.value;
+  const pos = posEl.value;
+  const nominal = nominalEl.value.replace(/\D/g, '');
+  const retur = parseInt(returEl.value) || 0;
+  const pembayaranVal = pembayaran.value;
+
+  let brightgas = "0";
+
+  if (brightgasYN.value === "Ya") {
+
+    const val12 = parseInt(brightgas12.value) || 0;
+    const val55 = parseInt(brightgas55.value) || 0;
+
+    brightgas = `${val12} Tbg (12kg) || ${val55} Tbg (5,5 KG)`;
+
+  }
+
+  navigator.geolocation.getCurrentPosition(async posGeo => {
+
+    const lokasi = `https://www.google.com/maps?q=${posGeo.coords.latitude},${posGeo.coords.longitude}`;
+
+    const payload = {
+      action: 'addTransaksi',
+      sheet: 'Transaksi',
+      payload: {
+        nama, uraian, pos, nominal,
+        pembayaran: pembayaranVal,
+        fotoNota: window.fotoNotaBase64,
+        fotoBukti: window.fotoBuktiBase64 || "",
+        brightgas, retur, returFoto: window.fotoReturBase64 || "",
+        lokasi
+      }
+    };
+
+    try {
+
+      const res = await fetch(SUBMIT_URL,{
+        method:'POST',
+        headers:{'Content-Type':'text/plain'},
+        body:JSON.stringify(payload)
       });
-    });
 
-    let uraianMap = {};
-    fetch(API_POS).then(r => r.json()).then(data => {
-      data.forEach(row => {
-        uraianMap[row.uraian] = row.pos;
-        const o = document.createElement('option');
-        o.value = row.uraian;
-        document.getElementById('uraianList').appendChild(o);
-      });
-    });
+      const result = await res.json();
 
-    uraianEl.addEventListener('input', () => {
-      posEl.value = uraianMap[uraianEl.value] || '';
-    });
+      if(result.status==="success"){
 
-    nominalEl.addEventListener('input', e => {
-      const v = e.target.value.replace(/\D/g, '');
-      e.target.value = new Intl.NumberFormat('id-ID').format(v);
-    });
+        showPopup();
 
-    // Tampilkan/hide Foto Retur jika retur > 0
-    returEl.addEventListener('input', () => {
-      const val = parseInt(returEl.value) || 0;
-      document.getElementById('returFotoContainer').classList.toggle('hidden', val <= 0);
-    });
+        this.reset();
 
-    // Tampilkan/hide Foto Bukti jika pembayaran Ya
-    pembayaran.addEventListener('change', () => {
-      document.getElementById('buktiTransferContainer').classList.toggle('hidden', pembayaran.value !== 'Ya');
-    });
+        previewNota.classList.add('hidden');
+        previewBukti.classList.add('hidden');
+        previewRetur.classList.add('hidden');
 
-    // Fungsi tampilkan popup notif
-    function showPopup() {
-      popupNotif.classList.remove('opacity-0', 'pointer-events-none');
-      setTimeout(() => {
-        popupNotif.classList.add('opacity-0', 'pointer-events-none');
-      }, 4000);
+      }
+
+    } catch(err){
+
+      alert("❌ Error "+err.message);
+
     }
 
-    closePopupBtn.addEventListener('click', () => {
-      popupNotif.classList.add('opacity-0', 'pointer-events-none');
-    });
+    loadingOverlay.classList.add('hidden');
 
-    document.getElementById('ledgerForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-      loadingOverlay.classList.remove('hidden');
+  });
 
-      const nama = namaEl.value;
-      const uraian = uraianEl.value;
-      const pos = posEl.value;
-      const nominal = nominalEl.value.replace(/\D/g, '');
-      const retur = parseInt(returEl.value) || 0;
-      const pembayaranVal = pembayaran.value;
+});
 
-      let brightgas = "0";
-      if (brightgasYN.value === "Ya") {
-        const val12 = parseInt(brightgas12.value) || 0;
-        const val55 = parseInt(brightgas55.value) || 0;
-        brightgas = `${val12} Tbg (12kg) || ${val55} Tbg (5,5 KG)`;
-      }
 
-      if (!window.fotoNotaBase64) {
-        alert("❌ Foto Pangkalan wajib diambil.");
-        loadingOverlay.classList.add('hidden');
-        return;
-      }
+/* =========================
+NOTIF TRANSAKSI BARU
+========================= */
 
-      if (pembayaranVal === "Ya" && !window.fotoBuktiBase64) {
-        alert("❌ Foto Pemilik Pangkalan wajib diambil.");
-        loadingOverlay.classList.add('hidden');
-        return;
-      }
-
-      if (retur > 0 && !window.fotoReturBase64) {
-        alert("❌ Foto retur wajib diambil.");
-        loadingOverlay.classList.add('hidden');
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(async posGeo => {
-        const lokasi = `https://www.google.com/maps?q=${posGeo.coords.latitude},${posGeo.coords.longitude}`;
-        const payload = {
-          action: 'addTransaksi',
-          sheet: 'Transaksi',
-          payload: {
-            nama, uraian, pos, nominal,
-            pembayaran: pembayaranVal,
-            fotoNota: window.fotoNotaBase64,
-            fotoBukti: window.fotoBuktiBase64 || "",
-            brightgas, retur, returFoto: window.fotoReturBase64 || "",
-            lokasi
-          }
-        };
-
-        try {
-          const res = await fetch(SUBMIT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(payload)
-          });
-          const result = await res.json();
-          if (result.status === 'success') {
-            showPopup();
-            this.reset();
-            previewNota.classList.add('hidden');
-            previewBukti.classList.add('hidden');
-            previewRetur.classList.add('hidden');
-            posEl.value = '';
-            brightgasContainer.classList.add('hidden');
-            // Reset foto base64
-            window.fotoNotaBase64 = null;
-            window.fotoBuktiBase64 = null;
-            window.fotoReturBase64 = null;
-          } else {
-            alert('❌ Gagal: ' + result.message);
-          }
-        } catch (err) {
-          alert('❌ Error: ' + err.message);
-        } finally {
-          loadingOverlay.classList.add('hidden');
-        }
-      }, () => {
-        alert("❌ Gagal mendapatkan lokasi.");
-        loadingOverlay.classList.add('hidden');
-      });
-    });
-setInterval(checkTransaksiBaru,5000);
-
-let lastData=0;
+let lastData = 0;
 
 async function checkTransaksiBaru(){
 
-const res=await fetch(API_ENDPOINT+"?action=transaksi");
+  try{
 
-const data=await res.json();
+    const res = await fetch(API_ENDPOINT+"?action=transaksi");
 
-if(data.length>lastData){
+    const data = await res.json();
 
-new Notification("🚚 Pengiriman Baru",{
-body:"Driver baru saja mengirim LPG"
-});
+    if(data.length > lastData){
+
+      if(Notification.permission==="granted"){
+
+        new Notification("🚚 Pengiriman LPG Baru",{
+          body:"Driver baru saja mengirim LPG",
+          icon:"icon.png"
+        });
+
+      }
+
+    }
+
+    lastData = data.length;
+
+  }catch(e){
+    console.log(e);
+  }
 
 }
 
-lastData=data.length;
+setInterval(checkTransaksiBaru,5000);
 
-}
-  </script>
+</script>
 </body>
 </html>
