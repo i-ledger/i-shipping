@@ -73,8 +73,9 @@
               <th class="px-4 py-2">Foto Pangkalan</th>
               <th class="px-4 py-2">Pemilik Pangkalan</th>
               <th class="px-4 py-2">Bukti Retur</th>
-              <th class="px-4 py-1">Lokasi</th>
-              <th class="px-4 py-2">Aksi</th>
+<th class="px-4 py-1">Lokasi</th>
+<th class="px-4 py-1">IP Address</th>
+<th class="px-4 py-2">Aksi</th>
             </tr>
           </thead>
           <tbody id="rekapBody"></tbody>
@@ -246,9 +247,10 @@
           <td class="px-4 py-2 text-center">${renderThumb(r.foto)}</td>
           <td class="px-4 py-2 text-center">${renderThumb(r.buktitransfer)}</td>
           <td class="px-4 py-2 text-center">${renderThumb(r.buktiretur)}</td>
-          <td class="px-4 py-2 text-center">
-            ${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">📍</a>` : '-'}
-          </td>
+<td class="px-4 py-2 text-center">
+  ${r.lokasi ? `<a href="${r.lokasi}" target="_blank" class="text-blue-600 underline">📍</a>` : '-'}
+</td>
+<td class="px-4 py-2 text-center">${r.ipaddress || '-'}</td>
           <td class="px-4 py-2 text-center">
             <div class="flex gap-1 justify-center">
               <button data-row="${r.__row}" class="editBtn px-2 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded">✏️Edit</button>
