@@ -8,7 +8,6 @@
   <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#4f46e5">
   <style>
-    /* Spinner Animasi */
     .spinner {
       border: 4px solid rgba(99, 102, 241, 0.2);
       border-top-color: #6366f1;
@@ -49,7 +48,7 @@
   </div>
 
   <!-- Tombol Ke Dashboard -->
-  <a href="https://ishippingv2.pages.dev/login" 
+  <a href="https://ship-6rr.pages.dev/masterdataishiping.html" 
      class="absolute top-6 right-6 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl shadow-lg font-semibold transition">
     Ke Dashboard
   </a>
@@ -164,14 +163,8 @@
 
 <script src="config.js"></script>
 <script src="kamera-kanvas.js"></script>
-
-<!-- (SEMUA HTML LU TETAP, GA DIUBAH) -->
-
 <script>
 
-/* =========================
-AKTIFKAN NOTIFICATION
-========================= */
 
 if ("Notification" in window) {
   Notification.requestPermission().then(function(permission){
@@ -179,9 +172,6 @@ if ("Notification" in window) {
   });
 }
 
-/* =========================
-SERVICE WORKER PWA
-========================= */
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js')
@@ -221,10 +211,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
   });
 });
 
-/* =========================
-SCRIPT APLIKASI
-========================= */
-
 const API_NAMA = API_ENDPOINT + '?action=nama';
 const API_POS = API_ENDPOINT + '?action=pos';
 const SUBMIT_URL = API_ENDPOINT;
@@ -249,22 +235,29 @@ const brightgasContainer = document.getElementById('brightgasContainer');
 const brightgas12 = document.getElementById('brightgas12');
 const brightgas55 = document.getElementById('brightgas55');
 
-/* =========================
-🔥 TAMBAHAN: AMBIL IP USER
-========================= */
 async function getPublicIP() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 3000); // ⏱️ 3 detik max
+
   try {
-    const res = await fetch("https://api.ipify.org?format=json");
+    const res = await fetch("https://api.ipify.org?format=json", {
+      signal: controller.signal
+    });
+
+    clearTimeout(timeout);
+
+    if (!res.ok) throw new Error("Gagal ambil Jaringan");
+
     const data = await res.json();
-    return data.ip || "UNKNOWN";
-  } catch {
-    return "UNKNOWN";
+
+    if (!data.ip) throw new Error("tidak valid");
+
+    return data.ip;
+
+  } catch (err) {
+    throw new Error("❌ Aktifkan Jaringan Lokal Anda");
   }
 }
-
-/* =========================
-EVENT
-========================= */
 
 brightgasYN.addEventListener('change', () => {
   brightgasContainer.classList.toggle('hidden', brightgasYN.value !== 'Ya');
@@ -317,9 +310,6 @@ closePopupBtn.addEventListener('click', () => {
   popupNotif.classList.add('opacity-0', 'pointer-events-none');
 });
 
-/* =========================
-SUBMIT
-========================= */
 
 document.getElementById('ledgerForm').addEventListener('submit', async function (e) {
 
@@ -341,7 +331,15 @@ document.getElementById('ledgerForm').addEventListener('submit', async function 
     brightgas = `${val12} Tbg (12kg) || ${val55} Tbg (5,5 KG)`;
   }
 
-  const userIP = await getPublicIP(); // 🔥 ambil IP
+let userIP;
+
+try {
+  userIP = await getPublicIP();
+} catch (err) {
+  loadingOverlay.classList.add('hidden');
+  alert(err.message);
+  return; // ❌ STOP submit
+}
 
   navigator.geolocation.getCurrentPosition(async posGeo => {
 
@@ -357,7 +355,7 @@ document.getElementById('ledgerForm').addEventListener('submit', async function 
         fotoBukti: window.fotoBuktiBase64 || "",
         brightgas, retur, returFoto: window.fotoReturBase64 || "",
         lokasi,
-        ip: userIP // 🔥 TAMBAHAN
+        ip: userIP 
       }
     };
 
