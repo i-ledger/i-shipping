@@ -49,7 +49,7 @@
   </div>
 
   <!-- Tombol Ke Dashboard -->
-  <a href="https://ishippingv2.pages.dev/login" 
+  <a href="https://ship-6rr.pages.dev/masterdataishiping.html" 
      class="absolute top-6 right-6 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl shadow-lg font-semibold transition">
     Ke Dashboard
   </a>
@@ -165,6 +165,8 @@
 <script src="config.js"></script>
 <script src="kamera-kanvas.js"></script>
 
+<!-- (SEMUA HTML LU TETAP, GA DIUBAH) -->
+
 <script>
 
 /* =========================
@@ -172,11 +174,9 @@ AKTIFKAN NOTIFICATION
 ========================= */
 
 if ("Notification" in window) {
-
   Notification.requestPermission().then(function(permission){
     console.log("Notification permission:",permission);
   });
-
 }
 
 /* =========================
@@ -184,26 +184,22 @@ SERVICE WORKER PWA
 ========================= */
 
 if ('serviceWorker' in navigator) {
-
   navigator.serviceWorker.register('sw.js')
   .then(() => {
-
     console.log("Service Worker aktif");
-
     Notification.requestPermission().then(permission=>{
       console.log("Permission:", permission);
     });
-
   })
   .catch(err => console.log("SW Error:", err));
-
 }
 
-  let deferredPrompt;
+let deferredPrompt;
 
 window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault(); // cegah prompt default
+  e.preventDefault();
   deferredPrompt = e;
+
   const installBtn = document.createElement('button');
   installBtn.textContent = "Install i-Shipping";
   installBtn.style.position = "fixed";
@@ -215,19 +211,16 @@ window.addEventListener('beforeinstallprompt', (e) => {
   installBtn.style.border = "none";
   installBtn.style.borderRadius = "8px";
   installBtn.style.zIndex = 1000;
+
   document.body.appendChild(installBtn);
 
   installBtn.addEventListener('click', async () => {
     deferredPrompt.prompt();
     const choice = await deferredPrompt.userChoice;
-    if(choice.outcome === 'accepted'){
-      console.log('PWA installed');
-    } else {
-      console.log('PWA dismissed');
-    }
     installBtn.remove();
   });
 });
+
 /* =========================
 SCRIPT APLIKASI
 ========================= */
@@ -242,9 +235,11 @@ const posEl = document.getElementById('pos');
 const nominalEl = document.getElementById('nominal');
 const returEl = document.getElementById('retur');
 const pembayaran = document.getElementById('pembayaran');
+
 const previewNota = document.getElementById('previewNota');
 const previewBukti = document.getElementById('previewBukti');
 const previewRetur = document.getElementById('previewRetur');
+
 const loadingOverlay = document.getElementById('loadingOverlay');
 const popupNotif = document.getElementById('popupNotif');
 const closePopupBtn = document.getElementById('closePopupBtn');
@@ -253,6 +248,23 @@ const brightgasYN = document.getElementById('brightgasYN');
 const brightgasContainer = document.getElementById('brightgasContainer');
 const brightgas12 = document.getElementById('brightgas12');
 const brightgas55 = document.getElementById('brightgas55');
+
+/* =========================
+🔥 TAMBAHAN: AMBIL IP USER
+========================= */
+async function getPublicIP() {
+  try {
+    const res = await fetch("https://api.ipify.org?format=json");
+    const data = await res.json();
+    return data.ip || "UNKNOWN";
+  } catch {
+    return "UNKNOWN";
+  }
+}
+
+/* =========================
+EVENT
+========================= */
 
 brightgasYN.addEventListener('change', () => {
   brightgasContainer.classList.toggle('hidden', brightgasYN.value !== 'Ya');
@@ -294,7 +306,6 @@ pembayaran.addEventListener('change', () => {
   document.getElementById('buktiTransferContainer').classList.toggle('hidden', pembayaran.value !== 'Ya');
 });
 
-
 function showPopup() {
   popupNotif.classList.remove('opacity-0', 'pointer-events-none');
   setTimeout(() => {
@@ -306,6 +317,9 @@ closePopupBtn.addEventListener('click', () => {
   popupNotif.classList.add('opacity-0', 'pointer-events-none');
 });
 
+/* =========================
+SUBMIT
+========================= */
 
 document.getElementById('ledgerForm').addEventListener('submit', async function (e) {
 
@@ -322,13 +336,12 @@ document.getElementById('ledgerForm').addEventListener('submit', async function 
   let brightgas = "0";
 
   if (brightgasYN.value === "Ya") {
-
     const val12 = parseInt(brightgas12.value) || 0;
     const val55 = parseInt(brightgas55.value) || 0;
-
     brightgas = `${val12} Tbg (12kg) || ${val55} Tbg (5,5 KG)`;
-
   }
+
+  const userIP = await getPublicIP(); // 🔥 ambil IP
 
   navigator.geolocation.getCurrentPosition(async posGeo => {
 
@@ -343,7 +356,8 @@ document.getElementById('ledgerForm').addEventListener('submit', async function 
         fotoNota: window.fotoNotaBase64,
         fotoBukti: window.fotoBuktiBase64 || "",
         brightgas, retur, returFoto: window.fotoReturBase64 || "",
-        lokasi
+        lokasi,
+        ip: userIP // 🔥 TAMBAHAN
       }
     };
 
@@ -358,21 +372,15 @@ document.getElementById('ledgerForm').addEventListener('submit', async function 
       const result = await res.json();
 
       if(result.status==="success"){
-
         showPopup();
-
         this.reset();
-
         previewNota.classList.add('hidden');
         previewBukti.classList.add('hidden');
         previewRetur.classList.add('hidden');
-
       }
 
     } catch(err){
-
       alert("❌ Error "+err.message);
-
     }
 
     loadingOverlay.classList.add('hidden');
@@ -381,49 +389,33 @@ document.getElementById('ledgerForm').addEventListener('submit', async function 
 
 });
 
-
 /* =========================
-NOTIF TRANSAKSI BARU
+NOTIF
 ========================= */
 
 let lastData = 0;
 
 async function checkTransaksiBaru(){
-
 try{
-
 const res = await fetch(API_ENDPOINT+"?action=transaksi");
-
 const data = await res.json();
 
 if(data.length > lastData){
-
 const terbaru = data[data.length-1];
 
-const nama = terbaru.nama;
-const uraian = terbaru.uraian;
-const pos = terbaru.pos;
-const nominal = terbaru.nominal;
-
 if(Notification.permission==="granted"){
-
 new Notification("🚚 Pengiriman LPG Baru",{
-body: nama+" | "+uraian+" | "+pos+" | "+nominal+" tabung",
+body: terbaru.nama+" | "+terbaru.uraian+" | "+terbaru.pos+" | "+terbaru.nominal+" tabung",
 icon:"icon.png"
 });
-
 }
-
 }
 
 lastData = data.length;
 
 }catch(e){
-
 console.log(e);
-
 }
-
 }
 
 setInterval(checkTransaksiBaru,2000);
