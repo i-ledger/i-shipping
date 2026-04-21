@@ -151,28 +151,44 @@
 
   <script src="config.js"></script>
   <script>
-    /* === PIN Handling === */
-    const CORRECT_PIN = "2121";
+    
     const pinModal = document.getElementById("pinModal");
     const pinInput = document.getElementById("pinInput");
     const pinSubmit = document.getElementById("pinSubmit");
     const pinError = document.getElementById("pinError");
     const pageContent = document.getElementById("pageContent");
 
-    pinSubmit.addEventListener("click", () => {
-      if (pinInput.value === CORRECT_PIN) {
-        pinModal.style.display = "none";
-        pageContent.classList.remove("hidden");
-      } else {
-        pinError.classList.remove("hidden");
-        pinInput.value = "";
-        pinInput.focus();
-      }
-    });
-    pinInput.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") pinSubmit.click();
+pinSubmit.addEventListener("click", async () => {
+  showLoading(true);
+  try {
+    const res = await fetch(POST_URL, {
+      method: "POST",
+      headers: { "Content-Type": "Text/Plain" },
+      body: JSON.stringify({
+        action: "checkPin",
+        payload: { pin: pinInput.value }
+      })
     });
 
+    const result = await res.json();
+
+    if (result.valid) {
+      localStorage.setItem("user_nama", result.nama);
+      localStorage.setItem("user_role", result.role);
+
+      pinModal.style.display = "none";
+      pageContent.classList.remove("hidden");
+    } else {
+      pinError.classList.remove("hidden");
+      pinInput.value = "";
+      pinInput.focus();
+    }
+  } catch (err) {
+    alert("Error cek PIN");
+  } finally {
+    showLoading(false);
+  }
+});
     /* === Variabel Global === */
     const API_URL = API_ENDPOINT + '?action=transaksi';
     const GET_URL = API_ENDPOINT + '?action=transaksi';
