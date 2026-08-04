@@ -25,6 +25,10 @@
       backdrop-filter: blur(3px);
       background-color: rgba(0,0,0,0.4);
     }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body class="bg-gradient-to-br from-indigo-100 to-white min-h-screen flex items-center justify-center p-6 relative font-sans">
@@ -64,6 +68,7 @@
         <input list="uraianList" id="uraian" required 
                class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         <datalist id="uraianList"></datalist>
+        <p id="uraianWarning" class="hidden text-red-600 text-sm mt-2">⚠️ Nama Pangkalan tidak dikenali / Nama PT tidak ditemukan. Pilih dari daftar yang tersedia.</p>
       </div>
 
       <div>
@@ -107,7 +112,7 @@
 
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Foto Pangkalan</label>
-        <video id="videoNota" autoplay playsinline class="w-full h-64 object-cover rounded-xl shadow-lg border"></video>
+        <video id="videoNota" autoplay playsinline muted class="w-full h-64 object-cover rounded-xl shadow-lg border"></video>
         <canvas id="canvasNota" class="hidden"></canvas>
         <button id="ambilNota" type="button" onclick="takeSnapshot('Nota')" 
                 class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl shadow-lg font-semibold transition">
@@ -124,7 +129,7 @@
 
       <div id="returFotoContainer" class="hidden">
         <label class="block text-sm font-medium text-gray-700 mb-2">Foto Retur</label>
-        <video id="videoRetur" autoplay playsinline class="w-full h-64 object-cover rounded-xl shadow-lg border"></video>
+        <video id="videoRetur" autoplay playsinline muted class="w-full h-64 object-cover rounded-xl shadow-lg border"></video>
         <canvas id="canvasRetur" class="hidden"></canvas>
         <button id="ambilRetur" type="button" onclick="takeSnapshot('Retur')" 
                 class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl shadow-lg font-semibold transition">
@@ -144,7 +149,7 @@
 
       <div id="buktiTransferContainer" class="hidden">
         <label class="block text-sm font-medium text-gray-700 mb-2">Foto Pemilik + Pangkalan</label>
-        <video id="videoBukti" autoplay playsinline class="w-full h-64 object-cover rounded-xl shadow-lg border"></video>
+        <video id="videoBukti" autoplay playsinline muted class="w-full h-64 object-cover rounded-xl shadow-lg border"></video>
         <canvas id="canvasBukti" class="hidden"></canvas>
         <button id="ambilBukti" type="button" onclick="takeSnapshot('Bukti')" 
                 class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl shadow-lg font-semibold transition">
@@ -153,7 +158,7 @@
         <img id="previewBukti" class="w-full mt-4 hidden rounded-xl border shadow" />
       </div>
 
-      <button type="submit" 
+      <button type="submit" id="submitBtn"
               class="w-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 hover:from-indigo-700 hover:via-indigo-800 hover:to-indigo-900 
                      text-white font-extrabold py-4 rounded-3xl shadow-xl text-xl transition">
         Submit
@@ -165,21 +170,16 @@
 <script src="kamera-kanvas.js"></script>
 <script>
 
-
 if ("Notification" in window) {
   Notification.requestPermission().then(function(permission){
     console.log("Notification permission:",permission);
   });
 }
 
-
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js')
   .then(() => {
     console.log("Service Worker aktif");
-    Notification.requestPermission().then(permission=>{
-      console.log("Permission:", permission);
-    });
   })
   .catch(err => console.log("SW Error:", err));
 }
@@ -221,6 +221,8 @@ const posEl = document.getElementById('pos');
 const nominalEl = document.getElementById('nominal');
 const returEl = document.getElementById('retur');
 const pembayaran = document.getElementById('pembayaran');
+const uraianWarning = document.getElementById('uraianWarning');
+const submitBtn = document.getElementById('submitBtn');
 
 const previewNota = document.getElementById('previewNota');
 const previewBukti = document.getElementById('previewBukti');
@@ -234,11 +236,14 @@ const brightgasYN = document.getElementById('brightgasYN');
 const brightgasContainer = document.getElementById('brightgasContainer');
 const brightgas12 = document.getElementById('brightgas12');
 const brightgas55 = document.getElementById('brightgas55');
-const brightgas50 = document.getElementById('brightgas50'); // Dom selector baru
+const brightgas50 = document.getElementById('brightgas50');
+
+// ===== FIX (double submit / lemot): flag guard tambahan selain disabled tombol =====
+let isSubmitting = false;
 
 async function getPublicIP() {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 3000); // ⏱️ 3 detik max
+  const timeout = setTimeout(() => controller.abort(), 3000);
 
   try {
     const res = await fetch("https://api.ipify.org?format=json", {
@@ -258,6 +263,21 @@ async function getPublicIP() {
   } catch (err) {
     throw new Error("❌ Aktifkan Jaringan Lokal Anda");
   }
+}
+
+// ===== FIX (lemot): bungkus getCurrentPosition jadi Promise dgn timeout, tidak menggantung =====
+function getPositionAsync() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Geolocation tidak didukung perangkat ini"));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      resolve,
+      err => reject(new Error("❌ Gagal ambil lokasi: " + err.message)),
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 }
+    );
+  });
 }
 
 brightgasYN.addEventListener('change', () => {
@@ -282,8 +302,11 @@ fetch(API_POS).then(r => r.json()).then(data => {
   });
 });
 
+// ===== FIX (Nama PT kosong): validasi & tampilkan warning saat uraian tidak cocok =====
 uraianEl.addEventListener('input', () => {
-  posEl.value = uraianMap[uraianEl.value] || '';
+  const matchedPos = uraianMap[uraianEl.value] || '';
+  posEl.value = matchedPos;
+  uraianWarning.classList.toggle('hidden', !!matchedPos);
 });
 
 nominalEl.addEventListener('input', e => {
@@ -315,7 +338,9 @@ closePopupBtn.addEventListener('click', () => {
 document.getElementById('ledgerForm').addEventListener('submit', async function (e) {
 
   e.preventDefault();
-  loadingOverlay.classList.remove('hidden');
+
+  // ===== FIX (double submit): stop kalau sudah dalam proses submit =====
+  if (isSubmitting) return;
 
   const nama = namaEl.value;
   const uraian = uraianEl.value;
@@ -324,26 +349,36 @@ document.getElementById('ledgerForm').addEventListener('submit', async function 
   const retur = parseInt(returEl.value) || 0;
   const pembayaranVal = pembayaran.value;
 
+  // ===== FIX (Nama PT wajib ada sebelum submit) =====
+  if (!pos || !uraianMap[uraian]) {
+    uraianWarning.classList.remove('hidden');
+    alert("⚠️ Nama PT tidak ditemukan. Pilih Nama Pangkalan yang valid dari daftar sebelum submit.");
+    uraianEl.focus();
+    return;
+  }
+
+  if (!window.fotoNotaBase64) {
+    alert("⚠️ Foto Pangkalan wajib diambil sebelum submit.");
+    return;
+  }
+
+  isSubmitting = true;
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Mengirim...";
+  loadingOverlay.classList.remove('hidden');
+
   let brightgas = "0";
 
   if (brightgasYN.value === "Ya") {
     const val12 = parseInt(brightgas12.value) || 0;
     const val55 = parseInt(brightgas55.value) || 0;
-    const val50 = parseInt(brightgas50.value) || 0; // Mengambil nilai 50 kg
-    brightgas = `${val12} Tbg (12kg) || ${val55} Tbg (5,5 KG) || ${val50} Tbg (50 KG)`; // Format output diperbarui
+    const val50 = parseInt(brightgas50.value) || 0;
+    brightgas = `${val12} Tbg (12kg) || ${val55} Tbg (5,5 KG) || ${val50} Tbg (50 KG)`;
   }
 
-let userIP;
-
-try {
-  userIP = await getPublicIP();
-} catch (err) {
-  loadingOverlay.classList.add('hidden');
-  alert(err.message);
-  return; // ❌ STOP submit
-}
-
-  navigator.geolocation.getCurrentPosition(async posGeo => {
+  try {
+    const userIP = await getPublicIP();
+    const posGeo = await getPositionAsync();
 
     const lokasi = `https://www.google.com/maps?q=${posGeo.coords.latitude},${posGeo.coords.longitude}`;
 
@@ -357,35 +392,42 @@ try {
         fotoBukti: window.fotoBuktiBase64 || "",
         brightgas, retur, returFoto: window.fotoReturBase64 || "",
         lokasi,
-        ip: userIP 
+        ip: userIP
       }
     };
 
-    try {
+    const res = await fetch(SUBMIT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
 
-      const res = await fetch(SUBMIT_URL,{
-        method:'POST',
-        headers:{'Content-Type':'text/plain'},
-        body:JSON.stringify(payload)
-      });
+    const result = await res.json();
 
-      const result = await res.json();
-
-      if(result.status==="success"){
-        showPopup();
-        this.reset();
-        previewNota.classList.add('hidden');
-        previewBukti.classList.add('hidden');
-        previewRetur.classList.add('hidden');
-      }
-
-    } catch(err){
-      alert("❌ Error "+err.message);
+    if (result.status === "success") {
+      showPopup();
+      this.reset();
+      previewNota.classList.add('hidden');
+      previewBukti.classList.add('hidden');
+      previewRetur.classList.add('hidden');
+      posEl.value = '';
+      uraianWarning.classList.add('hidden');
+      delete window.fotoNotaBase64;
+      delete window.fotoBuktiBase64;
+      delete window.fotoReturBase64;
+    } else {
+      alert("❌ Gagal submit: " + (result.message || "unknown error"));
     }
 
+  } catch (err) {
+    alert("❌ Error " + err.message);
+  } finally {
+    // ===== FIX (double submit): selalu re-enable tombol di akhir, sukses maupun gagal =====
     loadingOverlay.classList.add('hidden');
-
-  });
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Submit";
+    isSubmitting = false;
+  }
 
 });
 
@@ -394,31 +436,54 @@ NOTIF
 ========================= */
 
 let lastData = 0;
+let notifTimer = null;
 
 async function checkTransaksiBaru(){
-try{
-const res = await fetch(API_ENDPOINT+"?action=transaksi");
-const data = await res.json();
+  try{
+    const res = await fetch(API_ENDPOINT+"?action=transaksi");
+    const data = await res.json();
 
-if(data.length > lastData){
-const terbaru = data[data.length-1];
+    if(data.length > lastData){
+      const terbaru = data[data.length-1];
 
-if(Notification.permission==="granted"){
-new Notification("🚚 Pengiriman LPG Baru",{
-body: terbaru.nama+" | "+terbaru.uraian+" | "+terbaru.pos+" | "+terbaru.nominal+" tabung",
-icon:"icon.png"
+      if(Notification.permission==="granted"){
+        new Notification("🚚 Pengiriman LPG Baru",{
+          body: terbaru.nama+" | "+terbaru.uraian+" | "+terbaru.pos+" | "+terbaru.nominal+" tabung",
+          icon:"icon.png"
+        });
+      }
+    }
+
+    lastData = data.length;
+
+  }catch(e){
+    console.log(e);
+  }
+}
+
+// ===== FIX (lemot): polling diperlambat 2s -> 15s, dan berhenti saat tab tidak aktif =====
+function startNotifPolling() {
+  if (notifTimer) return;
+  checkTransaksiBaru();
+  notifTimer = setInterval(checkTransaksiBaru, 15000);
+}
+
+function stopNotifPolling() {
+  if (notifTimer) {
+    clearInterval(notifTimer);
+    notifTimer = null;
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    stopNotifPolling();
+  } else {
+    startNotifPolling();
+  }
 });
-}
-}
 
-lastData = data.length;
-
-}catch(e){
-console.log(e);
-}
-}
-
-setInterval(checkTransaksiBaru,2000);
+startNotifPolling();
 
 </script>
 </body>
