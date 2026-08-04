@@ -4,19 +4,33 @@ const cameras = {
   Bukti: { videoEl: 'videoBukti', canvasEl: 'canvasBukti', previewEl: 'previewBukti' },
 };
 
+// ===== FIX (lemot): resolusi diturunkan dari 1280x1024 ke 960x720 =====
+// Resolusi ini masih cukup jelas utk nota/bukti foto tapi jauh lebih ringan
+// utk kamera HP low-end / koneksi upload base64 yang lambat.
 const constraints = {
   audio: false,
   video: {
     facingMode: { ideal: 'environment' },
-    width: { ideal: 1280 },
-    height: { ideal: 1024 }
+    width: { ideal: 960 },
+    height: { ideal: 720 }
   }
 };
 
+const OUTPUT_WIDTH = 960;
+const OUTPUT_HEIGHT = 720;
+const JPEG_QUALITY = 0.8; // kompres kualitas biar file lebih kecil & upload lebih cepat
+
+let activeStreams = {};
+
 async function startCamera(key) {
   const video = document.getElementById(cameras[key].videoEl);
+
+  // ===== FIX (lemot): jangan buka stream baru kalau sudah ada yang aktif utk key ini =====
+  if (activeStreams[key]) return;
+
   try {
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    activeStreams[key] = stream;
     video.srcObject = stream;
     video.play();
   } catch (err) {
@@ -31,6 +45,7 @@ function stopCamera(key) {
     stream.getTracks().forEach(track => track.stop());
     video.srcObject = null;
   }
+  delete activeStreams[key];
 }
 
 function takeSnapshot(key) {
@@ -38,17 +53,15 @@ function takeSnapshot(key) {
   const canvas = document.getElementById(cameras[key].canvasEl);
   const preview = document.getElementById(cameras[key].previewEl);
 
-  const outputWidth = 1280;
-  const outputHeight = 1024;
-  canvas.width = outputWidth;
-  canvas.height = outputHeight;
+  canvas.width = OUTPUT_WIDTH;
+  canvas.height = OUTPUT_HEIGHT;
 
   const ctx = canvas.getContext('2d');
 
   const videoWidth = video.videoWidth;
   const videoHeight = video.videoHeight;
   const videoRatio = videoWidth / videoHeight;
-  const outputRatio = outputWidth / outputHeight;
+  const outputRatio = OUTPUT_WIDTH / OUTPUT_HEIGHT;
 
   let sx, sy, sWidth, sHeight;
 
@@ -64,9 +77,10 @@ function takeSnapshot(key) {
     sy = (videoHeight - sHeight) / 2;
   }
 
-  ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, outputWidth, outputHeight);
+  ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
 
-  const dataURL = canvas.toDataURL('image/jpeg');
+  // ===== FIX (lemot): kompres JPEG quality 0.8 supaya base64 lebih kecil & upload lebih cepat =====
+  const dataURL = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
   preview.src = dataURL;
   preview.classList.remove('hidden');
   video.classList.add('hidden');
@@ -163,4 +177,9 @@ window.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById(`ambil${k}`);
     if (!btn) console.warn(`Tombol ambil${k} tidak ditemukan di HTML`);
   });
+});
+
+// ===== FIX (lemot): matikan semua kamera yang masih aktif saat halaman ditinggalkan =====
+window.addEventListener('beforeunload', () => {
+  Object.keys(activeStreams).forEach(key => stopCamera(key));
 });
