@@ -6,7 +6,7 @@
   <title>i-Shipping SES_GS</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#4f46e5">
+  <meta name="theme-color" content="#4f46e5">
   <style>
     .spinner {
       border: 4px solid rgba(99, 102, 241, 0.2);
@@ -16,19 +16,13 @@
       height: 48px;
       animation: spin 1s linear infinite;
     }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
     canvas { display: none; }
-    /* Backdrop blur dan overlay loading */
     #loadingOverlay {
       backdrop-filter: blur(3px);
       background-color: rgba(0,0,0,0.4);
     }
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
   </style>
 </head>
 <body class="bg-gradient-to-br from-indigo-100 to-white min-h-screen flex items-center justify-center p-6 relative font-sans">
@@ -37,22 +31,28 @@
     <div class="spinner"></div>
   </div>
 
-  <div id="popupNotif" 
-       class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
+  <!-- REVISI: z-60 tidak ada di Tailwind default, diganti z-[60] -->
+  <div id="popupNotif"
+       class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2
               bg-white rounded-3xl shadow-2xl p-8 max-w-sm text-center
-              opacity-0 pointer-events-none transition-opacity duration-300 z-60">
+              opacity-0 pointer-events-none transition-opacity duration-300 z-[60]">
     <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto mb-4 h-14 w-14 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
       <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
     </svg>
     <h3 class="text-xl font-semibold text-gray-900 mb-2">Barang sudah terkirim</h3>
     <p class="text-gray-600 mb-6">Terimakasih</p>
-    <button id="closePopupBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6 py-2 font-semibold transition">Tutup</button>
+    <button id="closePopupBtn" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6 py-2 font-semibold transition">Tutup</button>
   </div>
 
-  <a href="https://ishippingv2.pages.dev/mastership.html" 
+  <a href="https://ishippingv2.pages.dev/mastership.html"
      class="absolute top-6 right-6 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl shadow-lg font-semibold transition">
     Ke Dashboard
   </a>
+
+  <button id="installBtn" type="button"
+          class="hidden fixed bottom-5 right-5 z-40 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg shadow-lg font-semibold">
+    Install i-Shipping
+  </button>
 
   <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-10">
     <h2 class="text-4xl font-extrabold text-indigo-700 mb-8 text-center tracking-tight">i-Shipping SES_GS</h2>
@@ -65,7 +65,7 @@
 
       <div>
         <label for="uraian" class="block text-sm font-medium text-gray-700 mb-2">Nama Pangkalan</label>
-        <input list="uraianList" id="uraian" required 
+        <input list="uraianList" id="uraian" required autocomplete="off"
                class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         <datalist id="uraianList"></datalist>
         <p id="uraianWarning" class="hidden text-red-600 text-sm mt-2">⚠️ Nama Pangkalan tidak dikenali / Nama PT tidak ditemukan. Pilih dari daftar yang tersedia.</p>
@@ -73,19 +73,19 @@
 
       <div>
         <label for="pos" class="block text-sm font-medium text-gray-700 mb-2">Nama PT</label>
-        <input type="text" id="pos" readonly 
+        <input type="text" id="pos" readonly
                class="mt-1 block w-full bg-gray-100 border border-gray-300 rounded-xl p-4 text-lg cursor-not-allowed" />
       </div>
 
       <div>
         <label for="nominal" class="block text-sm font-medium text-gray-700 mb-2">Jumlah Pengiriman LPG 3Kg</label>
-        <input type="text" id="nominal" required 
+        <input type="text" id="nominal" required inputmode="numeric"
                class="mt-1 block w-full border border-gray-300 rounded-xl p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
 
       <div>
         <label for="brightgasYN" class="block text-sm font-medium text-gray-700 mb-2">Apakah Driver Mengirim Bright Gas?</label>
-        <select id="brightgasYN" 
+        <select id="brightgasYN"
                 class="mt-1 block w-full border border-gray-300 rounded-xl p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
           <option value="Tidak">Tidak</option>
           <option value="Ya">Ya</option>
@@ -95,17 +95,17 @@
       <div id="brightgasContainer" class="hidden space-y-6 mt-4">
         <div>
           <label for="brightgas12" class="block text-sm font-medium text-gray-700 mb-2">12 KG</label>
-          <input type="number" id="brightgas12" min="0" value="0" 
+          <input type="number" id="brightgas12" min="0" value="0" inputmode="numeric"
                  class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
           <label for="brightgas55" class="block text-sm font-medium text-gray-700 mb-2">5.5 KG</label>
-          <input type="number" id="brightgas55" min="0" value="0" 
+          <input type="number" id="brightgas55" min="0" value="0" inputmode="numeric"
                  class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
           <label for="brightgas50" class="block text-sm font-medium text-gray-700 mb-2">50 KG</label>
-          <input type="number" id="brightgas50" min="0" value="0" 
+          <input type="number" id="brightgas50" min="0" value="0" inputmode="numeric"
                  class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
       </div>
@@ -114,7 +114,7 @@
         <label class="block text-sm font-medium text-gray-700 mb-2">Foto Pangkalan</label>
         <video id="videoNota" autoplay playsinline muted class="w-full h-64 object-cover rounded-xl shadow-lg border"></video>
         <canvas id="canvasNota" class="hidden"></canvas>
-        <button id="ambilNota" type="button" onclick="takeSnapshot('Nota')" 
+        <button id="ambilNota" type="button" onclick="takeSnapshot('Nota')"
                 class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl shadow-lg font-semibold transition">
           Ambil Foto
         </button>
@@ -123,7 +123,7 @@
 
       <div>
         <label for="retur" class="block text-sm font-medium text-gray-700 mb-2">Retur</label>
-        <input type="number" id="retur" required min="0" value="0" 
+        <input type="number" id="retur" required min="0" value="0" inputmode="numeric"
                class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
 
@@ -131,7 +131,7 @@
         <label class="block text-sm font-medium text-gray-700 mb-2">Foto Retur</label>
         <video id="videoRetur" autoplay playsinline muted class="w-full h-64 object-cover rounded-xl shadow-lg border"></video>
         <canvas id="canvasRetur" class="hidden"></canvas>
-        <button id="ambilRetur" type="button" onclick="takeSnapshot('Retur')" 
+        <button id="ambilRetur" type="button" onclick="takeSnapshot('Retur')"
                 class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl shadow-lg font-semibold transition">
           Ambil Foto
         </button>
@@ -140,7 +140,7 @@
 
       <div>
         <label for="pembayaran" class="block text-sm font-medium text-gray-700 mb-2">Apakah Pemilik Pangkalan berada dilokasi Pangkalan?</label>
-        <select id="pembayaran" 
+        <select id="pembayaran"
                 class="mt-1 block w-full border border-gray-300 rounded-xl p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
           <option value="Tidak">Tidak</option>
           <option value="Ya">Ya</option>
@@ -151,7 +151,7 @@
         <label class="block text-sm font-medium text-gray-700 mb-2">Foto Pemilik + Pangkalan</label>
         <video id="videoBukti" autoplay playsinline muted class="w-full h-64 object-cover rounded-xl shadow-lg border"></video>
         <canvas id="canvasBukti" class="hidden"></canvas>
-        <button id="ambilBukti" type="button" onclick="takeSnapshot('Bukti')" 
+        <button id="ambilBukti" type="button" onclick="takeSnapshot('Bukti')"
                 class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl shadow-lg font-semibold transition">
           Ambil Foto
         </button>
@@ -159,7 +159,7 @@
       </div>
 
       <button type="submit" id="submitBtn"
-              class="w-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 hover:from-indigo-700 hover:via-indigo-800 hover:to-indigo-900 
+              class="w-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 hover:from-indigo-700 hover:via-indigo-800 hover:to-indigo-900
                      text-white font-extrabold py-4 rounded-3xl shadow-xl text-xl transition">
         Submit
       </button>
@@ -170,51 +170,59 @@
 <script src="kamera-kanvas.js"></script>
 <script>
 
-if ("Notification" in window) {
-  Notification.requestPermission().then(function(permission){
-    console.log("Notification permission:",permission);
-  });
-}
+/* =========================
+   PWA: service worker, notifikasi, install
+========================= */
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js')
-  .then(() => {
-    console.log("Service Worker aktif");
-  })
-  .catch(err => console.log("SW Error:", err));
+    .then(() => console.log("Service Worker aktif"))
+    .catch(err => console.log("SW Error:", err));
 }
 
-let deferredPrompt;
+// REVISI: izin notifikasi diminta saat user pertama kali menyentuh halaman
+// (bukan saat load), supaya tidak diblokir browser (terutama iOS/Safari).
+if ("Notification" in window && Notification.permission === "default") {
+  const askPermission = () => {
+    Notification.requestPermission();
+    document.removeEventListener('click', askPermission);
+  };
+  document.addEventListener('click', askPermission);
+}
+
+// REVISI: tombol install sudah ada di HTML, tidak dibuat ulang tiap event.
+// preventDefault() disengaja (pakai tombol sendiri), warning Chrome soal banner itu wajar.
+let deferredPrompt = null;
+const installBtn = document.getElementById('installBtn');
 
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-
-  const installBtn = document.createElement('button');
-  installBtn.textContent = "Install i-Shipping";
-  installBtn.style.position = "fixed";
-  installBtn.style.bottom = "20px";
-  installBtn.style.right = "20px";
-  installBtn.style.padding = "10px 20px";
-  installBtn.style.background = "#4f46e5";
-  installBtn.style.color = "#fff";
-  installBtn.style.border = "none";
-  installBtn.style.borderRadius = "8px";
-  installBtn.style.zIndex = 1000;
-
-  document.body.appendChild(installBtn);
-
-  installBtn.addEventListener('click', async () => {
-    deferredPrompt.prompt();
-    const choice = await deferredPrompt.userChoice;
-    installBtn.remove();
-  });
+  installBtn.classList.remove('hidden');
 });
+
+installBtn.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  installBtn.classList.add('hidden');
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  installBtn.classList.add('hidden');
+});
+
+/* =========================
+   ELEMEN & STATE
+========================= */
 
 const API_NAMA = API_ENDPOINT + '?action=nama';
 const API_POS = API_ENDPOINT + '?action=pos';
 const SUBMIT_URL = API_ENDPOINT;
 
+const formEl = document.getElementById('ledgerForm');
 const namaEl = document.getElementById('nama');
 const uraianEl = document.getElementById('uraian');
 const posEl = document.getElementById('pos');
@@ -228,6 +236,9 @@ const previewNota = document.getElementById('previewNota');
 const previewBukti = document.getElementById('previewBukti');
 const previewRetur = document.getElementById('previewRetur');
 
+const returFotoContainer = document.getElementById('returFotoContainer');
+const buktiTransferContainer = document.getElementById('buktiTransferContainer');
+
 const loadingOverlay = document.getElementById('loadingOverlay');
 const popupNotif = document.getElementById('popupNotif');
 const closePopupBtn = document.getElementById('closePopupBtn');
@@ -238,34 +249,30 @@ const brightgas12 = document.getElementById('brightgas12');
 const brightgas55 = document.getElementById('brightgas55');
 const brightgas50 = document.getElementById('brightgas50');
 
-// ===== FIX (double submit / lemot): flag guard tambahan selain disabled tombol =====
 let isSubmitting = false;
+let uraianMap = {};
+let popupTimer = null;
+
+/* =========================
+   HELPER
+========================= */
 
 async function getPublicIP() {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 3000);
-
   try {
-    const res = await fetch("https://api.ipify.org?format=json", {
-      signal: controller.signal
-    });
-
-    clearTimeout(timeout);
-
+    const res = await fetch("https://api.ipify.org?format=json", { signal: controller.signal });
     if (!res.ok) throw new Error("Gagal ambil Jaringan");
-
     const data = await res.json();
-
     if (!data.ip) throw new Error("tidak valid");
-
     return data.ip;
-
   } catch (err) {
     throw new Error("❌ Aktifkan Jaringan Lokal Anda");
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
-// ===== FIX (lemot): bungkus getCurrentPosition jadi Promise dgn timeout, tidak menggantung =====
 function getPositionAsync() {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
@@ -280,76 +287,114 @@ function getPositionAsync() {
   });
 }
 
+function showPopup() {
+  clearTimeout(popupTimer);
+  popupNotif.classList.remove('opacity-0', 'pointer-events-none');
+  popupTimer = setTimeout(hidePopup, 4000);
+}
+
+function hidePopup() {
+  popupNotif.classList.add('opacity-0', 'pointer-events-none');
+}
+
+closePopupBtn.addEventListener('click', hidePopup);
+
+// REVISI: reset() tidak memicu event 'change', jadi container harus disembunyikan manual
+function resetFormUI() {
+  formEl.reset();
+  [previewNota, previewBukti, previewRetur].forEach(el => el.classList.add('hidden'));
+  brightgasContainer.classList.add('hidden');
+  returFotoContainer.classList.add('hidden');
+  buktiTransferContainer.classList.add('hidden');
+  posEl.value = '';
+  uraianWarning.classList.add('hidden');
+  delete window.fotoNotaBase64;
+  delete window.fotoBuktiBase64;
+  delete window.fotoReturBase64;
+}
+
+/* =========================
+   LOAD DATA AWAL
+========================= */
+
+// REVISI: tambah pengecekan res.ok dan catch, supaya kalau gagal user tahu
+fetch(API_NAMA)
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(data => {
+    const frag = document.createDocumentFragment();
+    data.forEach(n => {
+      const o = document.createElement('option');
+      o.value = o.textContent = n;
+      frag.appendChild(o);
+    });
+    namaEl.appendChild(frag);
+  })
+  .catch(err => {
+    console.error("Gagal load nama:", err);
+    alert("⚠️ Daftar Driver/Kernet gagal dimuat. Cek koneksi lalu muat ulang halaman.");
+  });
+
+fetch(API_POS)
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(data => {
+    const list = document.getElementById('uraianList');
+    const frag = document.createDocumentFragment();
+    data.forEach(row => {
+      uraianMap[row.uraian] = row.pos;
+      const o = document.createElement('option');
+      o.value = row.uraian;
+      frag.appendChild(o);
+    });
+    list.appendChild(frag);
+  })
+  .catch(err => {
+    console.error("Gagal load pangkalan:", err);
+    alert("⚠️ Daftar Pangkalan gagal dimuat. Cek koneksi lalu muat ulang halaman.");
+  });
+
+/* =========================
+   EVENT INPUT
+========================= */
+
 brightgasYN.addEventListener('change', () => {
   brightgasContainer.classList.toggle('hidden', brightgasYN.value !== 'Ya');
 });
 
-fetch(API_NAMA).then(r => r.json()).then(data => {
-  data.forEach(n => {
-    const o = document.createElement('option');
-    o.value = o.textContent = n;
-    namaEl.appendChild(o);
-  });
-});
-
-let uraianMap = {};
-fetch(API_POS).then(r => r.json()).then(data => {
-  data.forEach(row => {
-    uraianMap[row.uraian] = row.pos;
-    const o = document.createElement('option');
-    o.value = row.uraian;
-    document.getElementById('uraianList').appendChild(o);
-  });
-});
-
-// ===== FIX (Nama PT kosong): validasi & tampilkan warning saat uraian tidak cocok =====
 uraianEl.addEventListener('input', () => {
-  const matchedPos = uraianMap[uraianEl.value] || '';
+  const matchedPos = uraianMap[uraianEl.value.trim()] || '';
   posEl.value = matchedPos;
   uraianWarning.classList.toggle('hidden', !!matchedPos);
 });
 
 nominalEl.addEventListener('input', e => {
   const v = e.target.value.replace(/\D/g, '');
-  e.target.value = new Intl.NumberFormat('id-ID').format(v);
+  e.target.value = v ? new Intl.NumberFormat('id-ID').format(v) : '';
 });
 
 returEl.addEventListener('input', () => {
   const val = parseInt(returEl.value) || 0;
-  document.getElementById('returFotoContainer').classList.toggle('hidden', val <= 0);
+  returFotoContainer.classList.toggle('hidden', val <= 0);
 });
 
 pembayaran.addEventListener('change', () => {
-  document.getElementById('buktiTransferContainer').classList.toggle('hidden', pembayaran.value !== 'Ya');
+  buktiTransferContainer.classList.toggle('hidden', pembayaran.value !== 'Ya');
 });
 
-function showPopup() {
-  popupNotif.classList.remove('opacity-0', 'pointer-events-none');
-  setTimeout(() => {
-    popupNotif.classList.add('opacity-0', 'pointer-events-none');
-  }, 4000);
-}
+/* =========================
+   SUBMIT
+========================= */
 
-closePopupBtn.addEventListener('click', () => {
-  popupNotif.classList.add('opacity-0', 'pointer-events-none');
-});
-
-
-document.getElementById('ledgerForm').addEventListener('submit', async function (e) {
-
+formEl.addEventListener('submit', async function (e) {
   e.preventDefault();
-
-  // ===== FIX (double submit): stop kalau sudah dalam proses submit =====
   if (isSubmitting) return;
 
   const nama = namaEl.value;
-  const uraian = uraianEl.value;
+  const uraian = uraianEl.value.trim();
   const pos = posEl.value;
   const nominal = nominalEl.value.replace(/\D/g, '');
   const retur = parseInt(returEl.value) || 0;
   const pembayaranVal = pembayaran.value;
 
-  // ===== FIX (Nama PT wajib ada sebelum submit) =====
   if (!pos || !uraianMap[uraian]) {
     uraianWarning.classList.remove('hidden');
     alert("⚠️ Nama PT tidak ditemukan. Pilih Nama Pangkalan yang valid dari daftar sebelum submit.");
@@ -357,8 +402,25 @@ document.getElementById('ledgerForm').addEventListener('submit', async function 
     return;
   }
 
+  if (!nominal || parseInt(nominal) <= 0) {
+    alert("⚠️ Jumlah pengiriman LPG 3Kg harus lebih dari 0.");
+    nominalEl.focus();
+    return;
+  }
+
   if (!window.fotoNotaBase64) {
     alert("⚠️ Foto Pangkalan wajib diambil sebelum submit.");
+    return;
+  }
+
+  // REVISI: validasi foto untuk bagian yang tampil
+  if (retur > 0 && !window.fotoReturBase64) {
+    alert("⚠️ Foto Retur wajib diambil karena ada retur.");
+    return;
+  }
+
+  if (pembayaranVal === 'Ya' && !window.fotoBuktiBase64) {
+    alert("⚠️ Foto Pemilik + Pangkalan wajib diambil.");
     return;
   }
 
@@ -368,7 +430,6 @@ document.getElementById('ledgerForm').addEventListener('submit', async function 
   loadingOverlay.classList.remove('hidden');
 
   let brightgas = "0";
-
   if (brightgasYN.value === "Ya") {
     const val12 = parseInt(brightgas12.value) || 0;
     const val55 = parseInt(brightgas55.value) || 0;
@@ -377,8 +438,8 @@ document.getElementById('ledgerForm').addEventListener('submit', async function 
   }
 
   try {
-    const userIP = await getPublicIP();
-    const posGeo = await getPositionAsync();
+    // REVISI: IP dan lokasi diambil paralel, bukan berurutan (lebih cepat)
+    const [userIP, posGeo] = await Promise.all([getPublicIP(), getPositionAsync()]);
 
     const lokasi = `https://www.google.com/maps?q=${posGeo.coords.latitude},${posGeo.coords.longitude}`;
 
@@ -406,15 +467,7 @@ document.getElementById('ledgerForm').addEventListener('submit', async function 
 
     if (result.status === "success") {
       showPopup();
-      this.reset();
-      previewNota.classList.add('hidden');
-      previewBukti.classList.add('hidden');
-      previewRetur.classList.add('hidden');
-      posEl.value = '';
-      uraianWarning.classList.add('hidden');
-      delete window.fotoNotaBase64;
-      delete window.fotoBuktiBase64;
-      delete window.fotoReturBase64;
+      resetFormUI();
     } else {
       alert("❌ Gagal submit: " + (result.message || "unknown error"));
     }
@@ -422,46 +475,42 @@ document.getElementById('ledgerForm').addEventListener('submit', async function 
   } catch (err) {
     alert("❌ Error " + err.message);
   } finally {
-    // ===== FIX (double submit): selalu re-enable tombol di akhir, sukses maupun gagal =====
     loadingOverlay.classList.add('hidden');
     submitBtn.disabled = false;
     submitBtn.textContent = "Submit";
     isSubmitting = false;
   }
-
 });
 
 /* =========================
-NOTIF
+   NOTIF TRANSAKSI BARU
 ========================= */
 
-let lastData = 0;
+// REVISI: lastData diawali null. Sebelumnya 0, jadi setiap halaman dibuka
+// transaksi terakhir selalu dianggap "baru" dan memunculkan notifikasi palsu.
+let lastData = null;
 let notifTimer = null;
 
-async function checkTransaksiBaru(){
-  try{
-    const res = await fetch(API_ENDPOINT+"?action=transaksi");
+async function checkTransaksiBaru() {
+  try {
+    const res = await fetch(API_ENDPOINT + "?action=transaksi");
     const data = await res.json();
 
-    if(data.length > lastData){
-      const terbaru = data[data.length-1];
-
-      if(Notification.permission==="granted"){
-        new Notification("🚚 Pengiriman LPG Baru",{
-          body: terbaru.nama+" | "+terbaru.uraian+" | "+terbaru.pos+" | "+terbaru.nominal+" tabung",
-          icon:"icon.png"
+    if (lastData !== null && data.length > lastData) {
+      const terbaru = data[data.length - 1];
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("🚚 Pengiriman LPG Baru", {
+          body: terbaru.nama + " | " + terbaru.uraian + " | " + terbaru.pos + " | " + terbaru.nominal + " tabung",
+          icon: "icon.png"
         });
       }
     }
-
     lastData = data.length;
-
-  }catch(e){
+  } catch (e) {
     console.log(e);
   }
 }
 
-// ===== FIX (lemot): polling diperlambat 2s -> 15s, dan berhenti saat tab tidak aktif =====
 function startNotifPolling() {
   if (notifTimer) return;
   checkTransaksiBaru();
@@ -476,11 +525,7 @@ function stopNotifPolling() {
 }
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) {
-    stopNotifPolling();
-  } else {
-    startNotifPolling();
-  }
+  document.hidden ? stopNotifPolling() : startNotifPolling();
 });
 
 startNotifPolling();
